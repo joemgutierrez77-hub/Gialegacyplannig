@@ -1,13 +1,16 @@
 """
 Profitability module — agency-level financial analysis, contribution margins,
 chargeback exposure, and override income projection.
+
+Data layer: uses Airtable when AIRTABLE_API_KEY + AIRTABLE_BASE_ID are set,
+otherwise falls back to local JSON files in data/policies/ledger.json.
 """
 
 import json
 import os
 from pathlib import Path
 
-from config.settings import AGENCY, DATA_DIR
+from config.settings import AGENCY, DATA_DIR, USE_AIRTABLE
 from src.claude_client import call_claude
 
 POLICIES_FILE = os.path.join(DATA_DIR, "policies", "ledger.json")
@@ -18,7 +21,14 @@ def _load_prompt() -> str:
     return SYSTEM_PROMPT.read_text()
 
 
+# ---------------------------------------------------------------------------
+# Data layer — Airtable or local JSON
+# ---------------------------------------------------------------------------
+
 def _load_ledger() -> list:
+    if USE_AIRTABLE:
+        from src.airtable_adapter import get_issued_policies
+        return get_issued_policies()
     if not os.path.exists(POLICIES_FILE):
         return []
     with open(POLICIES_FILE) as f:
@@ -26,23 +36,37 @@ def _load_ledger() -> list:
 
 
 def _save_ledger(data: list) -> None:
+    # Only used for local-JSON path; Airtable writes happen in record_policy/mark_lapsed
     Path(POLICIES_FILE).parent.mkdir(parents=True, exist_ok=True)
     with open(POLICIES_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
 
 def record_policy(
-    agent_id:          int,
-    agent_name:        str,
-    policy_number:     str,
-    carrier:           str,
-    issue_date:        str,          # "YYYY-MM-DD"
-    annual_premium:    float,
-    agent_commission_pct: float,     # e.g. 0.70 for 70%
-    status:            str = "active",  # active / lapsed / chargeback
+    agent_id:             str,
+    agent_name:           str,
+    policy_number:        str,
+    carrier:              str,
+    issue_date:           str,           # "YYYY-MM-DD"
+    annual_premium:       float,
+    agent_commission_pct: float,         # e.g. 0.70 for 70%
+    status:               str = "active",
 ) -> dict:
-    """Add an issued policy to the agency ledger."""
-    ledger   = _load_ledger()
+    """Add an issued policy — writes to Airtable or local JSON depending on config."""
+    if USE_AIRTABLE:
+        from src.airtable_adapter import write_issued_policy
+        return write_issued_policy(
+            agent_id=str(agent_id),
+            agent_name=agent_name,
+            policy_number=policy_number,
+            carrier=carrier,
+            issue_date=issue_date,
+            annual_premium=annual_premium,
+            agent_commission_pct=agent_commission_pct,
+        )
+
+    # Local JSON path
+    ledger           = _load_ledger()
     gross_commission = annual_premium * agent_commission_pct
     override         = annual_premium * AGENCY["override_rate"]
     reserve          = gross_commission * AGENCY["chargeback_reserve_pct"]
@@ -68,7 +92,12 @@ def record_policy(
 
 
 def mark_lapsed(policy_number: str, chargeback_amount: float) -> dict:
-    """Record a policy lapse and chargeback against the agent."""
+    """Record a policy lapse and chargeback — writes to Airtable or local JSON."""
+    if USE_AIRTABLE:
+        from src.airtable_adapter import mark_policy_lapsed
+        return mark_policy_lapsed(policy_number, chargeback_amount)
+
+    # Local JSON path
     ledger = _load_ledger()
     for p in ledger:
         if p["policy_number"] == policy_number:

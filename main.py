@@ -109,6 +109,55 @@ def cmd_usage(args):
     print(f"  {'TOTAL':<20} ${total:.4f}")
 
 
+def cmd_airtable(args):
+    from config.settings import USE_AIRTABLE, AIRTABLE_BASE_ID, AIRTABLE_TABLES
+    sub = args.subcommand
+
+    if sub == "status":
+        print("\n--- Airtable Integration Status ---")
+        print(f"  Active:  {USE_AIRTABLE}")
+        print(f"  Base ID: {AIRTABLE_BASE_ID}")
+        for key, name in AIRTABLE_TABLES.items():
+            print(f"  Table [{key}]: '{name}'")
+
+    elif sub == "inspect":
+        if not USE_AIRTABLE:
+            print("Airtable is not active. Set AIRTABLE_API_KEY and AIRTABLE_BASE_ID first.")
+            return
+        from src.airtable_adapter import inspect_tables
+        print("\n--- Live Airtable Field Names ---")
+        for table, fields in inspect_tables().items():
+            print(f"\n  [{table}]")
+            for f in fields:
+                print(f"    • {f}")
+
+    elif sub == "pending":
+        if not USE_AIRTABLE:
+            print("Airtable is not active.")
+            return
+        from src.airtable_adapter import get_pending_apps
+        apps = get_pending_apps()
+        print(f"\n--- Pending Applications ({len(apps)}) ---")
+        for a in apps:
+            print(f"  {a['submit_date']}  {a['agent_name']:<20} {a['applicant_name']:<20}"
+                  f"  {a['carrier']:<15}  ${a['annual_premium']:,.0f}  [{a['status']}]")
+
+    elif sub == "issued":
+        if not USE_AIRTABLE:
+            print("Airtable is not active.")
+            return
+        from src.airtable_adapter import get_issued_policies
+        policies = get_issued_policies()
+        print(f"\n--- Issued Policies ({len(policies)}) ---")
+        for p in policies:
+            print(f"  {p['issue_date']}  {p['agent_name']:<20} {p['policy_number']:<15}"
+                  f"  {p['carrier']:<15}  APV ${p['annual_premium']:,.0f}"
+                  f"  Net ${p['net_to_agent']:,.0f}  [{p['status']}]")
+
+    else:
+        print(f"Unknown airtable subcommand: {sub}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="GIA Legacy Planning — Agency Management CLI"
@@ -145,6 +194,10 @@ def main():
     usg = sub.add_parser("usage")
     usg.add_argument("--since", help="YYYY-MM-DD")
 
+    # ---- airtable ----
+    at = sub.add_parser("airtable")
+    at.add_argument("subcommand", choices=["status", "inspect", "pending", "issued"])
+
     args = parser.parse_args()
 
     if args.command == "recruiting":
@@ -155,6 +208,8 @@ def main():
         cmd_profitability(args)
     elif args.command == "usage":
         cmd_usage(args)
+    elif args.command == "airtable":
+        cmd_airtable(args)
     else:
         parser.print_help()
 

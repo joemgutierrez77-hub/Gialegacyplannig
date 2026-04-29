@@ -69,3 +69,63 @@ TOKEN_LIMITS = {
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 DATA_DIR          = os.path.join(os.path.dirname(__file__), "..", "data")
 LOG_FILE          = os.path.join(DATA_DIR, "api_usage.jsonl")
+
+# ---------------------------------------------------------------------------
+# Airtable integration
+# Set AIRTABLE_API_KEY and AIRTABLE_BASE_ID as environment variables.
+# When both are present the system reads/writes Airtable instead of local JSON.
+# Base ID is visible in your Airtable URL: airtable.com/<BASE_ID>/...
+# ---------------------------------------------------------------------------
+AIRTABLE_API_KEY = os.environ.get("AIRTABLE_API_KEY", "")
+AIRTABLE_BASE_ID = os.environ.get("AIRTABLE_BASE_ID", "app6n6AKwbFtlsnXy")
+
+# Table names — must match exactly what appears in your Airtable base
+AIRTABLE_TABLES = {
+    "pending":   os.environ.get("AIRTABLE_TABLE_PENDING",   "Pending"),
+    "issued":    os.environ.get("AIRTABLE_TABLE_ISSUED",     "Issued"),
+    "recruits":  os.environ.get("AIRTABLE_TABLE_RECRUITS",   "Recruits"),
+    "agents":    os.environ.get("AIRTABLE_TABLE_AGENTS",     "Agents"),
+}
+
+# Field name mapping: internal key → your Airtable column name
+# Edit the right-hand values to match your actual column headers.
+AIRTABLE_FIELDS = {
+    # --- Shared / identity ---
+    "agent_name":           "Agent Name",
+    "agent_id":             "Agent ID",
+
+    # --- Pending applications table ---
+    "applicant_name":       "Applicant Name",
+    "carrier":              "Carrier",
+    "face_amount":          "Face Amount",
+    "annual_premium":       "Annual Premium",
+    "submit_date":          "Submit Date",
+    "app_status":           "Status",           # e.g. "Pending", "Approved", "Declined"
+    "policy_number":        "Policy Number",
+
+    # --- Issued policies table ---
+    "issue_date":           "Issue Date",
+    "commission_pct":       "Commission %",
+    "gross_commission":     "Gross Commission",
+    "agency_override":      "Agency Override",
+    "chargeback_reserve":   "Chargeback Reserve",
+    "net_to_agent":         "Net to Agent",
+    "policy_status":        "Policy Status",    # "Active", "Lapsed", "Chargeback"
+    "chargeback_amount":    "Chargeback Amount",
+    "persistency":          "Persistency Rate",
+
+    # --- Recruits table ---
+    "recruit_name":         "Name",
+    "recruit_phone":        "Phone",
+    "recruit_source":       "Source",
+    "recruit_stage":        "Stage",
+    "recruit_notes":        "Notes",
+    "recruit_added_date":   "Added Date",
+
+    # --- Agents table ---
+    "start_date":           "Start Date",
+    "license_state":        "License State",
+    "agent_status":         "Status",
+}
+
+USE_AIRTABLE = bool(AIRTABLE_API_KEY and AIRTABLE_BASE_ID)
