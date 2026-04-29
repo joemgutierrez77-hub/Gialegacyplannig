@@ -10,12 +10,9 @@ Key cost-control features:
 
 import json
 import os
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-
-import anthropic
 
 from config.settings import (
     ANTHROPIC_API_KEY,
@@ -26,19 +23,20 @@ from config.settings import (
 )
 
 # Singleton client — one connection, reused across all modules
-_client: Optional[anthropic.Anthropic] = None
+_client = None
 
 
-def get_client() -> anthropic.Anthropic:
+def get_client():
     global _client
     if _client is None:
+        import anthropic as _anthropic
         if not ANTHROPIC_API_KEY:
             raise EnvironmentError("ANTHROPIC_API_KEY is not set.")
-        _client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        _client = _anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     return _client
 
 
-def _log_usage(model: str, usage: anthropic.types.Usage, module: str, call_type: str) -> dict:
+def _log_usage(model: str, usage, module: str, call_type: str) -> dict:
     """Write token counts and estimated cost to the usage log."""
     rates = COST_PER_MILLION.get(model, {})
     input_tokens  = getattr(usage, "input_tokens", 0)

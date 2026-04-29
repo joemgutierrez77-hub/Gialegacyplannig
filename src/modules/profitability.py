@@ -6,7 +6,6 @@ chargeback exposure, and override income projection.
 import json
 import os
 from pathlib import Path
-from typing import Optional
 
 from config.settings import AGENCY, DATA_DIR
 from src.claude_client import call_claude

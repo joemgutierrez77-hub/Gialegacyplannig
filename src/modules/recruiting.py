@@ -6,7 +6,6 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from config.settings import DATA_DIR
 from src.claude_client import call_claude

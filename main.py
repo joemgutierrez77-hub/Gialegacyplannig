@@ -15,17 +15,15 @@ Usage:
   python main.py usage [--since YYYY-MM-DD]
 """
 
-import sys
 import argparse
 
 from src.claude_client import cost_summary
 from src.modules.recruiting    import (add_recruit, advance_stage,
                                         pipeline_summary, score_candidate,
                                         draft_outreach, pipeline_health_report)
-from src.modules.production    import (add_agent, log_monthly_stats,
-                                        agent_scorecard, team_leaderboard,
+from src.modules.production    import (add_agent, agent_scorecard, team_leaderboard,
                                         activity_gap_analysis)
-from src.modules.profitability import (record_policy, monthly_pnl_report,
+from src.modules.profitability import (monthly_pnl_report,
                                         chargeback_exposure_report,
                                         override_income_projection)
 
