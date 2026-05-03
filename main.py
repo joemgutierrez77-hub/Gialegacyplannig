@@ -40,7 +40,7 @@ def cmd_recruiting(args):
         print(pipeline_health_report())
 
     elif sub == "add":
-        r = add_recruit(args.name, args.phone, args.source, args.notes or "")
+        r = add_recruit(args.name, args.phone, args.source, args.notes or "", args.email or "")
         print(f"Added recruit #{r['id']}: {r['name']}")
 
     elif sub == "advance":
@@ -171,6 +171,7 @@ def main():
     rec.add_argument("--phone",   "-p")
     rec.add_argument("--source",  "-s")
     rec.add_argument("--notes",   "-o")
+    rec.add_argument("--email",   "-e")
     rec.add_argument("--context", "-c")
     rec.add_argument("--id",      type=int)
     rec.add_argument("--stage")
