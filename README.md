@@ -59,14 +59,20 @@ main.py                    ← CLI entry point
 
 ---
 
-## CLI Usage
+## Features
+
+- **Onboarding Phase Tracking**: Detailed 11-stage recruiting pipeline with automatic email alerts on phase changes
+- **AI-Powered Analysis**: Claude integration for candidate scoring, coaching reports, and financial projections
+- **Cost-Optimized**: Smart model routing, prompt caching, and usage tracking to minimize API costs
+- **Dual Data Sources**: Local JSON files or Airtable integration for enterprise deployments
+- **Comprehensive CLI**: Full command-line interface for all agency operations
 
 ```bash
 # Recruiting
 python main.py recruiting pipeline                          # show stage counts
 python main.py recruiting report                            # AI pipeline health report
-python main.py recruiting add -n "Jane Smith" -p "555-0001" -s "referral"
-python main.py recruiting advance --id 1 --stage interviewed
+python main.py recruiting add -n "Jane Smith" -p "555-0001" -s "referral" -e "jane@example.com"
+python main.py recruiting advance --id 1 --stage watched_info
 python main.py recruiting score --notes "10 years sales, strong network..."
 python main.py recruiting outreach -n "Mike" -s "Facebook ad" -c "expressed interest"
 
