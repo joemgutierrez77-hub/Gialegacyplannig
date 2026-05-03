@@ -4,7 +4,9 @@ Recruiting module — manage candidate pipeline, score prospects, generate outre
 
 import json
 import os
+import smtplib
 from datetime import datetime
+from email.message import EmailMessage
 from pathlib import Path
 
 from config.settings import DATA_DIR
@@ -32,26 +34,64 @@ def _save_pipeline(data: list) -> None:
 
 
 STAGES = [
-    "lead",
-    "contacted",
-    "interviewed",
+    "new_lead",
+    "watched_info",
+    "committed",
+    "licensing_started",
+    "nurture",
+    "cold",
+    "passed_exam",
+    "contracting",
     "contracted",
-    "licensed",
     "active",
     "inactive",
 ]
 
 
-def add_recruit(name: str, phone: str, source: str, notes: str = "") -> dict:
-    """Add a new recruit to the pipeline at the 'lead' stage."""
+def _send_phase_change_email(recruit: dict, previous_stage: str, new_stage: str) -> None:
+    """Send a phase-change email when SMTP configuration and recruit email are present."""
+    to_email = recruit.get("email", "").strip()
+    if not to_email:
+        return
+
+    smtp_host = os.environ.get("SMTP_HOST", "").strip()
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER", "").strip()
+    smtp_pass = os.environ.get("SMTP_PASSWORD", "").strip()
+    from_email = os.environ.get("FROM_EMAIL", smtp_user).strip()
+
+    if not all([smtp_host, smtp_user, smtp_pass, from_email]):
+        return
+
+    msg = EmailMessage()
+    msg["Subject"] = f"Your onboarding phase is now: {new_stage.replace('_', ' ').title()}"
+    msg["From"] = from_email
+    msg["To"] = to_email
+    msg.set_content(
+        f"Hi {recruit['name']},\n\n"
+        f"Quick update: we moved you from {previous_stage.replace('_', ' ').title()} to "
+        f"{new_stage.replace('_', ' ').title()}.\n\n"
+        "Reply to this email if you need help with next steps.\n\n"
+        "- GIA Legacy Planning"
+    )
+
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+
+
+def add_recruit(name: str, phone: str, source: str, notes: str = "", email: str = "") -> dict:
+    """Add a new recruit to the pipeline at the 'new_lead' stage."""
     pipeline = _load_pipeline()
     recruit = {
         "id":         len(pipeline) + 1,
         "name":       name,
         "phone":      phone,
         "source":     source,
-        "stage":      "lead",
+        "stage":      "new_lead",
         "notes":      notes,
+        "email":      email,
         "added_date": datetime.today().strftime("%Y-%m-%d"),
         "history":    [],
     }
@@ -67,14 +107,16 @@ def advance_stage(recruit_id: int, new_stage: str, notes: str = "") -> dict:
     pipeline = _load_pipeline()
     for r in pipeline:
         if r["id"] == recruit_id:
+            previous_stage = r["stage"]
             r["history"].append({
-                "from":  r["stage"],
+                "from":  previous_stage,
                 "to":    new_stage,
                 "date":  datetime.today().strftime("%Y-%m-%d"),
                 "notes": notes,
             })
             r["stage"] = new_stage
             _save_pipeline(pipeline)
+            _send_phase_change_email(r, previous_stage, new_stage)
             return r
     raise ValueError(f"Recruit ID {recruit_id} not found.")
 
