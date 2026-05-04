@@ -158,6 +158,12 @@ def cmd_airtable(args):
         print(f"Unknown airtable subcommand: {sub}")
 
 
+def cmd_export(args):
+    from src.excel_export import export_to_excel
+    path = export_to_excel(output_path=args.output or None)
+    print(f"Exported: {path}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="GIA Legacy Planning — Agency Management CLI"
@@ -199,6 +205,10 @@ def main():
     at = sub.add_parser("airtable")
     at.add_argument("subcommand", choices=["status", "inspect", "pending", "issued"])
 
+    # ---- export ----
+    exp = sub.add_parser("export")
+    exp.add_argument("--output", "-o", help="Output filename (default: GIA_Legacy_Tracker_YYYY-MM-DD.xlsx)")
+
     args = parser.parse_args()
 
     if args.command == "recruiting":
@@ -211,6 +221,8 @@ def main():
         cmd_usage(args)
     elif args.command == "airtable":
         cmd_airtable(args)
+    elif args.command == "export":
+        cmd_export(args)
     else:
         parser.print_help()
 
