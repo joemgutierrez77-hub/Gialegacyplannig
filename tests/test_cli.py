@@ -1,6 +1,5 @@
 """CLI integration tests — verify each subcommand routes to the right function."""
 import sys
-import pytest
 from unittest.mock import patch
 
 

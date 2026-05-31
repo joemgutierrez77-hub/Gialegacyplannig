@@ -1,7 +1,6 @@
 """Tests for all Claude-AI-powered functions across recruiting, production, and profitability.
 All tests mock call_claude to avoid live API calls.
 """
-import json
 import pytest
 from unittest.mock import patch
 
