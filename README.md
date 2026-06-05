@@ -38,7 +38,49 @@ data/
   api_usage.jsonl          ← Every API call logged (tokens + estimated cost)
 
 main.py                    ← CLI entry point
+api.py                     ← Mobile API layer (FastAPI) over the same modules
 ```
+
+---
+
+## Mobile API (phone app back-end)
+
+`api.py` exposes the recruiting / production / profitability modules as a
+REST API so a phone app — native, or a no-code builder like **Glide** or
+**Softr** — can run the agency from the field.
+
+```bash
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY=sk-ant-...
+uvicorn api:app --reload
+```
+
+Open **http://localhost:8000/docs** for interactive, phone-friendly API docs.
+
+| Endpoint | Method | What it does | Claude? |
+|---|---|---|---|
+| `/dashboard` | GET | Home-screen snapshot: pipeline, team production vs. targets, override income | No (instant/free) |
+| `/recruiting/pipeline` | GET | Stage counts | No |
+| `/recruiting/recruits` | GET / POST | List / add a recruit | No |
+| `/recruiting/recruits/{id}/advance` | POST | Advance a stage (fires the onboarding email) | No |
+| `/recruiting/report` | GET | AI pipeline health report | Yes |
+| `/recruiting/score` | POST | AI candidate scoring | Yes |
+| `/recruiting/outreach` | POST | AI-drafted first-contact message | Yes |
+| `/production/agents` | GET / POST | List / add an agent | No |
+| `/production/agents/{id}/stats` | POST | Log a month of production | No |
+| `/production/leaderboard` | GET | AI team leaderboard | Yes |
+| `/production/agents/{id}/scorecard` | GET | AI coaching scorecard | Yes |
+| `/production/agents/{id}/gaps` | GET | AI funnel gap analysis | Yes |
+| `/profitability/policies` | GET / POST | List / record a policy | No |
+| `/profitability/policies/{num}/lapse` | POST | Record a lapse + chargeback | No |
+| `/profitability/pnl?month=YYYY-MM` | GET | AI monthly P&L | Yes |
+| `/profitability/chargebacks` | GET | AI chargeback exposure | Yes |
+| `/profitability/projection?months=6` | GET | AI override income projection | Yes |
+| `/usage?since=YYYY-MM-DD` | GET | API spend by module | No |
+
+Read/list endpoints never call Claude, so they're instant and cost nothing —
+ideal for a mobile home screen. AI endpoints route through the same
+cost-controlled `call_claude` path as the CLI.
 
 ---
 
