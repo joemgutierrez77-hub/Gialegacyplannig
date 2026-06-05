@@ -81,6 +81,9 @@ python main.py production leaderboard                       # ranked team view
 python main.py production scorecard --id 1 --months 3      # agent coaching report
 python main.py production gaps --id 1                       # funnel gap analysis
 python main.py production add-agent -n "Tom Jones" --start-date 2026-01-15 --state TX
+python main.py production log-stats --id 1 -m 2026-04 \
+    --contacts 80 --appointments 25 --apps-submitted 10 \
+    --apps-issued 8 --apv 12000 --persistency 0.91         # log a month of production data
 
 # Profitability
 python main.py profitability pnl --month 2026-04            # monthly P&L
