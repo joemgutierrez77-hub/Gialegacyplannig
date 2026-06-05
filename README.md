@@ -49,6 +49,24 @@ api.py                     ← Mobile API layer (FastAPI) over the same modules
 REST API so a phone app — native, or a no-code builder like **Glide** or
 **Softr** — can run the agency from the field.
 
+### Get a permanent link (no terminal) — deploy to Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joemgutierrez77-hub/Gialegacyplannig)
+
+1. Click the button (or go to **dashboard.render.com → New → Blueprint** and
+   pick this repo). Render reads `render.yaml` and builds everything.
+2. In ~2 minutes you get a permanent URL like
+   `https://gia-legacy-planning.onrender.com` — open it on your phone and
+   bookmark it / add to your home screen. That's your app.
+3. (Optional) In the Render dashboard add `ANTHROPIC_API_KEY` to turn on the AI
+   reports, and `AIRTABLE_API_KEY` + `AIRTABLE_BASE_ID` for persistent storage.
+
+> **Note on data:** Render's free tier has an ephemeral disk — local JSON data
+> resets when the service restarts. For a permanent record, set the Airtable
+> keys (the system already reads/writes Airtable when they're present).
+
+### Run it locally instead
+
 ```bash
 pip install -r requirements.txt
 export ANTHROPIC_API_KEY=sk-ant-...   # optional — only the AI endpoints need it
