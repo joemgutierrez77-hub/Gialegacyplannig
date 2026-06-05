@@ -22,7 +22,7 @@ from src.modules.recruiting    import (add_recruit, advance_stage,
                                         pipeline_summary, score_candidate,
                                         draft_outreach, pipeline_health_report)
 from src.modules.production    import (add_agent, agent_scorecard, team_leaderboard,
-                                        activity_gap_analysis)
+                                        activity_gap_analysis, log_monthly_stats)
 from src.modules.profitability import (monthly_pnl_report,
                                         chargeback_exposure_report,
                                         override_income_projection)
@@ -73,6 +73,17 @@ def cmd_production(args):
     elif sub == "add-agent":
         a = add_agent(args.name, args.start_date, args.state)
         print(f"Added agent #{a['id']}: {a['name']}")
+
+    elif sub == "log-stats":
+        record = log_monthly_stats(
+            args.id, args.month,
+            contacts=args.contacts, appointments=args.appointments,
+            apps_submitted=args.apps_submitted, apps_issued=args.apps_issued,
+            apv=args.apv, chargebacks=args.chargebacks, persistency=args.persistency,
+        )
+        print(f"Logged {record['month']} stats for agent #{args.id}: "
+              f"{record['apps_issued']} issued, ${record['apv']:,.0f} APV, "
+              f"{record['persistency']*100:.0f}% persistency")
 
     else:
         print(f"Unknown production subcommand: {sub}")
@@ -178,12 +189,21 @@ def main():
 
     # ---- production ----
     prod = sub.add_parser("production")
-    prod.add_argument("subcommand", choices=["leaderboard","scorecard","gaps","add-agent"])
+    prod.add_argument("subcommand", choices=["leaderboard","scorecard","gaps","add-agent","log-stats"])
     prod.add_argument("--id",         type=int)
     prod.add_argument("--months",     type=int)
     prod.add_argument("--name",       "-n")
     prod.add_argument("--start-date", "-d")
     prod.add_argument("--state")
+    # log-stats fields (one month of production data for an agent)
+    prod.add_argument("--month",          "-m", help="YYYY-MM")
+    prod.add_argument("--contacts",       type=int,   default=0)
+    prod.add_argument("--appointments",   type=int,   default=0)
+    prod.add_argument("--apps-submitted", type=int,   default=0)
+    prod.add_argument("--apps-issued",    type=int,   default=0)
+    prod.add_argument("--apv",            type=float, default=0.0, help="Annual Premium Value of issued policies")
+    prod.add_argument("--chargebacks",    type=float, default=0.0, help="$ of chargebacks this month")
+    prod.add_argument("--persistency",    type=float, default=0.0, help="13-month persistency rate (0.0-1.0)")
 
     # ---- profitability ----
     prof = sub.add_parser("profitability")
