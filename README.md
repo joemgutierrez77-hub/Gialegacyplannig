@@ -51,11 +51,22 @@ REST API so a phone app — native, or a no-code builder like **Glide** or
 
 ```bash
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...
+export ANTHROPIC_API_KEY=sk-ant-...   # optional — only the AI endpoints need it
 uvicorn api:app --reload
 ```
 
-Open **http://localhost:8000/docs** for interactive, phone-friendly API docs.
+Then open one of these in any browser (including your phone's):
+
+- **http://localhost:8000/** — the mobile **home screen**: live pipeline, this
+  month's production vs. targets, override income, and a quick "add recruit" form.
+- **http://localhost:8000/docs** — interactive API docs for every endpoint.
+
+To open it from your phone, run the server on a computer and visit
+`http://<that-computer's-LAN-IP>:8000/` on the same Wi-Fi (start it with
+`uvicorn api:app --host 0.0.0.0` so the phone can reach it).
+
+AI endpoints return a clean `503` (not a crash) if `ANTHROPIC_API_KEY` is unset,
+so the home screen and all data endpoints work with no key at all.
 
 | Endpoint | Method | What it does | Claude? |
 |---|---|---|---|

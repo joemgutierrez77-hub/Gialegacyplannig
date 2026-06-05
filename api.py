@@ -24,9 +24,11 @@ Design notes:
 """
 
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
+from typing import Callable, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from config.settings import AGENCY
@@ -40,6 +42,20 @@ app = FastAPI(
     description="Mobile-ready endpoints for recruiting, production, and profitability.",
     version="1.0.0",
 )
+
+HOME_PAGE = Path(__file__).parent / "static" / "index.html"
+
+
+def _ai(fn: Callable, *args, **kwargs):
+    """Run a Claude-backed call, turning a missing API key into a clean 503
+    instead of a raw 500 stack trace."""
+    try:
+        return fn(*args, **kwargs)
+    except EnvironmentError as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"AI features need ANTHROPIC_API_KEY to be set. ({e})",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +118,12 @@ class LapseIn(BaseModel):
 # ---------------------------------------------------------------------------
 # Health & dashboard
 # ---------------------------------------------------------------------------
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def home():
+    """Mobile-friendly home screen. Open this URL in any phone browser."""
+    return HOME_PAGE.read_text()
+
+
 @app.get("/health", tags=["system"])
 def health():
     return {"status": "ok", "agency": AGENCY["name"]}
@@ -198,19 +220,19 @@ def advance_recruit(recruit_id: int, body: AdvanceIn):
 @app.get("/recruiting/report", tags=["recruiting"])
 def recruiting_report():
     """AI pipeline health report (calls Claude)."""
-    return {"report": rec_mod.pipeline_health_report()}
+    return {"report": _ai(rec_mod.pipeline_health_report)}
 
 
 @app.post("/recruiting/score", tags=["recruiting"])
 def score_recruit(body: ScoreIn):
     """AI candidate scoring (calls Claude)."""
-    return {"result": rec_mod.score_candidate(body.notes)}
+    return {"result": _ai(rec_mod.score_candidate, body.notes)}
 
 
 @app.post("/recruiting/outreach", tags=["recruiting"])
 def outreach(body: OutreachIn):
     """AI-drafted first-contact message (calls Claude)."""
-    return {"message": rec_mod.draft_outreach(body.name, body.source, body.context)}
+    return {"message": _ai(rec_mod.draft_outreach, body.name, body.source, body.context)}
 
 
 # ---------------------------------------------------------------------------
@@ -241,14 +263,14 @@ def log_stats(agent_id: int, body: MonthlyStatsIn):
 @app.get("/production/leaderboard", tags=["production"])
 def leaderboard():
     """AI team leaderboard (calls Claude)."""
-    return {"leaderboard": prod_mod.team_leaderboard()}
+    return {"leaderboard": _ai(prod_mod.team_leaderboard)}
 
 
 @app.get("/production/agents/{agent_id}/scorecard", tags=["production"])
 def scorecard(agent_id: int, months: int = 3):
     """AI coaching scorecard (calls Claude)."""
     try:
-        return {"scorecard": prod_mod.agent_scorecard(agent_id, months=months)}
+        return {"scorecard": _ai(prod_mod.agent_scorecard, agent_id, months=months)}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -257,7 +279,7 @@ def scorecard(agent_id: int, months: int = 3):
 def gaps(agent_id: int):
     """AI funnel gap analysis (calls Claude)."""
     try:
-        return {"analysis": prod_mod.activity_gap_analysis(agent_id)}
+        return {"analysis": _ai(prod_mod.activity_gap_analysis, agent_id)}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -294,19 +316,19 @@ def lapse_policy(policy_number: str, body: LapseIn):
 @app.get("/profitability/pnl", tags=["profitability"])
 def pnl(month: str):
     """AI monthly P&L (calls Claude). month = YYYY-MM."""
-    return {"report": prof_mod.monthly_pnl_report(month)}
+    return {"report": _ai(prof_mod.monthly_pnl_report, month)}
 
 
 @app.get("/profitability/chargebacks", tags=["profitability"])
 def chargebacks():
     """AI chargeback exposure report (calls Claude)."""
-    return {"report": prof_mod.chargeback_exposure_report()}
+    return {"report": _ai(prof_mod.chargeback_exposure_report)}
 
 
 @app.get("/profitability/projection", tags=["profitability"])
 def projection(months: int = 6):
     """AI override income projection (calls Claude)."""
-    return {"report": prof_mod.override_income_projection(months)}
+    return {"report": _ai(prof_mod.override_income_projection, months)}
 
 
 # ---------------------------------------------------------------------------

@@ -31,6 +31,23 @@ def test_health(client):
     assert r.json()["status"] == "ok"
 
 
+def test_home_page_serves_html(client):
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    assert "GIA Legacy Planning" in r.text
+
+
+def test_ai_endpoint_without_key_returns_503(client, monkeypatch):
+    """Missing ANTHROPIC_API_KEY should be a clean 503, not a 500 stack trace."""
+    import src.claude_client as cc
+    monkeypatch.setattr(cc, "_client", None)
+    monkeypatch.setattr(cc, "ANTHROPIC_API_KEY", "")
+    r = client.post("/recruiting/score", json={"notes": "test"})
+    assert r.status_code == 503
+    assert "ANTHROPIC_API_KEY" in r.json()["detail"]
+
+
 def test_recruit_lifecycle(client):
     created = client.post("/recruiting/recruits", json={
         "name": "Jane Smith", "phone": "555-0001", "source": "referral",

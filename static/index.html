@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>GIA Legacy Planning</title>
+<style>
+  :root { --bg:#0f172a; --card:#1e293b; --line:#334155; --txt:#e2e8f0;
+          --muted:#94a3b8; --accent:#38bdf8; --good:#34d399; --bad:#f87171; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:-apple-system,system-ui,Segoe UI,Roboto,sans-serif;
+         background:var(--bg); color:var(--txt); padding:16px 14px 60px; }
+  header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
+  h1 { font-size:20px; margin:0; }
+  .sub { color:var(--muted); font-size:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px;
+          padding:14px; margin-bottom:14px; }
+  .card h2 { font-size:13px; text-transform:uppercase; letter-spacing:.5px;
+             color:var(--muted); margin:0 0 10px; }
+  .row { display:flex; justify-content:space-between; align-items:center; padding:7px 0;
+         border-top:1px solid var(--line); font-size:15px; }
+  .row:first-of-type { border-top:none; }
+  .metric { font-variant-numeric:tabular-nums; font-weight:600; }
+  .bar { height:6px; background:var(--line); border-radius:4px; overflow:hidden; margin-top:4px; }
+  .bar > i { display:block; height:100%; background:var(--accent); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .stat { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px; }
+  .stat b { font-size:22px; display:block; }
+  .stat span { color:var(--muted); font-size:11px; }
+  input,select,button { font-size:16px; width:100%; padding:11px; border-radius:10px;
+         border:1px solid var(--line); background:var(--bg); color:var(--txt); margin-top:8px; }
+  button { background:var(--accent); color:#001018; font-weight:700; border:none; }
+  button:active { opacity:.8; }
+  .pill { font-size:11px; color:var(--muted); }
+  .err { color:var(--bad); font-size:13px; }
+  .ok { color:var(--good); }
+  a.docs { color:var(--accent); font-size:12px; text-decoration:none; }
+</style>
+</head>
+<body>
+<header>
+  <div><h1>GIA Legacy Planning</h1><div class="sub" id="month">—</div></div>
+  <a class="docs" href="/docs">API ›</a>
+</header>
+
+<div class="card">
+  <h2>Recruiting Pipeline</h2>
+  <div id="pipeline"><div class="pill">Loading…</div></div>
+</div>
+
+<div class="card">
+  <h2>This Month — Team Production</h2>
+  <div class="grid" id="production"></div>
+</div>
+
+<div class="card">
+  <h2>Override Income</h2>
+  <div class="grid" id="profit"></div>
+</div>
+
+<div class="card">
+  <h2>Quick Add Recruit</h2>
+  <input id="r-name" placeholder="Name">
+  <input id="r-phone" placeholder="Phone">
+  <input id="r-source" placeholder="Source (e.g. referral)">
+  <button onclick="addRecruit()">Add to Pipeline</button>
+  <div id="addmsg" style="margin-top:8px;"></div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const money = (n) => "$" + Math.round(n).toLocaleString();
+
+async function load() {
+  try {
+    const d = await (await fetch("/dashboard")).json();
+    $("month").textContent = "Period: " + d.month;
+
+    // Pipeline
+    const pipe = d.recruiting.pipeline;
+    $("pipeline").innerHTML =
+      Object.entries(pipe).filter(([,v]) => v > 0)
+        .map(([k,v]) => `<div class="row"><span>${k.replace(/_/g," ")}</span><span class="metric">${v}</span></div>`)
+        .join("") ||
+      `<div class="pill">No recruits yet — add one below. Total target: ${d.recruiting.monthly_contact_target} contacts/mo.</div>`;
+
+    // Production vs targets
+    const a = d.production.actual, t = d.production.targets;
+    const block = (label, val, tgt, isMoney) => {
+      const pct = tgt ? Math.min(100, Math.round(val/tgt*100)) : 0;
+      const show = isMoney ? money(val) : val;
+      const tshow = isMoney ? money(tgt) : tgt;
+      return `<div class="stat"><b>${show}</b><span>${label} · target ${tshow}</span>
+        <div class="bar"><i style="width:${pct}%"></i></div></div>`;
+    };
+    $("production").innerHTML =
+      block("Apps submitted", a.apps_submitted, t.apps_submitted) +
+      block("Apps issued", a.apps_issued, t.apps_issued) +
+      block("APV", a.apv, t.apv, true) +
+      `<div class="stat"><b>${d.production.producing_this_month}/${d.production.roster_size}</b>
+        <span>Agents producing</span></div>`;
+
+    // Profit
+    const p = d.profitability;
+    $("profit").innerHTML =
+      `<div class="stat"><b>${money(p.gross_override)}</b><span>Gross override</span></div>
+       <div class="stat"><b>${money(p.chargebacks)}</b><span>Chargebacks</span></div>
+       <div class="stat"><b class="ok">${money(p.net_override)}</b><span>Net override</span></div>
+       <div class="stat"><b>${p.active_policies}</b><span>Active policies</span></div>`;
+  } catch (e) {
+    $("pipeline").innerHTML = `<div class="err">Couldn't reach the server. Is it running?</div>`;
+  }
+}
+
+async function addRecruit() {
+  const name = $("r-name").value.trim();
+  const phone = $("r-phone").value.trim();
+  const source = $("r-source").value.trim() || "unknown";
+  if (!name) { $("addmsg").innerHTML = `<span class="err">Name is required.</span>`; return; }
+  try {
+    const res = await fetch("/recruiting/recruits", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({name, phone, source})
+    });
+    if (!res.ok) throw new Error();
+    const r = await res.json();
+    $("addmsg").innerHTML = `<span class="ok">Added #${r.id}: ${r.name}</span>`;
+    $("r-name").value = $("r-phone").value = $("r-source").value = "";
+    load();
+  } catch (e) {
+    $("addmsg").innerHTML = `<span class="err">Failed to add. Is the server running?</span>`;
+  }
+}
+
+load();
+</script>
+</body>
+</html>
