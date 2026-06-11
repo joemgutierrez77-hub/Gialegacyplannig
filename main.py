@@ -95,6 +95,23 @@ def cmd_profitability(args):
         print(f"Unknown profitability subcommand: {sub}")
 
 
+def cmd_flowhub(args):
+    sub = args.subcommand
+    if sub == "sync":
+        from src.modules.flowhub import build_snapshot, export_flowhub
+        path = export_flowhub()
+        snap = build_snapshot()
+        print(f"\n--- FlowHub Sync ({snap['source']}) ---")
+        print(f"  Recruits in pipeline:   {snap['recruiting']['total']}")
+        print(f"  Active agents tracked:  {len(snap['production']['agents'])}")
+        print(f"  Active policies:        {snap['profitability']['activePolicies']}")
+        print(f"  Suggested daily tasks:  {len(snap['suggestions'])}")
+        print(f"\nWrote {path}")
+        print("Open productivity/index.html — new business tasks appear automatically.")
+    else:
+        print(f"Unknown flowhub subcommand: {sub}")
+
+
 def cmd_usage(args):
     since = getattr(args, "since", None)
     summary = cost_summary(since_date=since)
@@ -199,6 +216,10 @@ def main():
     at = sub.add_parser("airtable")
     at.add_argument("subcommand", choices=["status", "inspect", "pending", "issued"])
 
+    # ---- flowhub ----
+    fh = sub.add_parser("flowhub")
+    fh.add_argument("subcommand", choices=["sync"])
+
     args = parser.parse_args()
 
     if args.command == "recruiting":
@@ -211,6 +232,8 @@ def main():
         cmd_usage(args)
     elif args.command == "airtable":
         cmd_airtable(args)
+    elif args.command == "flowhub":
+        cmd_flowhub(args)
     else:
         parser.print_help()
 

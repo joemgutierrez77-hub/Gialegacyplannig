@@ -20,6 +20,25 @@ privately in your browser's local storage.
 - **Notes** — markdown editor with live preview, notebooks, tags, full-text search, pinning
 - **Pomodoro** — 25/5 with long breaks, link sessions to tasks, chime + browser notifications, stats & streaks
 - **Arcade** — classic Snake with high-score tracking for screen breaks
+- **Business** — live agency overview + auto-generated daily tasks from your real data (see below)
+
+### Live business data → daily tasks
+
+```bash
+python main.py flowhub sync
+```
+
+This reads your agency data (local JSON or Airtable, same as the rest of the system)
+and writes `productivity/business-data.js` next to the app. On the next page load, FlowHub:
+
+- Shows a **Business** view: pipeline stage counts, agent production vs targets, APV, chargeback exposure
+- **Auto-adds daily tasks** from real business state — new-lead outreach, stalled-recruit follow-ups,
+  coaching sessions for agents below APV/persistency targets, missing monthly stats, recruiting quota
+  pace, and chargeback reviews — each due today, in an "Agency" project
+- Never duplicates: every suggestion has a stable key, so re-running the sync only adds what's new
+
+Run the sync each morning (or add it to a scheduled job) so your to-do list is pre-filled
+before you start the day. `business-data.js` is gitignored — your business data stays local.
 
 ---
 
