@@ -40,6 +40,15 @@ and writes `productivity/business-data.js` next to the app. On the next page loa
 Run the sync each morning (or add it to a scheduled job) so your to-do list is pre-filled
 before you start the day. `business-data.js` is gitignored — your business data stays local.
 
+### macOS one-click launch & automatic daily sync
+
+- **`FlowHub.command`** (project root) — double-click to sync business data and open FlowHub
+  in your browser in one step. macOS may ask you to right-click → Open the first time.
+- **`scripts/setup-daily-sync.command`** — double-click once to schedule the sync to run
+  automatically every morning at 7:00 (uses a launchd agent; catches up after sleep,
+  logs to `~/Library/Logs/flowhub-sync.log`).
+- **`scripts/remove-daily-sync.command`** — removes the schedule.
+
 ---
 
 ## Setup
