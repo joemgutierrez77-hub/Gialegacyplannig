@@ -108,6 +108,49 @@ def cmd_flowhub(args):
         print(f"  Suggested daily tasks:  {len(snap['suggestions'])}")
         print(f"\nWrote {path}")
         print("Open productivity/index.html — new business tasks appear automatically.")
+
+    elif sub == "connect":
+        from src.modules.connectors import load_env, save_env_key
+        env = load_env()
+        print("\n--- Connect external tools to FlowHub ---")
+        print(f"  Teamtailor: {'✅ connected' if env.get('TEAMTAILOR_API_KEY') else '— not connected'}")
+        print(f"  Calendly:   {'✅ connected' if env.get('CALENDLY_API_TOKEN') else '— not connected'}")
+        print("\nWhich do you want to set up?")
+        print("  1) Teamtailor  (recruits sync into your pipeline)")
+        print("  2) Calendly    (meetings appear on your FlowHub calendar)")
+        choice = input("Enter 1 or 2: ").strip()
+        if choice == "1":
+            print("\nGet your key: Teamtailor → Settings → API keys → New API key (read scope).")
+            key = input("Paste your Teamtailor API key: ").strip()
+            if key:
+                save_env_key("TEAMTAILOR_API_KEY", key)
+                print("Saved. Run `python main.py flowhub sync` to pull candidates now.")
+        elif choice == "2":
+            print("\nGet your token: Calendly → Integrations & apps → API & webhooks →")
+            print("Personal access tokens → Generate new token.")
+            key = input("Paste your Calendly token: ").strip()
+            if key:
+                save_env_key("CALENDLY_API_TOKEN", key)
+                print("Saved. Run `python main.py flowhub sync` to pull meetings now.")
+        else:
+            print("Nothing changed.")
+
+    elif sub == "import-policies":
+        from src.modules.connectors import import_policies_csv
+        if not args.file:
+            print("Usage: python main.py flowhub import-policies --file <report.csv>")
+            return
+        try:
+            res = import_policies_csv(args.file, commission_pct=args.commission)
+        except (ValueError, FileNotFoundError) as e:
+            print(f"Import failed: {e}")
+            return
+        print("\n--- Policy Import ---")
+        print(f"  Added:   {res['added']}")
+        print(f"  Skipped: {res['skipped']} (already in ledger or no policy number)")
+        if res["unmapped"]:
+            print(f"  Ignored columns: {', '.join(res['unmapped'][:8])}")
+        print("Run `python main.py flowhub sync` to refresh FlowHub.")
     else:
         print(f"Unknown flowhub subcommand: {sub}")
 
@@ -218,7 +261,10 @@ def main():
 
     # ---- flowhub ----
     fh = sub.add_parser("flowhub")
-    fh.add_argument("subcommand", choices=["sync"])
+    fh.add_argument("subcommand", choices=["sync", "connect", "import-policies"])
+    fh.add_argument("--file", "-f", help="CSV report to import")
+    fh.add_argument("--commission", type=float, default=0.70,
+                    help="Agent commission rate for imported policies (default 0.70)")
 
     args = parser.parse_args()
 
