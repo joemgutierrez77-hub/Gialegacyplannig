@@ -5,6 +5,24 @@ Covers **Recruiting**, **Production**, and **Profitability** — structured arou
 
 ---
 
+## FlowHub — Personal Productivity App
+
+A self-contained personal productivity tool lives in [`productivity/index.html`](productivity/index.html).
+Open the file in any browser — no install, no server, no dependencies. All data is saved
+privately in your browser's local storage.
+
+**Modules (deeply integrated):**
+
+- **Dashboard** — today's tasks, overdue alerts, upcoming events, focus stats, quick capture
+- **Tasks** — projects, tags, priorities, due dates, subtasks, recurring tasks
+- **Kanban board** — drag-and-drop columns (Backlog / To Do / In Progress / Done) over the same tasks
+- **Calendar** — month + week (hourly) views, events with recurrence, task due dates overlaid, drag to reschedule
+- **Notes** — markdown editor with live preview, notebooks, tags, full-text search, pinning
+- **Pomodoro** — 25/5 with long breaks, link sessions to tasks, chime + browser notifications, stats & streaks
+- **Arcade** — classic Snake with high-score tracking for screen breaks
+
+---
+
 ## Setup
 
 ```bash
