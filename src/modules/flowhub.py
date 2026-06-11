@@ -76,7 +76,7 @@ def _days_in_stage(recruit: dict) -> int:
     return _days_since(recruit.get("added_date", ""))
 
 
-def build_snapshot() -> dict:
+def build_snapshot(events: list = None) -> dict:
     """Aggregate all business data into one snapshot dict for FlowHub."""
     recruits = _load_recruits()
     agents   = _load_agents()
@@ -153,6 +153,7 @@ def build_snapshot() -> dict:
             "monthIssued": month_issued,
         },
         "suggestions": suggestions,
+        "events": events or [],
     }
 
 
@@ -231,8 +232,16 @@ def _build_suggestions(recruits, agent_rows, this_month,
 
 
 def export_flowhub() -> str:
-    """Write the snapshot to productivity/business-data.js. Returns the path."""
-    snapshot = build_snapshot()
+    """Run configured connectors, then write productivity/business-data.js."""
+    from src.modules.connectors import run_connectors
+    conn = run_connectors()
+    if conn["teamtailor"] is not None:
+        print(f"  Teamtailor: {conn['teamtailor']} new candidate(s) added to pipeline")
+    if conn["calendly_events"]:
+        print(f"  Calendly: {len(conn['calendly_events'])} upcoming meeting(s) found")
+    for err in conn["errors"]:
+        print(f"  ⚠ Connector error (skipped): {err}")
+    snapshot = build_snapshot(events=conn["calendly_events"])
     path = os.path.abspath(EXPORT_FILE)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:

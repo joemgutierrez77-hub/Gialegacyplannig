@@ -40,6 +40,22 @@ and writes `productivity/business-data.js` next to the app. On the next page loa
 Run the sync each morning (or add it to a scheduled job) so your to-do list is pre-filled
 before you start the day. `business-data.js` is gitignored — your business data stays local.
 
+### External connectors — Teamtailor, Calendly, Quility HQ
+
+Pull data from the tools you already use, with a guided setup:
+
+```bash
+python main.py flowhub connect                          # paste in API keys (saved to gitignored .env)
+python main.py flowhub sync                             # connectors run automatically on every sync
+python main.py flowhub import-policies --file report.csv  # import a Quility HQ / carrier report
+```
+
+- **Teamtailor** — candidates flow into the recruiting pipeline as new leads (deduplicated,
+  never moved backward once you advance them)
+- **Calendly** — upcoming meetings appear on the FlowHub calendar and stay current if rescheduled
+- **Quility HQ / carriers** — download any policy report as CSV and import it; flexible column
+  matching (Policy #/Agent/Carrier/Premium/Status), deduplicated by policy number
+
 ### macOS one-click launch & automatic daily sync
 
 - **`FlowHub.command`** (project root) — double-click to sync business data and open FlowHub

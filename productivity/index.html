@@ -470,6 +470,7 @@ try {
   state = raw ? JSON.parse(raw) : defaultState();
 } catch (e) { state = defaultState(); }
 if (!state.business) state.business = { imported: {}, autoImport: true };
+if (!state.business.importedEvents) state.business.importedEvents = {};
 function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ } }
 
 /* ---------- ui state (not persisted) ---------- */
@@ -704,6 +705,27 @@ function importBusinessTasks(){
   if (!biz) return 0;
   let n = 0;
   (biz.suggestions || []).forEach(s => { if (!state.business.imported[s.key]){ addBizSuggestion(s); n++; } });
+  return n;
+}
+function importBusinessEvents(){
+  const biz = BIZ();
+  if (!biz || !biz.events) return 0;
+  let n = 0;
+  biz.events.forEach(be => {
+    const existingId = state.business.importedEvents[be.key];
+    const existing = existingId ? eventById(existingId) : null;
+    if (existing){
+      // meeting may have been rescheduled — keep it current
+      existing.title = be.title; existing.date = be.date;
+      existing.time = be.time || ''; existing.duration = be.duration || 60;
+    } else if (!existingId){
+      const ev = { id: uid(), title: be.title, date: be.date, time: be.time || '', duration: be.duration || 60, recur: null, color: '#22d3ee', notes: 'Synced from Calendly' };
+      state.events.push(ev);
+      state.business.importedEvents[be.key] = ev.id;
+      n++;
+    }
+  });
+  if (n) save();
   return n;
 }
 function bizSnapshotCardHTML(){
@@ -1624,7 +1646,13 @@ if (!CanvasRenderingContext2D.prototype.roundRect){
 /* init */
 if (BIZ() && state.business.autoImport){
   const n = importBusinessTasks();
-  if (n) setTimeout(() => toast(`💼 ${n} business task${n > 1 ? 's' : ''} added from agency data`), 400);
+  const ne = importBusinessEvents();
+  const parts = [];
+  if (n) parts.push(`${n} task${n > 1 ? 's' : ''}`);
+  if (ne) parts.push(`${ne} meeting${ne > 1 ? 's' : ''}`);
+  if (parts.length) setTimeout(() => toast(`💼 ${parts.join(' and ')} added from agency data`), 400);
+} else if (BIZ()){
+  importBusinessEvents(); // meeting times stay current even with auto-add off
 }
 switchView('dashboard');
 updatePomoUI();
