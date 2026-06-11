@@ -135,20 +135,30 @@ def cmd_flowhub(args):
         else:
             print("Nothing changed.")
 
-    elif sub == "import-policies":
-        from src.modules.connectors import import_policies_csv
+    elif sub in ("import-policies", "import-pending", "import-chargebacks"):
+        from src.modules.connectors import (import_policies_csv, import_pending_csv,
+                                            import_chargebacks_csv)
         if not args.file:
-            print("Usage: python main.py flowhub import-policies --file <report.csv>")
+            print(f"Usage: python main.py flowhub {sub} --file <report.csv>")
             return
         try:
-            res = import_policies_csv(args.file, commission_pct=args.commission)
+            if sub == "import-policies":
+                res = import_policies_csv(args.file, commission_pct=args.commission)
+                label = "Issued Policy Import"
+            elif sub == "import-pending":
+                res = import_pending_csv(args.file)
+                label = "Pending Application Import"
+            else:
+                res = import_chargebacks_csv(args.file)
+                label = "Chargeback Import"
         except (ValueError, FileNotFoundError) as e:
             print(f"Import failed: {e}")
             return
-        print("\n--- Policy Import ---")
-        print(f"  Added:   {res['added']}")
-        print(f"  Skipped: {res['skipped']} (already in ledger or no policy number)")
-        if res["unmapped"]:
+        print(f"\n--- {label} ---")
+        for k in ("added", "updated", "skipped"):
+            if k in res:
+                print(f"  {k.capitalize():<8} {res[k]}")
+        if res.get("unmapped"):
             print(f"  Ignored columns: {', '.join(res['unmapped'][:8])}")
         print("Run `python main.py flowhub sync` to refresh FlowHub.")
     else:
@@ -261,7 +271,8 @@ def main():
 
     # ---- flowhub ----
     fh = sub.add_parser("flowhub")
-    fh.add_argument("subcommand", choices=["sync", "connect", "import-policies"])
+    fh.add_argument("subcommand", choices=["sync", "connect", "import-policies",
+                                           "import-pending", "import-chargebacks"])
     fh.add_argument("--file", "-f", help="CSV report to import")
     fh.add_argument("--commission", type=float, default=0.70,
                     help="Agent commission rate for imported policies (default 0.70)")

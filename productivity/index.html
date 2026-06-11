@@ -786,13 +786,15 @@ function renderBusiness(){
     </div>`;
   }).join('');
   const pendingCount = (biz.suggestions || []).filter(s => !state.business.imported[s.key]).length;
+  const pd = biz.pending || { count: 0, apv: 0 };
   $('#biz-content').innerHTML = `
-    <div class="dash-grid">
+    <div class="dash-grid" style="grid-template-columns:repeat(6,1fr)">
       <div class="stat-card"><div class="sc-label">Pipeline</div><div class="sc-num">${r.total}</div><div class="sc-sub">recruits tracked</div></div>
       <div class="stat-card"><div class="sc-label">Contacted / mo</div><div class="sc-num">${r.addedThisMonth}<span style="font-size:14px;color:var(--muted)"> / ${r.targetContacted}</span></div><div class="sc-sub">${r.contractedThisMonth}/${r.targetContracts} contracted</div></div>
+      <div class="stat-card"><div class="sc-label">Pending apps</div><div class="sc-num">${pd.count}</div><div class="sc-sub">$${pd.apv.toLocaleString()} in underwriting</div></div>
       <div class="stat-card"><div class="sc-label">APV this month</div><div class="sc-num" style="font-size:21px">$${pf.monthApv.toLocaleString()}</div><div class="sc-sub">${pf.monthIssued} policies issued</div></div>
       <div class="stat-card"><div class="sc-label">Active book</div><div class="sc-num" style="font-size:21px">$${pf.totalApv.toLocaleString()}</div><div class="sc-sub">${pf.activePolicies} active policies</div></div>
-      <div class="stat-card"><div class="sc-label">CB exposure</div><div class="sc-num" style="font-size:21px;color:${pf.chargebackExposure > 0 ? 'var(--amber)' : 'var(--green)'}">$${pf.chargebackExposure.toLocaleString()}</div><div class="sc-sub">commission at risk</div></div>
+      <div class="stat-card"><div class="sc-label">CB exposure</div><div class="sc-num" style="font-size:21px;color:${pf.chargebackExposure > 0 ? 'var(--amber)' : 'var(--green)'}">$${pf.chargebackExposure.toLocaleString()}</div><div class="sc-sub">$${(pf.chargebacksTotal || 0).toLocaleString()} charged back to date</div></div>
     </div>
     <div class="dash-cols">
       <div class="card">

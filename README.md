@@ -45,10 +45,16 @@ before you start the day. `business-data.js` is gitignored — your business dat
 Pull data from the tools you already use, with a guided setup:
 
 ```bash
-python main.py flowhub connect                          # paste in API keys (saved to gitignored .env)
-python main.py flowhub sync                             # connectors run automatically on every sync
-python main.py flowhub import-policies --file report.csv  # import a Quility HQ / carrier report
+python main.py flowhub connect                             # paste in API keys (saved to gitignored .env)
+python main.py flowhub sync                                # connectors run automatically on every sync
+python main.py flowhub import-pending     --file apps.csv  # submitted/pending applications
+python main.py flowhub import-policies    --file issued.csv  # issued policies
+python main.py flowhub import-chargebacks --file cb.csv    # chargebacks (marks policies lapsed)
 ```
+
+On macOS, **`ImportReports.command`** (project root) does all three without typing: double-click,
+pick the report type, drag the CSV into the window. Pending apps stuck in underwriting 14+ days
+automatically become follow-up tasks; chargebacks update the active book and exposure totals.
 
 - **Teamtailor** — candidates flow into the recruiting pipeline as new leads (deduplicated,
   never moved backward once you advance them)

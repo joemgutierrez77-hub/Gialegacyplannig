@@ -62,6 +62,14 @@ def _load_ledger() -> list:
         return json.load(f)
 
 
+def _load_pending() -> list:
+    path = os.path.join(DATA_DIR, "policies", "pending.json")
+    if not os.path.exists(path):
+        return []
+    with open(path) as f:
+        return json.load(f)
+
+
 def _days_since(date_str: str) -> int:
     try:
         return (date.today() - datetime.strptime(date_str[:10], "%Y-%m-%d").date()).days
@@ -119,11 +127,19 @@ def build_snapshot(events: list = None) -> dict:
     month_apv       = sum(p.get("annual_premium", 0) for p in ledger
                           if str(p.get("issue_date", "")).startswith(this_month))
     month_issued    = sum(1 for p in ledger if str(p.get("issue_date", "")).startswith(this_month))
+    chargebacks_total = sum(p.get("chargeback_actual", 0) for p in ledger
+                            if p.get("status") == "lapsed")
+
+    # ---- pending applications ------------------------------------------
+    pending = _load_pending()
+    open_pending = [p for p in pending if p.get("status") == "pending"]
+    pending_apv = sum(p.get("annual_premium", 0) for p in open_pending)
 
     # ---- daily task suggestions ----------------------------------------
     suggestions = _build_suggestions(
         recruits, agent_rows, this_month,
         added_this_month, contracted_this_month, exposure,
+        open_pending,
     )
 
     return {
@@ -149,8 +165,13 @@ def build_snapshot(events: list = None) -> dict:
             "totalApv": round(total_apv, 2),
             "overrideIncome": round(total_override, 2),
             "chargebackExposure": round(exposure, 2),
+            "chargebacksTotal": round(chargebacks_total, 2),
             "monthApv": round(month_apv, 2),
             "monthIssued": month_issued,
+        },
+        "pending": {
+            "count": len(open_pending),
+            "apv": round(pending_apv, 2),
         },
         "suggestions": suggestions,
         "events": events or [],
@@ -158,9 +179,21 @@ def build_snapshot(events: list = None) -> dict:
 
 
 def _build_suggestions(recruits, agent_rows, this_month,
-                       added_this_month, contracted_this_month, exposure) -> list:
+                       added_this_month, contracted_this_month, exposure,
+                       open_pending=None) -> list:
     """Turn business state into concrete daily tasks with stable dedupe keys."""
     out = []
+
+    # Pending applications sitting too long without a decision
+    for p in (open_pending or []):
+        days = _days_since(p.get("submit_date", ""))
+        if days >= 14:
+            out.append({
+                "key": f"pending-stall-{p.get('id')}-{p.get('submit_date', '')}",
+                "title": f"Check pending app for {p['applicant_name']} ({p.get('carrier', '?')}) — {days} days in underwriting",
+                "detail": f"Submitted {p.get('submit_date', '?')} · ${p.get('annual_premium', 0):,.0f} premium · agent {p.get('agent_name', '?')}",
+                "priority": "high" if days >= 30 else "medium", "tag": "production",
+            })
 
     # Recruit follow-ups: anyone sitting in an actionable stage too long
     for r in recruits:
