@@ -9,6 +9,7 @@ def isolated_data(tmp_path, monkeypatch):
     import src.modules.connectors as con
     monkeypatch.setattr(con, "PIPELINE_FILE", str(tmp_path / "recruits" / "pipeline.json"))
     monkeypatch.setattr(con, "LEDGER_FILE", str(tmp_path / "policies" / "ledger.json"))
+    monkeypatch.setattr(con, "PENDING_FILE", str(tmp_path / "policies" / "pending.json"))
     monkeypatch.setattr(con, "ENV_FILE", str(tmp_path / ".env"))
     yield tmp_path
 
@@ -125,3 +126,44 @@ def test_env_round_trip(isolated_data):
     env = load_env()
     assert env["TEAMTAILOR_API_KEY"] == "tt-updated"
     assert env["CALENDLY_API_TOKEN"] == "cal-secret"
+
+
+def test_import_pending_csv(isolated_data):
+    from src.modules.connectors import import_pending_csv
+    csv_file = isolated_data / "pending.csv"
+    csv_file.write_text(
+        "Applicant Name,Agent,Carrier,Submit Date,Annual Premium,Status\n"
+        "Maria Lopez,Tom Reyes,AIG,2026-06-01,\"$3,600\",Pending\n"
+        "Ken Wu,Lisa Chan,Americo,2026-06-05,2400,Approved\n"
+        "Dana Cruz,Tom Reyes,AIG,2026-06-08,1800,Declined\n"
+    )
+    res = import_pending_csv(str(csv_file))
+    assert res["added"] == 3
+    pending = json.loads((isolated_data / "policies" / "pending.json").read_text())
+    maria = next(p for p in pending if p["applicant_name"] == "Maria Lopez")
+    assert maria["annual_premium"] == 3600.0
+    assert maria["status"] == "pending"
+    assert next(p for p in pending if p["applicant_name"] == "Ken Wu")["status"] == "approved"
+    assert next(p for p in pending if p["applicant_name"] == "Dana Cruz")["status"] == "declined"
+    # re-import never duplicates
+    assert import_pending_csv(str(csv_file))["added"] == 0
+
+
+def test_import_chargebacks_updates_existing_policy(isolated_data):
+    from src.modules.connectors import import_policies_csv, import_chargebacks_csv
+    issued = isolated_data / "issued.csv"
+    issued.write_text("Policy Number,Agent,Annual Premium\nP-500,Tom Reyes,5000\n")
+    import_policies_csv(str(issued), commission_pct=0.70)
+
+    cb = isolated_data / "cb.csv"
+    cb.write_text("Policy Number,Chargeback Amount\nP-500,\"$1,200\"\nP-999,800\n")
+    res = import_chargebacks_csv(str(cb))
+    assert res["updated"] == 1   # P-500 marked lapsed
+    assert res["added"] == 1     # P-999 unknown -> added as lapsed entry
+    ledger = json.loads((isolated_data / "policies" / "ledger.json").read_text())
+    p500 = next(p for p in ledger if p["policy_number"] == "P-500")
+    assert p500["status"] == "lapsed"
+    assert p500["chargeback_actual"] == 1200.0
+    # re-import is idempotent
+    res2 = import_chargebacks_csv(str(cb))
+    assert res2["updated"] == 0 and res2["added"] == 0 and res2["skipped"] == 2

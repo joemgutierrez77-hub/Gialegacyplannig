@@ -107,6 +107,28 @@ def test_export_writes_valid_js(isolated_data):
     assert "suggestions" in snap
 
 
+def test_pending_apps_in_snapshot_and_stall_task(isolated_data):
+    from src.modules.flowhub import build_snapshot
+    old = (date.today() - timedelta(days=20)).isoformat()
+    recent = (date.today() - timedelta(days=2)).isoformat()
+    d = isolated_data / "policies"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "pending.json").write_text(json.dumps([
+        {"id": 1, "applicant_name": "Maria Lopez", "agent_name": "Tom", "carrier": "AIG",
+         "submit_date": old, "annual_premium": 3600, "status": "pending"},
+        {"id": 2, "applicant_name": "Ken Wu", "agent_name": "Lisa", "carrier": "Americo",
+         "submit_date": recent, "annual_premium": 2400, "status": "pending"},
+        {"id": 3, "applicant_name": "Done Deal", "agent_name": "Tom", "carrier": "AIG",
+         "submit_date": old, "annual_premium": 999, "status": "approved"},
+    ]))
+    snap = build_snapshot()
+    assert snap["pending"]["count"] == 2          # approved one excluded
+    assert snap["pending"]["apv"] == 6000.0
+    keys = [s["key"] for s in snap["suggestions"]]
+    assert f"pending-stall-1-{old}" in keys       # 20 days -> stalled
+    assert f"pending-stall-2-{recent}" not in keys  # 2 days -> fine
+
+
 def test_suggestion_keys_are_stable(isolated_data):
     """Keys must be deterministic so FlowHub never duplicates tasks."""
     from src.modules.flowhub import build_snapshot

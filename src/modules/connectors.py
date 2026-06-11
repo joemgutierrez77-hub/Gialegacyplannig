@@ -26,6 +26,7 @@ from config.settings import AGENCY, DATA_DIR
 ENV_FILE = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
 PIPELINE_FILE = os.path.join(DATA_DIR, "recruits", "pipeline.json")
 LEDGER_FILE = os.path.join(DATA_DIR, "policies", "ledger.json")
+PENDING_FILE = os.path.join(DATA_DIR, "policies", "pending.json")
 
 
 # ---------------------------------------------------------------------------
@@ -191,7 +192,9 @@ CSV_ALIASES = {
     "carrier":        ["carrier", "company", "insurer"],
     "issue_date":     ["issue date", "issued", "effective date", "date issued"],
     "annual_premium": ["annual premium", "apv", "premium", "annualized premium", "ap"],
-    "status":         ["status", "policy status"],
+    "status":         ["status", "policy status", "app status", "application status"],
+    "submit_date":    ["submit date", "submitted", "date submitted", "application date", "app date", "date"],
+    "chargeback_amount": ["chargeback amount", "chargeback", "amount", "debit amount", "charged back"],
 }
 
 
@@ -219,17 +222,7 @@ def import_policies_csv(path: str, commission_pct: float = 0.70) -> dict:
     Import a policy report (e.g. downloaded from Quility HQ) into the ledger.
     Deduplicates by policy number. Returns {'added': n, 'skipped': n, 'unmapped': [...]}.
     """
-    with open(path, newline="", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
-        headers = reader.fieldnames or []
-        mapping = _match_columns(headers)
-        missing = [k for k in ("policy_number", "annual_premium") if k not in mapping]
-        if missing:
-            raise ValueError(
-                f"Could not find columns for {missing} in this file. "
-                f"Columns present: {headers}"
-            )
-        rows = list(reader)
+    rows, mapping, headers = _read_csv(path, required=["policy_number", "annual_premium"])
 
     ledger = []
     if os.path.exists(LEDGER_FILE):
@@ -270,6 +263,127 @@ def import_policies_csv(path: str, commission_pct: float = 0.70) -> dict:
     with open(LEDGER_FILE, "w") as f:
         json.dump(ledger, f, indent=2)
     return {"added": added, "skipped": skipped, "unmapped": [h for h in headers if h not in mapping.values()]}
+
+
+def _read_csv(path: str, required: list) -> tuple:
+    """Open a CSV, match columns, validate required fields. Returns (rows, mapping, headers)."""
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        headers = reader.fieldnames or []
+        mapping = _match_columns(headers)
+        missing = [k for k in required if k not in mapping]
+        if missing:
+            raise ValueError(
+                f"Could not find columns for {missing} in this file. "
+                f"Columns present: {headers}"
+            )
+        return list(reader), mapping, headers
+
+
+def import_pending_csv(path: str) -> dict:
+    """
+    Import a submitted/pending applications report into data/policies/pending.json.
+    Deduplicates by applicant + submit date. Returns {'added','skipped','unmapped'}.
+    """
+    rows, mapping, headers = _read_csv(path, required=["applicant_name", "annual_premium"])
+
+    pending = []
+    if os.path.exists(PENDING_FILE):
+        with open(PENDING_FILE) as f:
+            pending = json.load(f)
+    known = {(p["applicant_name"].lower(), p.get("submit_date", "")) for p in pending}
+
+    added = skipped = 0
+    for row in rows:
+        get = lambda field: str(row.get(mapping.get(field, ""), "") or "").strip()  # noqa: E731
+        applicant = get("applicant_name")
+        submit = get("submit_date")[:10]
+        if not applicant or (applicant.lower(), submit) in known:
+            skipped += 1
+            continue
+        status_raw = get("status").lower()
+        if "declin" in status_raw or "withdraw" in status_raw:
+            status = "declined"
+        elif "approv" in status_raw or "issu" in status_raw:
+            status = "approved"
+        else:
+            status = "pending"
+        pending.append({
+            "id": max((p["id"] for p in pending), default=0) + 1,
+            "applicant_name": applicant,
+            "agent_name": get("agent_name") or "Unassigned",
+            "carrier": get("carrier") or "Unknown",
+            "submit_date": submit or datetime.today().strftime("%Y-%m-%d"),
+            "annual_premium": _parse_money(get("annual_premium")),
+            "status": status,
+        })
+        known.add((applicant.lower(), submit))
+        added += 1
+
+    os.makedirs(os.path.dirname(PENDING_FILE), exist_ok=True)
+    with open(PENDING_FILE, "w") as f:
+        json.dump(pending, f, indent=2)
+    return {"added": added, "skipped": skipped,
+            "unmapped": [h for h in headers if h not in mapping.values()]}
+
+
+def import_chargebacks_csv(path: str) -> dict:
+    """
+    Import a chargeback report. Policies already in the ledger are marked lapsed
+    with the chargeback amount; unknown policy numbers are added as lapsed
+    entries so exposure totals stay honest.
+    Returns {'updated','added','skipped','unmapped'}.
+    """
+    rows, mapping, headers = _read_csv(path, required=["policy_number", "chargeback_amount"])
+
+    ledger = []
+    if os.path.exists(LEDGER_FILE):
+        with open(LEDGER_FILE) as f:
+            ledger = json.load(f)
+    by_no = {str(p.get("policy_number")): p for p in ledger}
+
+    updated = added = skipped = 0
+    for row in rows:
+        get = lambda field: str(row.get(mapping.get(field, ""), "") or "").strip()  # noqa: E731
+        policy_no = get("policy_number")
+        amount = _parse_money(get("chargeback_amount"))
+        if not policy_no or amount <= 0:
+            skipped += 1
+            continue
+        existing = by_no.get(policy_no)
+        if existing:
+            if existing.get("status") == "lapsed" and existing.get("chargeback_actual"):
+                skipped += 1  # already recorded
+                continue
+            existing["status"] = "lapsed"
+            existing["chargeback_actual"] = amount
+            existing["net_to_agent"] = round(existing.get("net_to_agent", 0) - amount, 2)
+            updated += 1
+        else:
+            ledger.append({
+                "id": max((p["id"] for p in ledger), default=0) + 1,
+                "agent_id": 0,
+                "agent_name": get("agent_name") or "Unassigned",
+                "policy_number": policy_no,
+                "carrier": get("carrier") or "Unknown",
+                "issue_date": get("issue_date")[:10] or datetime.today().strftime("%Y-%m-%d"),
+                "annual_premium": _parse_money(get("annual_premium")),
+                "agent_commission_pct": 0.0,
+                "gross_commission": 0.0,
+                "agency_override": 0.0,
+                "chargeback_reserve": 0.0,
+                "net_to_agent": round(-amount, 2),
+                "chargeback_actual": amount,
+                "status": "lapsed",
+            })
+            by_no[policy_no] = ledger[-1]
+            added += 1
+
+    os.makedirs(os.path.dirname(LEDGER_FILE), exist_ok=True)
+    with open(LEDGER_FILE, "w") as f:
+        json.dump(ledger, f, indent=2)
+    return {"updated": updated, "added": added, "skipped": skipped,
+            "unmapped": [h for h in headers if h not in mapping.values()]}
 
 
 # ---------------------------------------------------------------------------
