@@ -256,6 +256,7 @@
   <aside id="sidebar">
     <div class="brand"><div class="logo">⚡</div>FlowHub</div>
     <button class="nav-item" data-action="nav" data-id="dashboard"><span class="ico">🏠</span>Dashboard</button>
+    <button class="nav-item" data-action="nav" data-id="business"><span class="ico">💼</span>Business</button>
     <button class="nav-item" data-action="nav" data-id="tasks"><span class="ico">✅</span>Tasks</button>
     <button class="nav-item" data-action="nav" data-id="board"><span class="ico">📋</span>Board</button>
     <button class="nav-item" data-action="nav" data-id="calendar"><span class="ico">🗓️</span>Calendar</button>
@@ -275,6 +276,11 @@
     <section class="view" id="view-dashboard">
       <div class="view-head"><div class="view-title" id="dash-greeting">Dashboard</div><div class="spacer"></div><span class="chip" id="dash-date"></span></div>
       <div class="view-pad" id="dash-content"></div>
+    </section>
+
+    <section class="view" id="view-business">
+      <div class="view-head"><div class="view-title">Business Overview</div><div class="spacer"></div><span class="chip" id="biz-synced"></span></div>
+      <div class="view-pad" id="biz-content"></div>
     </section>
 
     <section class="view" id="view-tasks">
@@ -405,6 +411,7 @@
 <div id="modal-root"></div>
 <div id="toast-root"></div>
 
+<script src="business-data.js"></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -462,6 +469,7 @@ try {
   const raw = localStorage.getItem(LS_KEY);
   state = raw ? JSON.parse(raw) : defaultState();
 } catch (e) { state = defaultState(); }
+if (!state.business) state.business = { imported: {}, autoImport: true };
 function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ } }
 
 /* ---------- ui state (not persisted) ---------- */
@@ -502,6 +510,7 @@ function switchView(name){
 }
 function renderView(name){
   if (name === 'dashboard') renderDashboard();
+  else if (name === 'business') renderBusiness();
   else if (name === 'tasks') renderTasks();
   else if (name === 'board') renderBoard();
   else if (name === 'calendar') renderCalendar();
@@ -633,6 +642,7 @@ function renderDashboard(){
         ${focusList.length ? focusList.map(taskRowHTML).join('') : '<div class="empty">Nothing due today — add a task above or enjoy the calm 🍃</div>'}
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
+        ${bizSnapshotCardHTML()}
         <div class="card">
           <div class="dash-section-title">Next 7 Days</div>
           ${upcoming.length ? upcoming.slice(0, 8).map(({ds, e}) => `
@@ -662,6 +672,120 @@ function dashQuickAdd(){
   inp.value = '';
   renderDashboard();
   toast('Task added for today');
+}
+
+/* =====================================================================
+   BUSINESS — live agency data from `python main.py flowhub sync`
+   (loads productivity/business-data.js when present)
+   ===================================================================== */
+const BIZ = () => window.BUSINESS_DATA || null;
+const STAGE_ORDER = ['new_lead','watched_info','committed','licensing_started','passed_exam','contracting','contracted','active','nurture','cold','inactive'];
+const stageLabel = s => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+function bizProject(){
+  let p = state.projects.find(x => x.name === 'Agency');
+  if (!p){ p = { id: uid(), name: 'Agency', color: '#4ade80' }; state.projects.push(p); save(); }
+  return p;
+}
+function addBizSuggestion(s){
+  const t = createTask({
+    title: s.title,
+    notes: s.detail || '',
+    projectId: bizProject().id,
+    priority: s.priority === 'high' ? 'high' : s.priority === 'medium' ? 'medium' : 'none',
+    due: todayISO(),
+    tags: [s.tag].filter(Boolean),
+  });
+  state.business.imported[s.key] = t.id;
+  save();
+  return t;
+}
+function importBusinessTasks(){
+  const biz = BIZ();
+  if (!biz) return 0;
+  let n = 0;
+  (biz.suggestions || []).forEach(s => { if (!state.business.imported[s.key]){ addBizSuggestion(s); n++; } });
+  return n;
+}
+function bizSnapshotCardHTML(){
+  const biz = BIZ();
+  if (!biz) return '';
+  const open = state.tasks.filter(t => t.status !== 'done' && state.business.imported && Object.values(state.business.imported).includes(t.id)).length;
+  return `<div class="card">
+    <div class="dash-section-title">Business · ${esc(biz.agency)}</div>
+    <div class="dash-event"><span>👥</span><span style="flex:1;font-size:13.5px">Recruiting pipeline</span><b style="font-size:13.5px">${biz.recruiting.total}</b></div>
+    <div class="dash-event"><span>📈</span><span style="flex:1;font-size:13.5px">APV this month</span><b style="font-size:13.5px">$${biz.profitability.monthApv.toLocaleString()}</b></div>
+    <div class="dash-event"><span>⚠️</span><span style="flex:1;font-size:13.5px">Chargeback exposure</span><b style="font-size:13.5px;color:${biz.profitability.chargebackExposure > 0 ? 'var(--amber)' : 'var(--green)'}">$${biz.profitability.chargebackExposure.toLocaleString()}</b></div>
+    <div class="dash-event"><span>✅</span><span style="flex:1;font-size:13.5px">Open business tasks</span><b style="font-size:13.5px">${open}</b></div>
+    <button class="btn small" style="margin-top:10px" data-action="nav" data-id="business">Open Business →</button>
+  </div>`;
+}
+function renderBusiness(){
+  const biz = BIZ();
+  $('#biz-synced').textContent = biz ? `Synced ${biz.generatedAt} · ${biz.source}` : 'Not connected';
+  if (!biz){
+    $('#biz-content').innerHTML = `<div class="card" style="max-width:640px;margin:30px auto">
+      <div class="dash-section-title">Connect your agency data</div>
+      <p style="line-height:1.7;color:var(--muted);font-size:13.5px;margin-bottom:6px">FlowHub can pull your live recruiting pipeline, agent production, and policy ledger into this view — and add daily follow-up tasks to your to-do list automatically.</p>
+      <ol style="margin:10px 0 0 20px;line-height:2.1;font-size:13.5px">
+        <li>Open a terminal in your <b>Gialegacyplannig</b> folder</li>
+        <li>Run <code style="background:var(--surface2);padding:3px 9px;border-radius:6px">python main.py flowhub sync</code></li>
+        <li>Reload this page — your business dashboard appears here</li>
+      </ol>
+      <p style="margin-top:14px;color:var(--faint);font-size:12.5px">Keep <code>business-data.js</code> in the same folder as this file. Re-run the sync whenever your agency data changes — each new run refreshes the numbers and adds any new daily tasks (never duplicates old ones).</p>
+    </div>`;
+    return;
+  }
+  const r = biz.recruiting, pr = biz.production, pf = biz.profitability;
+  const stages = STAGE_ORDER.filter(s => r.stageCounts[s]).map(s =>
+    `<div class="dash-event"><span style="flex:1;font-size:13px">${stageLabel(s)}</span><b style="font-size:13px">${r.stageCounts[s]}</b></div>`).join('');
+  const agentRows = pr.agents.map(a => {
+    const pct = pr.targetApv ? Math.round(a.apv / pr.targetApv * 100) : 0;
+    const persistBad = a.persistency !== null && a.persistency !== undefined && a.persistency < pr.minPersistency;
+    return `<div class="dash-event">
+      <span style="flex:1;font-size:13.5px">${esc(a.name)}</span>
+      <span class="chip">${a.last_month ? esc(a.last_month) : 'no data'}</span>
+      <span class="chip" style="color:${pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--amber)' : 'var(--red)'}">$${(a.apv || 0).toLocaleString()} · ${pct}%</span>
+      ${a.persistency !== null && a.persistency !== undefined ? `<span class="chip" style="color:${persistBad ? 'var(--red)' : 'var(--green)'}">${Math.round(a.persistency * 100)}% persist</span>` : ''}
+    </div>`;
+  }).join('');
+  const sugRows = (biz.suggestions || []).map(s => {
+    const tid = state.business.imported[s.key];
+    const t = tid ? taskById(tid) : null;
+    const status = t && t.status === 'done'
+      ? '<span class="chip" style="color:var(--green)">✓ done</span>'
+      : tid ? '<span class="chip">in your tasks</span>'
+      : `<button class="btn small primary" data-action="biz-add" data-id="${esc(s.key)}">＋ Add</button>`;
+    const pcol = s.priority === 'high' ? 'var(--red)' : s.priority === 'medium' ? 'var(--amber)' : 'var(--muted)';
+    return `<div class="dash-event">
+      <span style="color:${pcol}">⚑</span>
+      <div style="flex:1;min-width:0"><div style="font-size:13.5px">${esc(s.title)}</div>
+      ${s.detail ? `<div style="font-size:11.5px;color:var(--faint)">${esc(s.detail)}</div>` : ''}</div>
+      <span class="chip">#${esc(s.tag || 'biz')}</span>${status}
+    </div>`;
+  }).join('');
+  const pendingCount = (biz.suggestions || []).filter(s => !state.business.imported[s.key]).length;
+  $('#biz-content').innerHTML = `
+    <div class="dash-grid">
+      <div class="stat-card"><div class="sc-label">Pipeline</div><div class="sc-num">${r.total}</div><div class="sc-sub">recruits tracked</div></div>
+      <div class="stat-card"><div class="sc-label">Contacted / mo</div><div class="sc-num">${r.addedThisMonth}<span style="font-size:14px;color:var(--muted)"> / ${r.targetContacted}</span></div><div class="sc-sub">${r.contractedThisMonth}/${r.targetContracts} contracted</div></div>
+      <div class="stat-card"><div class="sc-label">APV this month</div><div class="sc-num" style="font-size:21px">$${pf.monthApv.toLocaleString()}</div><div class="sc-sub">${pf.monthIssued} policies issued</div></div>
+      <div class="stat-card"><div class="sc-label">Active book</div><div class="sc-num" style="font-size:21px">$${pf.totalApv.toLocaleString()}</div><div class="sc-sub">${pf.activePolicies} active policies</div></div>
+      <div class="stat-card"><div class="sc-label">CB exposure</div><div class="sc-num" style="font-size:21px;color:${pf.chargebackExposure > 0 ? 'var(--amber)' : 'var(--green)'}">$${pf.chargebackExposure.toLocaleString()}</div><div class="sc-sub">commission at risk</div></div>
+    </div>
+    <div class="dash-cols">
+      <div class="card">
+        <div class="dash-section-title" style="display:flex;align-items:center">Today's Business Tasks
+          <div class="spacer"></div>
+          ${pendingCount ? `<button class="btn small primary" data-action="biz-add-all">＋ Add all (${pendingCount})</button>` : ''}
+          <button class="btn small ghost" data-action="biz-auto" style="margin-left:8px">${state.business.autoImport ? '🟢 Auto-add ON' : '⚪ Auto-add OFF'}</button>
+        </div>
+        ${sugRows || '<div class="empty">No business tasks suggested — pipeline and production look on track 🎉</div>'}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card"><div class="dash-section-title">Recruiting Pipeline</div>${stages || '<div class="empty">No recruits yet</div>'}</div>
+        <div class="card"><div class="dash-section-title">Agent Production (vs $${pr.targetApv.toLocaleString()} APV target)</div>${agentRows || '<div class="empty">No agents tracked</div>'}</div>
+      </div>
+    </div>`;
 }
 
 /* =====================================================================
@@ -1451,6 +1575,10 @@ document.addEventListener('click', e => {
     case 'pomo-toggle': pomoToggle(); break;
     case 'pomo-reset': pomoSetMode(pomo.mode); break;
     case 'pomo-skip': pomoSkip(); break;
+    /* business */
+    case 'biz-add': { const s = (BIZ()?.suggestions || []).find(x => x.key === id); if (s){ addBizSuggestion(s); renderBusiness(); toast('Added to today'); } break; }
+    case 'biz-add-all': { const n = importBusinessTasks(); renderBusiness(); toast(n ? `💼 ${n} business task${n > 1 ? 's' : ''} added for today` : 'Nothing new to add'); break; }
+    case 'biz-auto': state.business.autoImport = !state.business.autoImport; save(); renderBusiness(); break;
     /* arcade */
     case 'snake-start': snakeStart(); break;
   }
@@ -1494,6 +1622,10 @@ if (!CanvasRenderingContext2D.prototype.roundRect){
 }
 
 /* init */
+if (BIZ() && state.business.autoImport){
+  const n = importBusinessTasks();
+  if (n) setTimeout(() => toast(`💼 ${n} business task${n > 1 ? 's' : ''} added from agency data`), 400);
+}
 switchView('dashboard');
 updatePomoUI();
 </script>
