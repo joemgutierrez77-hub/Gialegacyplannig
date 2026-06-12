@@ -10,16 +10,18 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 echo "Which report are you importing?"
-echo "  1) Submitted / pending applications"
-echo "  2) Issued policies"
-echo "  3) Chargebacks"
-read -rp "Enter 1, 2 or 3: " choice
+echo "  1) Combined report — one file with a Status column (pending/issued/chargeback mixed)"
+echo "  2) Submitted / pending applications only"
+echo "  3) Issued policies only"
+echo "  4) Chargebacks only"
+read -rp "Enter 1, 2, 3 or 4: " choice
 
 case "$choice" in
-  1) action="import-pending" ;;
-  2) action="import-policies" ;;
-  3) action="import-chargebacks" ;;
-  *) echo "Please run again and enter 1, 2 or 3."; exit 1 ;;
+  1) action="import-all" ;;
+  2) action="import-pending" ;;
+  3) action="import-policies" ;;
+  4) action="import-chargebacks" ;;
+  *) echo "Please run again and enter 1, 2, 3 or 4."; exit 1 ;;
 esac
 
 echo ""

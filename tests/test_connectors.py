@@ -149,6 +149,83 @@ def test_import_pending_csv(isolated_data):
     assert import_pending_csv(str(csv_file))["added"] == 0
 
 
+def test_status_classifier():
+    from src.modules.connectors import _classify_status
+    assert _classify_status("Pending") == "pending"
+    assert _classify_status("Submitted - Underwriting") == "pending"
+    assert _classify_status("Approved") == "pending"   # approved ≠ placed yet
+    assert _classify_status("Declined") == "pending"   # pending importer marks declined
+    assert _classify_status("Issued") == "issued"
+    assert _classify_status("Active / In Force") == "issued"
+    assert _classify_status("Lapsed") == "chargeback"
+    assert _classify_status("Chargeback") == "chargeback"
+    assert _classify_status("Cancelled - NSF") == "chargeback"
+
+
+def test_import_combined_csv_routes_all_buckets(isolated_data):
+    from src.modules.connectors import import_combined_csv
+    csv_file = isolated_data / "combined.csv"
+    csv_file.write_text(
+        "Applicant Name,Agent,Carrier,Policy Number,Submit Date,Issue Date,Annual Premium,Status\n"
+        "Maria Lopez,Tom Reyes,AIG,,2026-06-01,,3600,Pending\n"
+        "Ken Wu,Lisa Chan,Americo,,2026-06-05,,2400,Submitted\n"
+        "Ana Diaz,Tom Reyes,AIG,P-700,2026-05-01,2026-05-20,5000,Issued\n"
+        "Raj Patel,Lisa Chan,AIG,P-701,2026-03-01,2026-03-15,4000,Lapsed\n"
+        "Lee Park,Tom Reyes,Americo,,2026-06-02,,1500,Declined\n"
+    )
+    res = import_combined_csv(str(csv_file), commission_pct=0.70)
+    assert res["pending"]["added"] == 3        # Maria, Ken, Lee (declined)
+    assert res["issued"]["added"] == 1         # Ana
+    assert res["chargebacks"]["added"] == 1    # Raj (not previously in ledger)
+
+    pending = json.loads((isolated_data / "policies" / "pending.json").read_text())
+    assert next(p for p in pending if p["applicant_name"] == "Lee Park")["status"] == "declined"
+    ledger = json.loads((isolated_data / "policies" / "ledger.json").read_text())
+    raj = next(p for p in ledger if p["policy_number"] == "P-701")
+    assert raj["status"] == "lapsed"
+    assert raj["chargeback_actual"] == 2800.0  # no amount column -> gross fallback (4000*0.7)
+
+    # re-import is idempotent
+    res2 = import_combined_csv(str(csv_file))
+    assert res2["pending"]["added"] == 0 and res2["issued"]["added"] == 0
+    assert res2["chargebacks"]["added"] == 0 and res2["chargebacks"]["updated"] == 0
+
+
+def test_combined_resolves_pending_when_app_issues(isolated_data):
+    from src.modules.connectors import import_combined_csv
+    week1 = isolated_data / "week1.csv"
+    week1.write_text(
+        "Applicant Name,Agent,Policy Number,Submit Date,Annual Premium,Status\n"
+        "Maria Lopez,Tom,,2026-06-01,3600,Pending\n"
+    )
+    import_combined_csv(str(week1))
+    # next week's report: same applicant, now issued with a policy number
+    week2 = isolated_data / "week2.csv"
+    week2.write_text(
+        "Applicant Name,Agent,Policy Number,Issue Date,Annual Premium,Status\n"
+        "Maria Lopez,Tom,P-800,2026-06-10,3600,Issued\n"
+    )
+    res = import_combined_csv(str(week2))
+    assert res["issued"]["added"] == 1
+    assert res["pending"]["resolved"] == 1
+    pending = json.loads((isolated_data / "policies" / "pending.json").read_text())
+    assert pending[0]["status"] == "approved"  # no longer counted or task-generating
+
+
+def test_pending_reimport_updates_changed_status(isolated_data):
+    from src.modules.connectors import import_pending_csv
+    f = isolated_data / "apps.csv"
+    f.write_text("Applicant Name,Submit Date,Annual Premium,Status\n"
+                 "Ken Wu,2026-06-05,2400,Pending\n")
+    import_pending_csv(str(f))
+    f.write_text("Applicant Name,Submit Date,Annual Premium,Status\n"
+                 "Ken Wu,2026-06-05,2400,Declined\n")
+    res = import_pending_csv(str(f))
+    assert res["updated"] == 1 and res["added"] == 0
+    pending = json.loads((isolated_data / "policies" / "pending.json").read_text())
+    assert pending[0]["status"] == "declined"
+
+
 def test_import_chargebacks_updates_existing_policy(isolated_data):
     from src.modules.connectors import import_policies_csv, import_chargebacks_csv
     issued = isolated_data / "issued.csv"

@@ -47,12 +47,18 @@ Pull data from the tools you already use, with a guided setup:
 ```bash
 python main.py flowhub connect                             # paste in API keys (saved to gitignored .env)
 python main.py flowhub sync                                # connectors run automatically on every sync
+python main.py flowhub import-all         --file report.csv  # ONE report with a Status column (recommended)
 python main.py flowhub import-pending     --file apps.csv  # submitted/pending applications
 python main.py flowhub import-policies    --file issued.csv  # issued policies
 python main.py flowhub import-chargebacks --file cb.csv    # chargebacks (marks policies lapsed)
 ```
 
-On macOS, **`ImportReports.command`** (project root) does all three without typing: double-click,
+`import-all` reads each row's Status (Pending/Submitted → pending apps, Issued/Active → ledger,
+Lapsed/Chargeback/Cancelled → chargebacks) and routes it automatically. Re-importing an updated
+report is always safe: existing rows are skipped, changed statuses are updated, and an app that
+goes pending → issued is closed out so it stops generating underwriting follow-up tasks.
+
+On macOS, **`ImportReports.command`** (project root) does it all without typing: double-click,
 pick the report type, drag the CSV into the window. Pending apps stuck in underwriting 14+ days
 automatically become follow-up tasks; chargebacks update the active book and exposure totals.
 

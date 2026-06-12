@@ -217,13 +217,12 @@ def _parse_money(val: str) -> float:
         return 0.0
 
 
-def import_policies_csv(path: str, commission_pct: float = 0.70) -> dict:
-    """
-    Import a policy report (e.g. downloaded from Quility HQ) into the ledger.
-    Deduplicates by policy number. Returns {'added': n, 'skipped': n, 'unmapped': [...]}.
-    """
-    rows, mapping, headers = _read_csv(path, required=["policy_number", "annual_premium"])
+def _row_getter(row: dict, mapping: dict):
+    return lambda field: str(row.get(mapping.get(field, ""), "") or "").strip()
 
+
+def _import_policy_rows(rows: list, mapping: dict, commission_pct: float = 0.70) -> dict:
+    """Add issued policies to the ledger. Deduplicates by policy number."""
     ledger = []
     if os.path.exists(LEDGER_FILE):
         with open(LEDGER_FILE) as f:
@@ -232,7 +231,7 @@ def import_policies_csv(path: str, commission_pct: float = 0.70) -> dict:
 
     added = skipped = 0
     for row in rows:
-        get = lambda field: str(row.get(mapping.get(field, ""), "") or "").strip()  # noqa: E731
+        get = _row_getter(row, mapping)
         policy_no = get("policy_number")
         if not policy_no or policy_no in known:
             skipped += 1
@@ -262,7 +261,18 @@ def import_policies_csv(path: str, commission_pct: float = 0.70) -> dict:
     os.makedirs(os.path.dirname(LEDGER_FILE), exist_ok=True)
     with open(LEDGER_FILE, "w") as f:
         json.dump(ledger, f, indent=2)
-    return {"added": added, "skipped": skipped, "unmapped": [h for h in headers if h not in mapping.values()]}
+    return {"added": added, "skipped": skipped}
+
+
+def import_policies_csv(path: str, commission_pct: float = 0.70) -> dict:
+    """
+    Import an issued-policy report (e.g. downloaded from Quility HQ) into the ledger.
+    Deduplicates by policy number. Returns {'added': n, 'skipped': n, 'unmapped': [...]}.
+    """
+    rows, mapping, headers = _read_csv(path, required=["policy_number", "annual_premium"])
+    res = _import_policy_rows(rows, mapping, commission_pct)
+    res["unmapped"] = [h for h in headers if h not in mapping.values()]
+    return res
 
 
 def _read_csv(path: str, required: list) -> tuple:
@@ -280,34 +290,44 @@ def _read_csv(path: str, required: list) -> tuple:
         return list(reader), mapping, headers
 
 
-def import_pending_csv(path: str) -> dict:
-    """
-    Import a submitted/pending applications report into data/policies/pending.json.
-    Deduplicates by applicant + submit date. Returns {'added','skipped','unmapped'}.
-    """
-    rows, mapping, headers = _read_csv(path, required=["applicant_name", "annual_premium"])
+def _pending_status(status_raw: str) -> str:
+    s = status_raw.lower()
+    if "declin" in s or "withdraw" in s:
+        return "declined"
+    if "approv" in s or "issu" in s:
+        return "approved"
+    return "pending"
 
+
+def _import_pending_rows(rows: list, mapping: dict) -> dict:
+    """
+    Add submitted/pending applications, deduplicated by applicant + submit date.
+    Re-importing a known application with a changed status (e.g. now Declined)
+    updates the record instead of skipping it.
+    """
     pending = []
     if os.path.exists(PENDING_FILE):
         with open(PENDING_FILE) as f:
             pending = json.load(f)
-    known = {(p["applicant_name"].lower(), p.get("submit_date", "")) for p in pending}
+    known = {(p["applicant_name"].lower(), p.get("submit_date", "")): p for p in pending}
 
-    added = skipped = 0
+    added = updated = skipped = 0
     for row in rows:
-        get = lambda field: str(row.get(mapping.get(field, ""), "") or "").strip()  # noqa: E731
+        get = _row_getter(row, mapping)
         applicant = get("applicant_name")
         submit = get("submit_date")[:10]
-        if not applicant or (applicant.lower(), submit) in known:
+        status = _pending_status(get("status"))
+        if not applicant:
             skipped += 1
             continue
-        status_raw = get("status").lower()
-        if "declin" in status_raw or "withdraw" in status_raw:
-            status = "declined"
-        elif "approv" in status_raw or "issu" in status_raw:
-            status = "approved"
-        else:
-            status = "pending"
+        existing = known.get((applicant.lower(), submit))
+        if existing:
+            if existing.get("status") != status:
+                existing["status"] = status
+                updated += 1
+            else:
+                skipped += 1
+            continue
         pending.append({
             "id": max((p["id"] for p in pending), default=0) + 1,
             "applicant_name": applicant,
@@ -317,25 +337,60 @@ def import_pending_csv(path: str) -> dict:
             "annual_premium": _parse_money(get("annual_premium")),
             "status": status,
         })
-        known.add((applicant.lower(), submit))
+        known[(applicant.lower(), submit)] = pending[-1]
         added += 1
 
     os.makedirs(os.path.dirname(PENDING_FILE), exist_ok=True)
     with open(PENDING_FILE, "w") as f:
         json.dump(pending, f, indent=2)
-    return {"added": added, "skipped": skipped,
-            "unmapped": [h for h in headers if h not in mapping.values()]}
+    return {"added": added, "updated": updated, "skipped": skipped}
 
 
-def import_chargebacks_csv(path: str) -> dict:
+def _resolve_pending(rows: list, mapping: dict, new_status: str) -> int:
     """
-    Import a chargeback report. Policies already in the ledger are marked lapsed
-    with the chargeback amount; unknown policy numbers are added as lapsed
-    entries so exposure totals stay honest.
-    Returns {'updated','added','skipped','unmapped'}.
+    Combined imports: when an application now shows as issued or charged back,
+    close out any matching open pending record so it stops counting (and stops
+    generating stalled-underwriting tasks). Matches by applicant name.
     """
-    rows, mapping, headers = _read_csv(path, required=["policy_number", "chargeback_amount"])
+    if not rows or not os.path.exists(PENDING_FILE):
+        return 0
+    with open(PENDING_FILE) as f:
+        pending = json.load(f)
+    names = set()
+    for row in rows:
+        get = _row_getter(row, mapping)
+        name = get("applicant_name").lower()
+        if name:
+            names.add(name)
+    changed = 0
+    for p in pending:
+        if p.get("status") == "pending" and p["applicant_name"].lower() in names:
+            p["status"] = new_status
+            changed += 1
+    if changed:
+        with open(PENDING_FILE, "w") as f:
+            json.dump(pending, f, indent=2)
+    return changed
 
+
+def import_pending_csv(path: str) -> dict:
+    """
+    Import a submitted/pending applications report into data/policies/pending.json.
+    Deduplicates by applicant + submit date. Returns {'added','skipped','unmapped'}.
+    """
+    rows, mapping, headers = _read_csv(path, required=["applicant_name", "annual_premium"])
+    res = _import_pending_rows(rows, mapping)
+    res["unmapped"] = [h for h in headers if h not in mapping.values()]
+    return res
+
+
+def _import_chargeback_rows(rows: list, mapping: dict, commission_pct: float = 0.70,
+                            fallback_amount: bool = False) -> dict:
+    """
+    Mark policies lapsed with chargeback amounts. When fallback_amount is True
+    (combined imports without an amount column), the gross commission is used
+    as the chargeback — the standard full first-year chargeback assumption.
+    """
     ledger = []
     if os.path.exists(LEDGER_FILE):
         with open(LEDGER_FILE) as f:
@@ -344,13 +399,16 @@ def import_chargebacks_csv(path: str) -> dict:
 
     updated = added = skipped = 0
     for row in rows:
-        get = lambda field: str(row.get(mapping.get(field, ""), "") or "").strip()  # noqa: E731
+        get = _row_getter(row, mapping)
         policy_no = get("policy_number")
         amount = _parse_money(get("chargeback_amount"))
+        existing = by_no.get(policy_no) if policy_no else None
+        if amount <= 0 and fallback_amount:
+            amount = (existing or {}).get("gross_commission") or \
+                round(_parse_money(get("annual_premium")) * commission_pct, 2)
         if not policy_no or amount <= 0:
             skipped += 1
             continue
-        existing = by_no.get(policy_no)
         if existing:
             if existing.get("status") == "lapsed" and existing.get("chargeback_actual"):
                 skipped += 1  # already recorded
@@ -382,8 +440,60 @@ def import_chargebacks_csv(path: str) -> dict:
     os.makedirs(os.path.dirname(LEDGER_FILE), exist_ok=True)
     with open(LEDGER_FILE, "w") as f:
         json.dump(ledger, f, indent=2)
-    return {"updated": updated, "added": added, "skipped": skipped,
-            "unmapped": [h for h in headers if h not in mapping.values()]}
+    return {"updated": updated, "added": added, "skipped": skipped}
+
+
+def import_chargebacks_csv(path: str) -> dict:
+    """
+    Import a chargeback report. Policies already in the ledger are marked lapsed
+    with the chargeback amount; unknown policy numbers are added as lapsed
+    entries so exposure totals stay honest.
+    Returns {'updated','added','skipped','unmapped'}.
+    """
+    rows, mapping, headers = _read_csv(path, required=["policy_number", "chargeback_amount"])
+    res = _import_chargeback_rows(rows, mapping)
+    res["unmapped"] = [h for h in headers if h not in mapping.values()]
+    return res
+
+
+def _classify_status(status: str) -> str:
+    """Route a combined-report row by its status text (pure, testable)."""
+    s = status.lower()
+    if any(k in s for k in ("laps", "charge", "cancel", "term", "nsf")):
+        return "chargeback"
+    if any(k in s for k in ("issu", "activ", "inforce", "in force", "placed", "paid")):
+        return "issued"
+    # pending, submitted, underwriting, approved, declined, withdrawn → pending
+    # records (the pending importer normalizes approved/declined itself)
+    return "pending"
+
+
+def import_combined_csv(path: str, commission_pct: float = 0.70) -> dict:
+    """
+    Import ONE report containing pending, issued, and charged-back rows mixed
+    together, routed by the Status column. Returns per-bucket results.
+    """
+    rows, mapping, headers = _read_csv(path, required=["status"])
+    buckets = {"pending": [], "issued": [], "chargeback": []}
+    for row in rows:
+        get = _row_getter(row, mapping)
+        buckets[_classify_status(get("status"))].append(row)
+
+    result = {
+        "pending": _import_pending_rows(buckets["pending"], mapping)
+        if buckets["pending"] else {"added": 0, "updated": 0, "skipped": 0},
+        "issued": _import_policy_rows(buckets["issued"], mapping, commission_pct)
+        if buckets["issued"] else {"added": 0, "skipped": 0},
+        "chargebacks": _import_chargeback_rows(buckets["chargeback"], mapping,
+                                               commission_pct, fallback_amount=True)
+        if buckets["chargeback"] else {"updated": 0, "added": 0, "skipped": 0},
+        "unmapped": [h for h in headers if h not in mapping.values()],
+    }
+    # Close out pending records for applicants whose policies are now placed/lapsed
+    resolved = _resolve_pending(buckets["issued"], mapping, "approved")
+    resolved += _resolve_pending(buckets["chargeback"], mapping, "approved")
+    result["pending"]["resolved"] = resolved
+    return result
 
 
 # ---------------------------------------------------------------------------
