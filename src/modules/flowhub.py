@@ -124,11 +124,35 @@ def build_snapshot(events: list = None) -> dict:
     total_apv       = sum(p.get("annual_premium", 0) for p in active)
     total_override  = sum(p.get("agency_override", 0) for p in active)
     exposure        = sum(p.get("gross_commission", 0) for p in at_risk)
-    month_apv       = sum(p.get("annual_premium", 0) for p in ledger
-                          if str(p.get("issue_date", "")).startswith(this_month))
-    month_issued    = sum(1 for p in ledger if str(p.get("issue_date", "")).startswith(this_month))
+    # Show the current month if it has production, else the latest month that does
+    # (reports often cover last month's business)
+    months_with_data = sorted({str(p.get("issue_date", ""))[:7] for p in active
+                               if p.get("issue_date")})
+    month_label = this_month if (this_month in months_with_data or not months_with_data) \
+        else months_with_data[-1]
+    month_active    = [p for p in active if str(p.get("issue_date", "")).startswith(month_label)]
+    month_apv       = sum(p.get("annual_premium", 0) for p in month_active)
+    month_issued    = len(month_active)
     chargebacks_total = sum(p.get("chargeback_actual", 0) for p in ledger
                             if p.get("status") == "lapsed")
+
+    # No roster maintained? Derive the agent leaderboard from the ledger itself.
+    if not agent_rows and month_active:
+        by_agent: dict = {}
+        for p in month_active:
+            row = by_agent.setdefault(p.get("agent_name") or "Unassigned",
+                                      {"apv": 0.0, "apps": 0})
+            row["apv"] += p.get("annual_premium", 0)
+            row["apps"] += 1
+        agent_rows = [{
+            "id": "ag-" + name.lower().replace(" ", "-"),
+            "name": name,
+            "last_month": month_label,
+            "apv": round(v["apv"], 2),
+            "apps_issued": v["apps"],
+            "persistency": None,
+            "derived": True,
+        } for name, v in sorted(by_agent.items(), key=lambda kv: -kv[1]["apv"])]
 
     # ---- pending applications ------------------------------------------
     pending = _load_pending()
@@ -168,6 +192,7 @@ def build_snapshot(events: list = None) -> dict:
             "chargebacksTotal": round(chargebacks_total, 2),
             "monthApv": round(month_apv, 2),
             "monthIssued": month_issued,
+            "monthLabel": month_label,
         },
         "pending": {
             "count": len(open_pending),
@@ -229,7 +254,8 @@ def _build_suggestions(recruits, agent_rows, this_month,
 
     # Production: missing stats and below-target coaching
     for a in agent_rows:
-        if a["last_month"] and a["last_month"] < this_month and date.today().day >= 5:
+        if a["last_month"] and a["last_month"] < this_month and date.today().day >= 5 \
+                and not a.get("derived"):
             out.append({
                 "key": f"stats-missing-{a['id']}-{this_month}",
                 "title": f"Log {this_month} production stats for {a['name']}",

@@ -192,15 +192,22 @@ CSV_ALIASES = {
     "carrier":        ["carrier", "company", "insurer"],
     "issue_date":     ["issue date", "issued", "effective date", "date issued"],
     "annual_premium": ["annual premium", "apv", "premium", "annualized premium", "ap"],
-    "status":         ["status", "policy status", "app status", "application status"],
+    "status":         ["status", "policy status", "app status", "application status", "decision"],
     "submit_date":    ["submit date", "submitted", "date submitted", "application date", "app date", "date"],
     "chargeback_amount": ["chargeback amount", "chargeback", "amount", "debit amount", "charged back"],
+    "month_counting": ["month counting", "counting month"],
+    "created":        ["created", "created at", "date created"],
 }
+
+
+def _norm_header(h: str) -> str:
+    """Normalize a header: lowercase, collapse newlines/extra spaces, strip."""
+    return " ".join(str(h).replace("\n", " ").lower().split())
 
 
 def _match_columns(headers: list) -> dict:
     """Map internal field names to CSV column names (pure, testable)."""
-    lower = {h.lower().strip(): h for h in headers}
+    lower = {_norm_header(h): h for h in headers}
     mapping = {}
     for field, aliases in CSV_ALIASES.items():
         for alias in aliases:
@@ -215,6 +222,58 @@ def _parse_money(val: str) -> float:
         return float(str(val).replace("$", "").replace(",", "").strip() or 0)
     except ValueError:
         return 0.0
+
+
+def _clean_text(val: str) -> str:
+    """Collapse newlines/extra whitespace inside cell values (e.g. agent names)."""
+    return " ".join(str(val or "").split())
+
+
+def parse_date_any(val: str) -> str:
+    """Normalize common date formats (5/20/2026, 2026-05-20, with times) to ISO."""
+    s = str(val or "").strip()
+    if not s:
+        return ""
+    token = s.split()[0]
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y"):
+        try:
+            return datetime.strptime(token, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return ""
+
+
+def _month_from_counting(month_name: str, created_iso: str) -> str:
+    """Resolve a 'Month Counting' value like 'May' to an ISO first-of-month date,
+    inferring the year from the row's Created date."""
+    import calendar
+    name = _clean_text(month_name).lower()
+    months = {calendar.month_name[i].lower(): i for i in range(1, 13)}
+    months.update({calendar.month_abbr[i].lower(): i for i in range(1, 13)})
+    if name not in months:
+        return ""
+    m = months[name]
+    year = int(created_iso[:4]) if created_iso[:4].isdigit() else datetime.today().year
+    if created_iso[5:7].isdigit() and m > int(created_iso[5:7]) + 6:
+        year -= 1  # e.g. December production logged in a January-created row
+    return f"{year}-{m:02d}-01"
+
+
+def _synth_id(prefix: str, *parts) -> str:
+    """Stable synthetic policy id for reports that have no policy numbers."""
+    import hashlib
+    digest = hashlib.md5("|".join(str(p) for p in parts).encode()).hexdigest()[:10]
+    return f"{prefix}-{digest}"
+
+
+def _row_dates(get) -> tuple:
+    """Best-available (issue_date, submit_date) for a row, ISO or ''."""
+    submit = parse_date_any(get("submit_date"))
+    issue = parse_date_any(get("issue_date")) or submit
+    if not issue:
+        created = parse_date_any(get("created"))
+        issue = _month_from_counting(get("month_counting"), created)
+    return issue, submit
 
 
 def _row_getter(row: dict, mapping: dict):
@@ -232,21 +291,27 @@ def _import_policy_rows(rows: list, mapping: dict, commission_pct: float = 0.70)
     added = skipped = 0
     for row in rows:
         get = _row_getter(row, mapping)
-        policy_no = get("policy_number")
-        if not policy_no or policy_no in known:
+        agent = _clean_text(get("agent_name"))
+        applicant = _clean_text(get("applicant_name"))
+        carrier = _clean_text(get("carrier"))
+        premium = _parse_money(get("annual_premium"))
+        issue_date, submit = _row_dates(get)
+        policy_no = get("policy_number") or \
+            _synth_id("auto", agent, applicant, carrier, premium, submit or issue_date)
+        if premium <= 0 or policy_no in known:
             skipped += 1
             continue
-        premium = _parse_money(get("annual_premium"))
         gross = premium * commission_pct
         status_raw = get("status").lower()
         status = "lapsed" if "laps" in status_raw or "charge" in status_raw else "active"
         ledger.append({
             "id": max((p["id"] for p in ledger), default=0) + 1,
             "agent_id": 0,
-            "agent_name": get("agent_name") or "Unassigned",
+            "agent_name": agent or "Unassigned",
+            "applicant_name": applicant,
             "policy_number": policy_no,
-            "carrier": get("carrier") or "Unknown",
-            "issue_date": get("issue_date")[:10] or datetime.today().strftime("%Y-%m-%d"),
+            "carrier": carrier or "Unknown",
+            "issue_date": issue_date or datetime.today().strftime("%Y-%m-%d"),
             "annual_premium": premium,
             "agent_commission_pct": commission_pct,
             "gross_commission": round(gross, 2),
@@ -269,7 +334,7 @@ def import_policies_csv(path: str, commission_pct: float = 0.70) -> dict:
     Import an issued-policy report (e.g. downloaded from Quility HQ) into the ledger.
     Deduplicates by policy number. Returns {'added': n, 'skipped': n, 'unmapped': [...]}.
     """
-    rows, mapping, headers = _read_csv(path, required=["policy_number", "annual_premium"])
+    rows, mapping, headers = _read_csv(path, required=["annual_premium"])
     res = _import_policy_rows(rows, mapping, commission_pct)
     res["unmapped"] = [h for h in headers if h not in mapping.values()]
     return res
@@ -314,8 +379,8 @@ def _import_pending_rows(rows: list, mapping: dict) -> dict:
     added = updated = skipped = 0
     for row in rows:
         get = _row_getter(row, mapping)
-        applicant = get("applicant_name")
-        submit = get("submit_date")[:10]
+        applicant = _clean_text(get("applicant_name"))
+        submit = parse_date_any(get("submit_date"))
         status = _pending_status(get("status"))
         if not applicant:
             skipped += 1
@@ -331,8 +396,8 @@ def _import_pending_rows(rows: list, mapping: dict) -> dict:
         pending.append({
             "id": max((p["id"] for p in pending), default=0) + 1,
             "applicant_name": applicant,
-            "agent_name": get("agent_name") or "Unassigned",
-            "carrier": get("carrier") or "Unknown",
+            "agent_name": _clean_text(get("agent_name")) or "Unassigned",
+            "carrier": _clean_text(get("carrier")) or "Unknown",
             "submit_date": submit or datetime.today().strftime("%Y-%m-%d"),
             "annual_premium": _parse_money(get("annual_premium")),
             "status": status,
@@ -356,15 +421,28 @@ def _resolve_pending(rows: list, mapping: dict, new_status: str) -> int:
         return 0
     with open(PENDING_FILE) as f:
         pending = json.load(f)
-    names = set()
+    def norm_carrier(c):
+        c = _clean_text(c).lower()
+        return "" if c in ("", "unknown") else c
+
+    # applicant -> carriers placed; carrier "" acts as a wildcard so reports
+    # without a carrier column still resolve, while a known carrier never
+    # closes the same client's pending app at a different carrier
+    placed: dict = {}
     for row in rows:
         get = _row_getter(row, mapping)
-        name = get("applicant_name").lower()
+        name = _clean_text(get("applicant_name")).lower()
         if name:
-            names.add(name)
+            placed.setdefault(name, set()).add(norm_carrier(get("carrier")))
     changed = 0
     for p in pending:
-        if p.get("status") == "pending" and p["applicant_name"].lower() in names:
+        if p.get("status") != "pending":
+            continue
+        carriers = placed.get(p["applicant_name"].lower())
+        if carriers is None:
+            continue
+        pc = norm_carrier(p.get("carrier", ""))
+        if pc == "" or "" in carriers or pc in carriers:
             p["status"] = new_status
             changed += 1
     if changed:
@@ -400,12 +478,20 @@ def _import_chargeback_rows(rows: list, mapping: dict, commission_pct: float = 0
     updated = added = skipped = 0
     for row in rows:
         get = _row_getter(row, mapping)
-        policy_no = get("policy_number")
+        agent = _clean_text(get("agent_name"))
+        applicant = _clean_text(get("applicant_name"))
+        carrier = _clean_text(get("carrier"))
+        premium = _parse_money(get("annual_premium"))
+        issue_date, _submit = _row_dates(get)
+        policy_no = get("policy_number") or \
+            _synth_id("cb", agent, applicant, carrier, premium, issue_date)
         amount = _parse_money(get("chargeback_amount"))
         existing = by_no.get(policy_no) if policy_no else None
         if amount <= 0 and fallback_amount:
+            # Negative-premium CB rows (tracker style): the reversed APV × commission
+            # is the clawed-back amount; otherwise fall back to gross commission.
             amount = (existing or {}).get("gross_commission") or \
-                round(_parse_money(get("annual_premium")) * commission_pct, 2)
+                round(abs(premium) * commission_pct, 2)
         if not policy_no or amount <= 0:
             skipped += 1
             continue
@@ -421,11 +507,12 @@ def _import_chargeback_rows(rows: list, mapping: dict, commission_pct: float = 0
             ledger.append({
                 "id": max((p["id"] for p in ledger), default=0) + 1,
                 "agent_id": 0,
-                "agent_name": get("agent_name") or "Unassigned",
+                "agent_name": agent or "Unassigned",
+                "applicant_name": applicant,
                 "policy_number": policy_no,
-                "carrier": get("carrier") or "Unknown",
-                "issue_date": get("issue_date")[:10] or datetime.today().strftime("%Y-%m-%d"),
-                "annual_premium": _parse_money(get("annual_premium")),
+                "carrier": carrier or "Unknown",
+                "issue_date": issue_date or datetime.today().strftime("%Y-%m-%d"),
+                "annual_premium": abs(premium),
                 "agent_commission_pct": 0.0,
                 "gross_commission": 0.0,
                 "agency_override": 0.0,
@@ -477,7 +564,11 @@ def import_combined_csv(path: str, commission_pct: float = 0.70) -> dict:
     buckets = {"pending": [], "issued": [], "chargeback": []}
     for row in rows:
         get = _row_getter(row, mapping)
-        buckets[_classify_status(get("status"))].append(row)
+        # Tracker-style chargebacks: negative premium rows, whatever the status says
+        if _parse_money(get("annual_premium")) < 0:
+            buckets["chargeback"].append(row)
+        else:
+            buckets[_classify_status(get("status"))].append(row)
 
     result = {
         "pending": _import_pending_rows(buckets["pending"], mapping)
