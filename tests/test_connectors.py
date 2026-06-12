@@ -97,8 +97,8 @@ def test_import_policies_csv(isolated_data):
         ",No Policy,X,2026-01-01,100,Active\n"
     )
     res = import_policies_csv(str(csv_file), commission_pct=0.70)
-    assert res["added"] == 2
-    assert res["skipped"] == 1  # blank policy number
+    assert res["added"] == 3  # blank policy number gets a stable synthetic id
+    assert res["skipped"] == 0
     ledger = json.loads((isolated_data / "policies" / "ledger.json").read_text())
     p = next(x for x in ledger if x["policy_number"] == "P-100")
     assert p["annual_premium"] == 4800.0
@@ -210,6 +210,40 @@ def test_combined_resolves_pending_when_app_issues(isolated_data):
     assert res["pending"]["resolved"] == 1
     pending = json.loads((isolated_data / "policies" / "pending.json").read_text())
     assert pending[0]["status"] == "approved"  # no longer counted or task-generating
+
+
+def test_real_tracker_format(isolated_data):
+    """Quility-style tracker: Decision column, Insured names, no policy numbers,
+    M/D/YYYY dates, negative-premium chargeback rows, multi-line headers."""
+    from src.modules.connectors import import_combined_csv
+    f = isolated_data / "tracker.csv"
+    f.write_text(
+        'Agent,Agency Owner/Keyleader,Insured ,Carrier,Policy Type,Submitted,"Monthly\nPremium",'
+        "APV,Decision ,Notes ,Month Counting,Created\n"
+        '"Courtney Wallace\n",Base,,American Equity,,,$167.65,$2011.78,Issue Paid ,,May,6/10/2026 9:23pm\n'
+        '"Darenique Slaughter\n",Base,CB\'s - 6,Mutual of Omaha,,,-$480.42,-$5765.00,Issue Paid ,,May,6/10/2026 9:31pm\n'
+        "LiQuiche L Young,Base,Lakeya Doss,Mutual of Omaha,IUL Express,5/19/2026,$45.41,$544.92,Issue Paid ,,May,5/20/2026 10:01pm\n"
+        "Joe Manuel Gutierrez,Base,jose lerma,Mutual of Omaha,IUL Express,5/25/2026,$46.81,$561.72,Pending ,,,5/27/2026 12:44am\n"
+        "Sarah Gonzales-Gutierrez,Base,delano harris,Fidelity and Guaranty,F&G Pathsetter,5/25/2026,$233.33,$2800.00,Not at Carrier ,,,5/27/2026 12:44am\n"
+    )
+    res = import_combined_csv(str(f), commission_pct=0.70)
+    assert res["issued"]["added"] == 2          # positive Issue Paid rows
+    assert res["chargebacks"]["added"] == 1     # negative-premium row
+    assert res["pending"]["added"] == 2         # Pending + Not at Carrier
+
+    ledger = json.loads((isolated_data / "policies" / "ledger.json").read_text())
+    courtney = next(p for p in ledger if p["agent_name"] == "Courtney Wallace")
+    assert courtney["annual_premium"] == 2011.78
+    assert courtney["issue_date"] == "2026-05-01"      # from Month Counting + Created year
+    lakeya = next(p for p in ledger if p.get("applicant_name") == "Lakeya Doss")
+    assert lakeya["issue_date"] == "2026-05-19"        # M/D/YYYY normalized
+    cb = next(p for p in ledger if p["status"] == "lapsed")
+    assert cb["agent_name"] == "Darenique Slaughter"   # newline in name cleaned
+    assert cb["chargeback_actual"] == round(5765.00 * 0.70, 2)
+    # idempotent re-import despite synthetic ids
+    res2 = import_combined_csv(str(f))
+    assert res2["issued"]["added"] == 0 and res2["chargebacks"]["added"] == 0
+    assert res2["pending"]["added"] == 0
 
 
 def test_pending_reimport_updates_changed_status(isolated_data):
