@@ -96,23 +96,40 @@ def cmd_profitability(args):
 
 
 def _connect_email():
-    from src.modules.email_connector import load_email_accounts, save_email_account, IMAP_HOSTS
+    from src.modules.email_connector import (load_email_accounts, save_email_account,
+                                             detect_imap_host)
     accts = load_email_accounts()
     print("\n--- Connect an email account ---")
     print(f"Currently connected: {len(accts)} account(s)")
-    print("Providers: " + ", ".join(sorted(set(IMAP_HOSTS))))
     print("\nYou need an APP PASSWORD, not your normal email password:")
-    print("  • Gmail:   myaccount.google.com → Security → 2-Step Verification → App passwords")
-    print("  • Outlook/Hotmail: account.microsoft.com → Security → Advanced security → App passwords")
-    provider = input("\nProvider (gmail / outlook / hotmail): ").strip().lower()
-    address = input("Email address: ").strip()
-    password = input("App password (stored only on this Mac): ").strip()
-    if provider and address and password:
-        idx = save_email_account(provider, address, password)
-        print(f"\n✅ Saved account #{idx} ({address}).")
-        print("Add more by running this again, or run `flowhub sync` to scan now.")
+    print("  • Gmail / Google Workspace: myaccount.google.com → Security → 2-Step Verification → App passwords")
+    print("  • Outlook / Hotmail / Microsoft 365: account.microsoft.com → Security → Advanced → App passwords")
+    address = input("\nEmail address: ").strip()
+    if not address or "@" not in address:
+        print("Nothing saved — a valid email address is required.")
+        return
+    print("Looking up your mail host…")
+    host = detect_imap_host(address)
+    if host:
+        print(f"Detected mail host: {host}")
+        override = input("Press Return to accept, or type a different IMAP server: ").strip()
+        host = override or host
     else:
-        print("Nothing saved — all three fields are required.")
+        print("Couldn't auto-detect your mail host.")
+        print("  • If your email is on Microsoft 365, enter: outlook.office365.com")
+        print("  • If it's on Google Workspace, enter:       imap.gmail.com")
+        host = input("IMAP server: ").strip()
+    if not host:
+        print("Nothing saved — an IMAP server is required.")
+        return
+    provider = "gmail" if "gmail" in host else "outlook" if "office365" in host else "custom"
+    password = input("App password (stored only on this Mac): ").strip()
+    if not password:
+        print("Nothing saved — the app password is required.")
+        return
+    idx = save_email_account(provider, address, password, host=host)
+    print(f"\n✅ Saved account #{idx} ({address} via {host}).")
+    print("Add more by running this again, or run `flowhub sync` to scan now.")
 
 
 def cmd_flowhub(args):
