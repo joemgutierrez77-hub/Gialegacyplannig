@@ -95,6 +95,26 @@ def cmd_profitability(args):
         print(f"Unknown profitability subcommand: {sub}")
 
 
+def _connect_email():
+    from src.modules.email_connector import load_email_accounts, save_email_account, IMAP_HOSTS
+    accts = load_email_accounts()
+    print("\n--- Connect an email account ---")
+    print(f"Currently connected: {len(accts)} account(s)")
+    print("Providers: " + ", ".join(sorted(set(IMAP_HOSTS))))
+    print("\nYou need an APP PASSWORD, not your normal email password:")
+    print("  • Gmail:   myaccount.google.com → Security → 2-Step Verification → App passwords")
+    print("  • Outlook/Hotmail: account.microsoft.com → Security → Advanced security → App passwords")
+    provider = input("\nProvider (gmail / outlook / hotmail): ").strip().lower()
+    address = input("Email address: ").strip()
+    password = input("App password (stored only on this Mac): ").strip()
+    if provider and address and password:
+        idx = save_email_account(provider, address, password)
+        print(f"\n✅ Saved account #{idx} ({address}).")
+        print("Add more by running this again, or run `flowhub sync` to scan now.")
+    else:
+        print("Nothing saved — all three fields are required.")
+
+
 def cmd_flowhub(args):
     sub = args.subcommand
     if sub == "sync":
@@ -111,14 +131,18 @@ def cmd_flowhub(args):
 
     elif sub == "connect":
         from src.modules.connectors import load_env, save_env_key
+        from src.modules.email_connector import load_email_accounts
         env = load_env()
+        accts = load_email_accounts()
         print("\n--- Connect external tools to FlowHub ---")
         print(f"  Teamtailor: {'✅ connected' if env.get('TEAMTAILOR_API_KEY') else '— not connected'}")
         print(f"  Calendly:   {'✅ connected' if env.get('CALENDLY_API_TOKEN') else '— not connected'}")
+        print(f"  Email:      {'✅ ' + str(len(accts)) + ' account(s)' if accts else '— not connected'}")
         print("\nWhich do you want to set up?")
         print("  1) Teamtailor  (recruits sync into your pipeline)")
         print("  2) Calendly    (meetings appear on your FlowHub calendar)")
-        choice = input("Enter 1 or 2: ").strip()
+        print("  3) Email       (carrier/recruit/client emails become tasks + a daily digest)")
+        choice = input("Enter 1, 2 or 3: ").strip()
         if choice == "1":
             print("\nGet your key: Teamtailor → Settings → API keys → New API key (read scope).")
             key = input("Paste your Teamtailor API key: ").strip()
@@ -132,8 +156,13 @@ def cmd_flowhub(args):
             if key:
                 save_env_key("CALENDLY_API_TOKEN", key)
                 print("Saved. Run `python main.py flowhub sync` to pull meetings now.")
+        elif choice == "3":
+            _connect_email()
         else:
             print("Nothing changed.")
+
+    elif sub == "connect-email":
+        _connect_email()
 
     elif sub in ("import-all", "import-policies", "import-pending", "import-chargebacks"):
         from src.modules.connectors import (import_policies_csv, import_pending_csv,
@@ -281,8 +310,8 @@ def main():
 
     # ---- flowhub ----
     fh = sub.add_parser("flowhub")
-    fh.add_argument("subcommand", choices=["sync", "connect", "import-all", "import-policies",
-                                           "import-pending", "import-chargebacks"])
+    fh.add_argument("subcommand", choices=["sync", "connect", "connect-email", "import-all",
+                                           "import-policies", "import-pending", "import-chargebacks"])
     fh.add_argument("--file", "-f", help="CSV report to import")
     fh.add_argument("--commission", type=float, default=0.70,
                     help="Agent commission rate for imported policies (default 0.70)")
