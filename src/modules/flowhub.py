@@ -84,7 +84,8 @@ def _days_in_stage(recruit: dict) -> int:
     return _days_since(recruit.get("added_date", ""))
 
 
-def build_snapshot(events: list = None) -> dict:
+def build_snapshot(events: list = None, extra_suggestions: list = None,
+                   email_digest: list = None) -> dict:
     """Aggregate all business data into one snapshot dict for FlowHub."""
     recruits = _load_recruits()
     agents   = _load_agents()
@@ -165,6 +166,8 @@ def build_snapshot(events: list = None) -> dict:
         added_this_month, contracted_this_month, exposure,
         open_pending,
     )
+    # email-derived tasks (carrier/recruit/client) lead the list
+    suggestions = (extra_suggestions or []) + suggestions
 
     return {
         "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -200,6 +203,7 @@ def build_snapshot(events: list = None) -> dict:
         },
         "suggestions": suggestions,
         "events": events or [],
+        "inbox": email_digest or [],
     }
 
 
@@ -298,9 +302,15 @@ def export_flowhub() -> str:
         print(f"  Teamtailor: {conn['teamtailor']} new candidate(s) added to pipeline")
     if conn["calendly_events"]:
         print(f"  Calendly: {len(conn['calendly_events'])} upcoming meeting(s) found")
+    if conn.get("email_accounts"):
+        print(f"  Email: {conn['email_accounts']} account(s) scanned, "
+              f"{len(conn['email_tasks'])} new task(s), "
+              f"{len(conn['email_digest'])} in digest")
     for err in conn["errors"]:
         print(f"  ⚠ Connector error (skipped): {err}")
-    snapshot = build_snapshot(events=conn["calendly_events"])
+    snapshot = build_snapshot(events=conn["calendly_events"],
+                              extra_suggestions=conn.get("email_tasks"),
+                              email_digest=conn.get("email_digest"))
     path = os.path.abspath(EXPORT_FILE)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:

@@ -594,7 +594,9 @@ def import_combined_csv(path: str, commission_pct: float = 0.70) -> dict:
 def run_connectors() -> dict:
     """Run every configured connector. Fail-soft per connector."""
     env = load_env()
-    result = {"teamtailor": None, "calendly_events": [], "errors": []}
+    result = {"teamtailor": None, "calendly_events": [],
+              "email_tasks": [], "email_digest": [], "email_accounts": 0,
+              "errors": []}
 
     if env.get("TEAMTAILOR_API_KEY"):
         try:
@@ -607,5 +609,15 @@ def run_connectors() -> dict:
             result["calendly_events"] = fetch_calendly_events(env["CALENDLY_API_TOKEN"])
         except Exception as e:
             result["errors"].append(f"Calendly: {e}")
+
+    try:
+        from src.modules.email_connector import run_email_connector
+        email_res = run_email_connector()
+        result["email_tasks"] = email_res["tasks"]
+        result["email_digest"] = email_res["digest"]
+        result["email_accounts"] = email_res["accounts"]
+        result["errors"].extend(email_res["errors"])
+    except Exception as e:
+        result["errors"].append(f"Email: {e}")
 
     return result

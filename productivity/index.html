@@ -806,10 +806,25 @@ function renderBusiness(){
         ${sugRows || '<div class="empty">No business tasks suggested — pipeline and production look on track 🎉</div>'}
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
+        ${bizInboxHTML(biz)}
         <div class="card"><div class="dash-section-title">Recruiting Pipeline</div>${stages || '<div class="empty">No recruits yet</div>'}</div>
         <div class="card"><div class="dash-section-title">Agent Production (vs $${pr.targetApv.toLocaleString()} APV target)</div>${agentRows || '<div class="empty">No agents tracked</div>'}</div>
       </div>
     </div>`;
+}
+function bizInboxHTML(biz){
+  const inbox = (biz && biz.inbox) || [];
+  if (!inbox.length) return '';
+  const dot = c => c === 'carrier' ? 'var(--amber)' : c === 'recruit' ? 'var(--accent)' : c === 'client' ? 'var(--green)' : 'var(--faint)';
+  const rows = inbox.slice(0, 12).map(e => `
+    <div class="dash-event">
+      <span class="ev-dot" style="background:${dot(e.category)}" title="${esc(e.category)}"></span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.subject || '(no subject)')}</div>
+        <div style="font-size:11px;color:var(--faint)">${esc(e.from || '')}${e.category !== 'other' ? ' · ' + esc(e.category) : ''}</div>
+      </div>
+    </div>`).join('');
+  return `<div class="card"><div class="dash-section-title">📬 Inbox Digest</div>${rows}</div>`;
 }
 
 /* =====================================================================

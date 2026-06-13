@@ -62,6 +62,29 @@ On macOS, **`ImportReports.command`** (project root) does it all without typing:
 pick the report type, drag the CSV into the window. Pending apps stuck in underwriting 14+ days
 automatically become follow-up tasks; chargebacks update the active book and exposure totals.
 
+### Email → tasks + daily digest (Gmail, Outlook/Microsoft 365, Hotmail)
+
+```bash
+python main.py flowhub connect-email      # add an account (repeat per inbox)
+python main.py flowhub sync               # email is scanned automatically every sync
+```
+
+Connect each inbox with an email address + **app password** (not your normal password —
+generate one under your account's 2-step-verification/security settings). FlowHub then, on
+every sync, scans the last few days and:
+
+- **Carrier emails** (Mutual of Omaha, AIG, Americo, NLG, F&G, TransAmerica, etc.) → tasks,
+  high priority when they mention a requirement/declined/lapse/payment issue
+- **Recruit replies** (sender matches your pipeline) → follow-up tasks
+- **Client messages** (sender matches an insured/applicant) → respond tasks
+- A **📬 Inbox Digest** panel in the Business view summarizing recent mail by category
+
+Everything runs locally via IMAP. Email contents are **never uploaded or committed** — only the
+derived tasks and a short digest go into the gitignored `business-data.js`, and credentials live
+only in your gitignored `.env`. On macOS, **`ConnectEmail.command`** walks you through setup.
+Note: some Microsoft 365 *business* accounts have IMAP app-passwords disabled by an admin; in
+that case ask your admin to enable IMAP, or use your personal Gmail/Hotmail.
+
 - **Teamtailor** — candidates flow into the recruiting pipeline as new leads (deduplicated,
   never moved backward once you advance them)
 - **Calendly** — upcoming meetings appear on the FlowHub calendar and stay current if rescheduled
