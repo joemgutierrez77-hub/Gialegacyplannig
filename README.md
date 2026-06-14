@@ -69,9 +69,11 @@ python main.py flowhub connect-email      # add an account (repeat per inbox)
 python main.py flowhub sync               # email is scanned automatically every sync
 ```
 
-Connect each inbox with an email address + **app password** (not your normal password —
-generate one under your account's 2-step-verification/security settings). FlowHub then, on
-every sync, scans the last few days and:
+Connect each inbox with just your **email address + app password** (not your normal password —
+generate one under your account's 2-step-verification/security settings). The setup auto-detects
+your mail host from the address — including **custom domains** (e.g. an agency domain on
+Microsoft 365 or Google Workspace) via an MX lookup, with a manual override if needed. FlowHub
+then, on every sync, scans the last few days and:
 
 - **Carrier emails** (Mutual of Omaha, AIG, Americo, NLG, F&G, TransAmerica, etc.) → tasks,
   high priority when they mention a requirement/declined/lapse/payment issue

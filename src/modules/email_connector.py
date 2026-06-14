@@ -64,7 +64,13 @@ INFO_KEYWORDS = [
 # ---------------------------------------------------------------------------
 
 def load_email_accounts() -> list:
-    """Parse EMAIL_ACCOUNT_* lines from .env into account dicts."""
+    """Parse EMAIL_ACCOUNT_* lines from .env into account dicts.
+
+    Two on-disk formats are accepted:
+      provider|address|password               (legacy, host from provider map)
+      provider|address|host|password          (explicit IMAP host; host may be
+                                                empty to fall back to the map)
+    """
     accounts = []
     path = os.path.abspath(ENV_FILE)
     if not os.path.exists(path):
@@ -77,18 +83,25 @@ def load_email_accounts() -> list:
             _, val = line.split("=", 1)
             val = val.strip().strip('"').strip("'")
             parts = val.split("|")
-            if len(parts) >= 3:
-                provider = parts[0].strip().lower()
-                accounts.append({
-                    "provider": provider,
-                    "address": parts[1].strip(),
-                    "password": "|".join(parts[2:]).strip(),  # passwords may contain |
-                    "host": IMAP_HOSTS.get(provider, IMAP_HOSTS.get("gmail")),
-                })
+            if len(parts) == 3:
+                provider, address, password = parts[0], parts[1], parts[2]
+                host = ""
+            elif len(parts) >= 4:
+                provider, address, host = parts[0], parts[1], parts[2]
+                password = "|".join(parts[3:])  # password may contain '|'
+            else:
+                continue
+            provider = provider.strip().lower()
+            accounts.append({
+                "provider": provider,
+                "address": address.strip(),
+                "password": password.strip(),
+                "host": host.strip() or IMAP_HOSTS.get(provider, IMAP_HOSTS.get("gmail")),
+            })
     return accounts
 
 
-def save_email_account(provider: str, address: str, password: str) -> int:
+def save_email_account(provider: str, address: str, password: str, host: str = "") -> int:
     """Append one EMAIL_ACCOUNT_N line to .env. Returns the index used."""
     path = os.path.abspath(ENV_FILE)
     lines = []
@@ -101,10 +114,55 @@ def save_email_account(provider: str, address: str, password: str) -> int:
             if m:
                 used = max(used, int(m.group(1)))
     idx = used + 1
-    lines.append(f"EMAIL_ACCOUNT_{idx}={provider.lower()}|{address}|{password}")
+    lines.append(f"EMAIL_ACCOUNT_{idx}={provider.lower()}|{address}|{host}|{password}")
     with open(path, "w") as f:
         f.write("\n".join(lines) + "\n")
     return idx
+
+
+# Consumer domains map straight to an IMAP host (no DNS lookup needed).
+CONSUMER_HOSTS = {
+    "gmail.com": "imap.gmail.com", "googlemail.com": "imap.gmail.com",
+    "outlook.com": "outlook.office365.com", "hotmail.com": "outlook.office365.com",
+    "live.com": "outlook.office365.com", "msn.com": "outlook.office365.com",
+    "yahoo.com": "imap.mail.yahoo.com", "aol.com": "imap.aol.com",
+    "icloud.com": "imap.mail.me.com", "me.com": "imap.mail.me.com",
+}
+
+
+def _imap_from_mx(mx_blob: str) -> str:
+    """Map a domain's MX records (joined lowercase string) to an IMAP host (pure)."""
+    b = mx_blob.lower()
+    if "google" in b or "googlemail" in b or "aspmx" in b:
+        return "imap.gmail.com"
+    if "outlook" in b or "office365" in b or "protection.outlook" in b or "microsoft" in b:
+        return "outlook.office365.com"
+    if "secureserver" in b or "godaddy" in b:
+        return "imap.secureserver.net"
+    if "zoho" in b:
+        return "imap.zoho.com"
+    if "yahoodns" in b or "yahoo" in b:
+        return "imap.mail.yahoo.com"
+    return ""
+
+
+def detect_imap_host(address: str) -> str:
+    """Best-effort IMAP host for an address: consumer map, else MX lookup."""
+    domain = address.split("@")[-1].strip().lower()
+    if not domain:
+        return ""
+    if domain in CONSUMER_HOSTS:
+        return CONSUMER_HOSTS[domain]
+    try:
+        import subprocess
+        out = subprocess.run(["nslookup", "-type=mx", domain],
+                             capture_output=True, text=True, timeout=10)
+        host = _imap_from_mx(out.stdout + out.stderr)
+        if host:
+            return host
+    except Exception:
+        pass
+    return ""
 
 
 # ---------------------------------------------------------------------------
