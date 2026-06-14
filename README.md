@@ -5,6 +5,27 @@ Covers **Recruiting**, **Production**, and **Profitability** — structured arou
 
 ---
 
+## Security & your credentials
+
+This system is built so your secrets never leave your machine:
+
+- **All credentials** (email app passwords, Teamtailor/Calendly keys) live only in a local
+  `.env` file. It is **gitignored** — never committed, never uploaded.
+- Your imported data (`data/`) and the generated `productivity/business-data.js` are also
+  gitignored and stay on your computer.
+- **Never paste a password or API key into a chat** — with Claude/ChatGPT or anyone. Chat
+  messages can be stored, so anything typed there should be treated as exposed. Enter
+  credentials only into the local prompts (`ConnectEmail.command` / `flowhub connect`),
+  which write them to `.env` on your machine.
+- Use **app passwords**, not your main account password, for email. App passwords are scoped
+  to mail only and can be revoked anytime without changing your real password.
+- Turn on **two-step verification** on each email account. Then even a leaked password is
+  useless to anyone without the code on your phone — this is the single strongest protection.
+- If a credential is ever exposed: revoke/regenerate it in your account's security settings
+  (delete the app password, rotate the API key) and it stops working immediately.
+
+---
+
 ## FlowHub — Personal Productivity App
 
 A self-contained personal productivity tool lives in [`productivity/index.html`](productivity/index.html).
