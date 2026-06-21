@@ -525,7 +525,7 @@ function defaultState(){
     game: { highScore: 0 },
     alerts: [],
     followups: [],
-    portals: { timTaylor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '' },
+    portals: { timTaylor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '', teamtailor: '' },
   };
 }
 let state;
@@ -537,7 +537,8 @@ if (!state.business) state.business = { imported: {}, autoImport: true };
 if (!state.business.importedEvents) state.business.importedEvents = {};
 if (!state.alerts) state.alerts = [];
 if (!state.followups) state.followups = [];
-if (!state.portals) state.portals = { timTaylor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '' };
+if (!state.portals) state.portals = { timTaylor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '', teamtailor: '' };
+if (!('teamtailor' in (state.portals || {}))) state.portals.teamtailor = '';
 function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ } }
 
 /* ---------- ui state (not persisted) ---------- */
@@ -706,6 +707,7 @@ function renderDashboard(){
     { label: '👤 Tim Taylor Portal', url: portals.timTaylor, cls: 'primary-portal' },
     { label: '🏢 Back Office', url: portals.backOffice, cls: '' },
     { label: '🤝 Agent Portal', url: portals.agentPortal, cls: '' },
+    { label: '🎯 Teamtailor', url: portals.teamtailor, cls: '' },
     { label: '📋 SuranceBay', url: portals.suranceBay, cls: '' },
     { label: '🏥 Carrier Portal', url: portals.carrierPortal, cls: '' },
   ].filter(p => p.url);
@@ -1088,6 +1090,7 @@ function renderBackOffice(){
     { key: 'timTaylor', icon: '👤', name: 'Tim Taylor Portal', desc: 'Agent portal for Tim Taylor' },
     { key: 'backOffice', icon: '🏢', name: 'Back Office', desc: 'Admin & operations portal' },
     { key: 'agentPortal', icon: '🤝', name: 'Agent Portal', desc: 'Recruit & agent management' },
+    { key: 'teamtailor', icon: '🎯', name: 'Teamtailor', desc: 'Recruiting & hiring platform' },
     { key: 'suranceBay', icon: '📋', name: 'SuranceBay', desc: 'Contracting & onboarding' },
     { key: 'carrierPortal', icon: '🏥', name: 'Carrier Portal', desc: 'Carrier submissions & status' },
   ];
@@ -1111,7 +1114,7 @@ function renderBackOffice(){
     </div>`;
 }
 function savePortals(){
-  const keys = ['timTaylor','backOffice','agentPortal','suranceBay','carrierPortal'];
+  const keys = ['timTaylor','backOffice','agentPortal','teamtailor','suranceBay','carrierPortal'];
   keys.forEach(k => { const el = document.getElementById('po-' + k); if (el) state.portals[k] = el.value.trim(); });
   save(); renderBackOffice(); toast('Portal links saved');
 }
