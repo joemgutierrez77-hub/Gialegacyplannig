@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FlowHub — Personal Productivity</title>
+<title>GIA Command — Legacy Planning</title>
 <style>
   :root{
     --bg:#0e1116; --bg2:#12161d; --surface:#171c25; --surface2:#1d2330;
@@ -71,6 +71,37 @@
 
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
   .empty{color:var(--faint);text-align:center;padding:34px 10px;font-size:13.5px}
+
+  /* ---------- Bottom Dock ---------- */
+  #bottom-dock{position:fixed;bottom:0;left:218px;right:0;height:52px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:8px;z-index:50}
+  .dock-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-decoration:none;white-space:nowrap;transition:all .12s;cursor:pointer}
+  .dock-btn:hover{border-color:var(--accent);color:var(--text);background:var(--surface2)}
+  .dock-btn.dock-primary{background:linear-gradient(135deg,var(--accent2),#b16cff);border-color:transparent;color:#fff}
+  .dock-btn.dock-primary:hover{filter:brightness(1.1)}
+  .dock-spacer{flex:1}
+  .dock-clock{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--faint);font-weight:600;padding:0 8px}
+  /* push main content above dock */
+  #main{padding-bottom:52px}
+
+  /* ---------- Huddle / Jarvis View ---------- */
+  .huddle-header{padding:22px 26px 16px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(124,140,255,.06),rgba(177,108,255,.04))}
+  .huddle-clock{font-size:38px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),#b16cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+  .huddle-date{font-size:13.5px;color:var(--muted);margin-top:4px;font-weight:500}
+  .top3-wrap{padding:18px 26px 0}
+  .top3-title{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+  .top3-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .top3-item{display:flex;align-items:flex-start;gap:14px;padding:12px 16px;border-radius:12px;border:1px solid var(--border);margin-bottom:10px;background:var(--surface);cursor:pointer;transition:border-color .12s}
+  .top3-item:hover{border-color:var(--accent)}
+  .top3-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),#b16cff);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+  .top3-num.done-num{background:var(--green)}
+  .huddle-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:14px 26px 18px}
+  .huddle-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+  .huddle-col-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:7px}
+  .huddle-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;background:var(--bg2)}
+  .huddle-item:hover{border-color:var(--border2)}
+  .huddle-empty{font-size:12.5px;color:var(--faint);text-align:center;padding:14px 8px}
+  .huddle-quick{display:flex;gap:8px;padding:0 26px 14px}
+  .huddle-quick input{flex:1;font-size:14px}
 
   /* ---------- Dashboard ---------- */
   .dash-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
@@ -223,6 +254,57 @@
   .sess-row{display:flex;gap:8px;font-size:12.5px;color:var(--muted);padding:6px 2px;border-bottom:1px solid var(--border)}
   .sess-row:last-child{border:none}
 
+  /* ---------- GIA Command Center ---------- */
+  .gia-portal-bar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .portal-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;font-weight:700;font-size:13px;border:1px solid var(--border2);background:var(--surface2);cursor:pointer;transition:all .15s;text-decoration:none;color:var(--text)}
+  .portal-btn:hover{filter:brightness(1.2);border-color:var(--accent)}
+  .portal-btn.primary-portal{background:linear-gradient(135deg,var(--accent2),#b16cff);border-color:transparent;color:#fff}
+  .portal-btn.danger-portal{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4);color:var(--red)}
+  .portal-btn.amber-portal{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.4);color:var(--amber)}
+  .alert-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px;cursor:pointer}
+  .alert-item:hover{border-color:var(--border2)}
+  .alert-item.level-critical{border-left:3px solid var(--red);background:rgba(248,113,113,.06)}
+  .alert-item.level-high{border-left:3px solid var(--amber);background:rgba(251,191,36,.05)}
+  .alert-item.level-medium{border-left:3px solid var(--accent);background:rgba(124,140,255,.05)}
+  .alert-item.resolved{opacity:.4;text-decoration:line-through}
+  .alert-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}
+  .ab-critical{background:rgba(248,113,113,.2);color:var(--red)}
+  .ab-high{background:rgba(251,191,36,.2);color:var(--amber)}
+  .ab-medium{background:rgba(124,140,255,.2);color:var(--accent)}
+  .followup-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px}
+  .followup-item:hover{border-color:var(--border2)}
+  .followup-item.done-fu{opacity:.45}
+  .agent-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#b16cff);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;color:#fff}
+  .backoffice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .bo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;text-align:center;cursor:pointer;transition:all .15s;text-decoration:none;display:block}
+  .bo-card:hover{border-color:var(--accent);background:var(--surface2)}
+  .bo-card .bo-icon{font-size:32px;margin-bottom:8px}
+  .bo-card .bo-name{font-weight:700;font-size:14px;color:var(--text)}
+  .bo-card .bo-desc{font-size:12px;color:var(--muted);margin-top:4px}
+  .portal-edit-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .portal-edit-row input{flex:1;font-size:13px}
+  .portal-edit-row label{font-size:12px;color:var(--muted);width:140px;flex:none}
+  /* leaderboard / production */
+  .lb-row{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid var(--border)}
+  .lb-row:last-child{border-bottom:none}
+  .lb-rank{font-size:13px;font-weight:700;color:var(--faint);width:22px;text-align:center;flex:none}
+  .lb-bar-wrap{flex:1;height:6px;background:var(--bg2);border-radius:4px;overflow:hidden}
+  .lb-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent2),#b16cff)}
+  .lb-apv{font-size:12.5px;font-weight:700;width:80px;text-align:right;flex:none}
+  /* recruit stages */
+  .stage-badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+  .stage-prospect{background:rgba(91,101,120,.25);color:var(--muted)}
+  .stage-contacted{background:rgba(124,140,255,.18);color:var(--accent)}
+  .stage-interested{background:rgba(251,191,36,.18);color:var(--amber)}
+  .stage-licensing{background:rgba(34,211,238,.18);color:var(--cyan)}
+  .stage-contracting{background:rgba(244,114,182,.18);color:var(--pink)}
+  .stage-active{background:rgba(74,222,128,.18);color:var(--green)}
+  .recruit-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px}
+  .recruit-row:hover{border-color:var(--border2)}
+  /* briefing banner */
+  .briefing-bar{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;background:linear-gradient(135deg,rgba(124,140,255,.15),rgba(177,108,255,.12));border:1px solid rgba(124,140,255,.3);margin-bottom:16px;font-size:13px}
+  .briefing-bar .bb-close{margin-left:auto;color:var(--faint);font-size:16px}
+
   /* ---------- Arcade ---------- */
   .arcade-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:8px}
   .arcade-hud{display:flex;gap:14px}
@@ -254,13 +336,18 @@
 <body>
 <div id="app">
   <aside id="sidebar">
-    <div class="brand"><div class="logo">⚡</div>FlowHub</div>
-    <button class="nav-item" data-action="nav" data-id="dashboard"><span class="ico">🏠</span>Dashboard</button>
-    <button class="nav-item" data-action="nav" data-id="business"><span class="ico">💼</span>Business</button>
+    <div class="brand"><div class="logo">🏛️</div>GIA Command</div>
+    <button class="nav-item" data-action="nav" data-id="huddle"><span class="ico">⚡</span>Daily Huddle</button>
+    <button class="nav-item" data-action="nav" data-id="dashboard"><span class="ico">🏠</span>Command Center</button>
+    <button class="nav-item" data-action="nav" data-id="alerts"><span class="ico">🚨</span>Alerts</button>
+    <button class="nav-item" data-action="nav" data-id="followups"><span class="ico">🤝</span>Agent Follow-Ups</button>
+    <button class="nav-item" data-action="nav" data-id="recruits"><span class="ico">🎯</span>Recruit Tracker</button>
+    <button class="nav-item" data-action="nav" data-id="business"><span class="ico">📊</span>Agent Tracker</button>
     <button class="nav-item" data-action="nav" data-id="tasks"><span class="ico">✅</span>Tasks</button>
-    <button class="nav-item" data-action="nav" data-id="board"><span class="ico">📋</span>Board</button>
-    <button class="nav-item" data-action="nav" data-id="calendar"><span class="ico">🗓️</span>Calendar</button>
+    <button class="nav-item" data-action="nav" data-id="calendar"><span class="ico">🗓️</span>Appointments</button>
+    <button class="nav-item" data-action="nav" data-id="backoffice"><span class="ico">🏢</span>Back Office</button>
     <button class="nav-item" data-action="nav" data-id="notes"><span class="ico">📝</span>Notes</button>
+    <button class="nav-item" data-action="nav" data-id="board"><span class="ico">📋</span>Board</button>
     <button class="nav-item" data-action="nav" data-id="pomodoro"><span class="ico">🍅</span>Pomodoro</button>
     <button class="nav-item" data-action="nav" data-id="arcade"><span class="ico">🕹️</span>Arcade</button>
     <div class="nav-spacer"></div>
@@ -268,10 +355,31 @@
       <div class="mt-label" id="mt-label">Focus</div>
       <div class="mt-time" id="mt-time">25:00</div>
     </div>
-    <div class="sidebar-foot">All data stays in this browser.</div>
+    <div class="sidebar-foot">GIA Legacy Planning · v2</div>
   </aside>
 
   <main id="main">
+
+    <section class="view" id="view-huddle">
+      <div class="huddle-header">
+        <div style="display:flex;align-items:flex-end;gap:18px">
+          <div>
+            <div class="huddle-clock" id="huddle-clock">9:00 AM</div>
+            <div class="huddle-date" id="huddle-date"></div>
+          </div>
+          <div style="flex:1"></div>
+          <div id="huddle-stats" style="display:flex;gap:10px;padding-bottom:4px"></div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto">
+        <div class="top3-wrap" id="huddle-top3"></div>
+        <div class="huddle-quick">
+          <input id="huddle-quick-input" type="text" placeholder="Quick capture — type anything, press Enter to add as a task…">
+          <button class="btn primary" data-action="huddle-quick-add">Add</button>
+        </div>
+        <div class="huddle-cols" id="huddle-cols"></div>
+      </div>
+    </section>
 
     <section class="view" id="view-dashboard">
       <div class="view-head"><div class="view-title" id="dash-greeting">Dashboard</div><div class="spacer"></div><span class="chip" id="dash-date"></span></div>
@@ -279,7 +387,7 @@
     </section>
 
     <section class="view" id="view-business">
-      <div class="view-head"><div class="view-title">Business Overview</div><div class="spacer"></div><span class="chip" id="biz-synced"></span></div>
+      <div class="view-head"><div class="view-title">Agent Tracker</div><div class="spacer"></div><span class="chip" id="biz-synced"></span></div>
       <div class="view-pad" id="biz-content"></div>
     </section>
 
@@ -406,7 +514,49 @@
       </div>
     </section>
 
+    <section class="view" id="view-recruits">
+      <div class="view-head">
+        <div class="view-title">Recruit Tracker</div>
+        <div class="spacer"></div>
+        ${(() => { const p = (typeof state !== 'undefined' && state.portals && state.portals.teamtailor) ? state.portals.teamtailor : ''; return p ? `<a class="btn" href="${p}" target="_blank" rel="noopener">🎯 Open Teamtailor ↗</a>` : ''; })()}
+        <button class="btn primary" data-action="recruit-new">＋ Add Recruit</button>
+      </div>
+      <div class="view-pad" id="recruits-content"></div>
+    </section>
+
+    <section class="view" id="view-alerts">
+      <div class="view-head">
+        <div class="view-title">Alerts &amp; Threats</div>
+        <div class="spacer"></div>
+        <button class="btn primary" data-action="alert-new">＋ New Alert</button>
+      </div>
+      <div class="view-pad" id="alerts-content"></div>
+    </section>
+
+    <section class="view" id="view-followups">
+      <div class="view-head">
+        <div class="view-title">Agent Follow-Ups</div>
+        <div class="spacer"></div>
+        <button class="btn primary" data-action="followup-new">＋ New Follow-Up</button>
+      </div>
+      <div class="view-pad" id="followups-content"></div>
+    </section>
+
+    <section class="view" id="view-backoffice">
+      <div class="view-head">
+        <div class="view-title">Back Office &amp; Portals</div>
+        <div class="spacer"></div>
+        <button class="btn ghost" data-action="portals-edit">✏️ Edit Links</button>
+      </div>
+      <div class="view-pad" id="backoffice-content"></div>
+    </section>
+
   </main>
+</div>
+<div id="bottom-dock">
+  <div id="dock-portals"></div>
+  <div class="dock-spacer"></div>
+  <span class="dock-clock" id="dock-clock"></span>
 </div>
 <div id="modal-root"></div>
 <div id="toast-root"></div>
@@ -462,6 +612,11 @@ function defaultState(){
     notebooks: [{ id: nbid, name: 'General' }],
     pomo: { sessions: [], settings: { focus: 25, short: 5, long: 15, longEvery: 4 } },
     game: { highScore: 0 },
+    alerts: [],
+    followups: [],
+    recruits: [],
+    portals: { teamtailor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '', slack: '', quilityHQ: '', calendly: '' },
+    meta: { lastBriefingDate: '' },
   };
 }
 let state;
@@ -471,6 +626,29 @@ try {
 } catch (e) { state = defaultState(); }
 if (!state.business) state.business = { imported: {}, autoImport: true };
 if (!state.business.importedEvents) state.business.importedEvents = {};
+if (!state.alerts) state.alerts = [];
+if (!state.followups) state.followups = [];
+if (!state.recruits) state.recruits = [];
+if (!state.portals) state.portals = { teamtailor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '', slack: '', quilityHQ: '', calendly: '' };
+['slack','quilityHQ','calendly'].forEach(k => { if (!(k in state.portals)) state.portals[k] = ''; });
+if (!('teamtailor' in state.portals)) { state.portals.teamtailor = state.portals.timTaylor || ''; }
+delete state.portals.timTaylor;
+if (!state.meta) state.meta = { lastBriefingDate: '' };
+// One-time seeding of known standard portal URLs so the dock works out of the box.
+// Org-specific links (Teamtailor subdomain, Slack workspace, back office) use the
+// standard sign-in pages — refine them in Back Office anytime.
+const PORTAL_DEFAULTS = {
+  teamtailor:   'https://app.teamtailor.com',
+  quilityHQ:    'https://hq.quility.com',
+  slack:        'https://app.slack.com/client',
+  suranceBay:   'https://surelc.surancebay.com',
+  calendly:     'https://calendly.com/app',
+};
+if (!state.meta.portalsSeeded){
+  Object.keys(PORTAL_DEFAULTS).forEach(k => { if (!state.portals[k]) state.portals[k] = PORTAL_DEFAULTS[k]; });
+  state.meta.portalsSeeded = true;
+  save();
+}
 function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ } }
 
 /* ---------- ui state (not persisted) ---------- */
@@ -507,10 +685,12 @@ function switchView(name){
   ui.view = name;
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view' + '-' + name));
   document.querySelectorAll('#sidebar .nav-item').forEach(b => b.classList.toggle('active', b.dataset.id === name));
+  if (name !== 'huddle') clearInterval(huddleClockInterval);
   renderView(name);
 }
 function renderView(name){
-  if (name === 'dashboard') renderDashboard();
+  if (name === 'huddle') renderHuddle();
+  else if (name === 'dashboard') renderDashboard();
   else if (name === 'business') renderBusiness();
   else if (name === 'tasks') renderTasks();
   else if (name === 'board') renderBoard();
@@ -518,6 +698,10 @@ function renderView(name){
   else if (name === 'notes') renderNotes();
   else if (name === 'pomodoro') renderPomodoro();
   else if (name === 'arcade') renderArcade();
+  else if (name === 'alerts') renderAlerts();
+  else if (name === 'followups') renderFollowups();
+  else if (name === 'recruits') renderRecruits();
+  else if (name === 'backoffice') renderBackOffice();
 }
 function rerender(){ renderView(ui.view); }
 
@@ -601,20 +785,180 @@ function focusStreak(){
   while (focusMinutesOn(d) > 0){ streak++; d = addDays(d, -1); }
   return streak;
 }
+/* =====================================================================
+   BOTTOM DOCK
+   ===================================================================== */
+const DOCK_PORTALS = [
+  { key: 'teamtailor', icon: '🎯', label: 'Teamtailor', primary: true },
+  { key: 'quilityHQ',  icon: '🏛️', label: 'Quility HQ' },
+  { key: 'slack',      icon: '💬', label: 'Slack' },
+  { key: 'backOffice', icon: '🏢', label: 'Back Office' },
+  { key: 'suranceBay', icon: '📋', label: 'SuranceBay' },
+  { key: 'agentPortal',icon: '🤝', label: 'Agent Portal' },
+  { key: 'calendly',   icon: '📅', label: 'Calendly' },
+  { key: 'carrierPortal', icon: '🏥', label: 'Carrier' },
+];
+function renderDock(){
+  const p = state.portals || {};
+  const active = DOCK_PORTALS.filter(d => p[d.key]);
+  if (!active.length){
+    $('#dock-portals').innerHTML = `<button class="dock-btn" data-action="nav" data-id="backoffice">⚙️ Set up quick-launch links</button>`;
+    return;
+  }
+  $('#dock-portals').innerHTML = active.map(d =>
+    `<a class="dock-btn ${d.primary ? 'dock-primary' : ''}" href="${esc(p[d.key])}" target="_blank" rel="noopener">${d.icon} ${d.label}</a>`
+  ).join('');
+}
+
+/* =====================================================================
+   DAILY HUDDLE (Jarvis default view)
+   ===================================================================== */
+let huddleClockInterval = null;
+function updateHuddleClock(){
+  const now = new Date();
+  const hh = now.getHours(), mm = now.getMinutes(), ss = now.getSeconds();
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  const h = hh % 12 || 12;
+  const clockEl = $('#huddle-clock');
+  const dockClock = $('#dock-clock');
+  if (clockEl) clockEl.textContent = `${h}:${pad(mm)}:${pad(ss)} ${ampm}`;
+  if (dockClock) dockClock.textContent = `${h}:${pad(mm)} ${ampm}`;
+}
+function renderHuddle(){
+  const t = todayISO();
+  const now = new Date();
+  const DOWS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  $('#huddle-date').textContent = `${DOWS_FULL[now.getDay()]}, ${MONTHS_FULL[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()} · GIA Legacy Planning`;
+
+  // live clock
+  clearInterval(huddleClockInterval);
+  huddleClockInterval = setInterval(updateHuddleClock, 1000);
+  updateHuddleClock();
+
+  // data
+  const open = state.tasks.filter(x => x.status !== 'done');
+  const overdue = open.filter(x => x.due && x.due < t);
+  const dueToday = open.filter(x => x.due === t);
+  const activeAlerts = (state.alerts || []).filter(a => !a.resolved);
+  const openFollowups = (state.followups || []).filter(f => !f.done && f.due && f.due <= t);
+  const todayAppts = [];
+  state.events.forEach(e => { if (eventOccursOn(e, t)) todayAppts.push(e); });
+  todayAppts.sort((a, b) => (a.time || '99') < (b.time || '99') ? -1 : 1);
+  const biz = BIZ();
+
+  // stat chips in header
+  const statChips = [
+    { val: activeAlerts.length, label: 'Alerts', color: activeAlerts.length ? 'var(--red)' : 'var(--green)', nav: 'alerts' },
+    { val: overdue.length, label: 'Overdue', color: overdue.length ? 'var(--amber)' : 'var(--text)', nav: 'tasks' },
+    { val: openFollowups.length, label: 'Follow-Ups Due', color: openFollowups.length ? 'var(--cyan)' : 'var(--text)', nav: 'followups' },
+    { val: todayAppts.length, label: "Appts Today", color: 'var(--text)', nav: 'calendar' },
+  ];
+  $('#huddle-stats').innerHTML = statChips.map(s =>
+    `<div class="stat-card" style="padding:8px 14px;cursor:pointer;min-width:80px;text-align:center" data-action="nav" data-id="${s.nav}">
+      <div class="sc-num" style="font-size:20px;color:${s.color}">${s.val}</div>
+      <div class="sc-label" style="font-size:10.5px">${s.label}</div>
+    </div>`
+  ).join('');
+
+  // TOP 3: overdue high → overdue → due today high → due today
+  const prioRank = { high: 0, medium: 1, low: 2, none: 3 };
+  const candidates = [...overdue, ...dueToday].slice().sort((a, b) =>
+    prioRank[a.priority || 'none'] - prioRank[b.priority || 'none']
+  );
+  const top3 = candidates.slice(0, 3);
+  $('#huddle-top3').innerHTML = `
+    <div class="top3-title">⚡ Top 3 Priorities Today</div>
+    ${top3.length ? top3.map((t2, i) => `
+      <div class="top3-item ${t2.status === 'done' ? 'done' : ''}" data-action="task-open" data-id="${t2.id}">
+        <div class="top3-num ${t2.status === 'done' ? 'done-num' : ''}">${t2.status === 'done' ? '✓' : i + 1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:14.5px;${t2.status === 'done' ? 'text-decoration:line-through;color:var(--faint)' : ''}">${esc(t2.title)}</div>
+          ${t2.due && t2.due < t ? `<span style="font-size:11.5px;color:var(--red)">⚠️ Overdue · ${fmtDate(t2.due)}</span>` : t2.due === t ? '<span style="font-size:11.5px;color:var(--amber)">Due today</span>' : ''}
+        </div>
+        <div class="t-check ${t2.priority === 'high' ? 'p-high' : t2.priority === 'medium' ? 'p-med' : ''}" data-action="task-toggle" data-id="${t2.id}" style="width:22px;height:22px">✓</div>
+      </div>`).join('') : '<div class="empty" style="padding:18px 10px">No tasks due today — add one below or enjoy the clear slate 🍃</div>'}`;
+
+  // agent dev items from BIZ
+  const agentDevItems = [];
+  if (biz) {
+    (biz.suggestions || []).filter(s => ['agent','coaching','production'].some(k => s.tag?.includes(k))).slice(0, 4).forEach(s => {
+      agentDevItems.push({ text: s.title, detail: s.detail || '', priority: s.priority });
+    });
+  }
+  // also add any high-priority follow-ups that aren't yet in the list
+  const futureFollowups = (state.followups || []).filter(f => !f.done && f.due && f.due > t).slice(0, 4);
+
+  // three-column huddle
+  $('#huddle-cols').innerHTML = `
+    <div class="huddle-col">
+      <div class="huddle-col-title">🤝 Agent &amp; Client Follow-Ups <span style="margin-left:auto;font-size:10px;color:var(--faint)">${openFollowups.length} due</span></div>
+      ${openFollowups.length ? openFollowups.slice(0, 5).map(f => `
+        <div class="huddle-item">
+          <div class="agent-avatar" style="width:26px;height:26px;font-size:11px">${(f.agentName || '?')[0].toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600">${esc(f.agentName || '')}</div>
+            <div style="font-size:11.5px;color:var(--muted)">${esc(f.action || '')}</div>
+          </div>
+          <button class="btn small ghost" data-action="followup-done" data-id="${f.id}" style="padding:3px 7px;font-size:11px">✓</button>
+        </div>`).join('') : `<div class="huddle-empty">No follow-ups due today</div>`}
+      ${futureFollowups.length ? `<div style="font-size:11px;color:var(--faint);padding:4px 4px 0">Upcoming: ${futureFollowups.map(f => `${esc(f.agentName)} (${fmtDate(f.due)})`).join(' · ')}</div>` : ''}
+      <button class="btn small ghost" data-action="followup-new" style="margin-top:4px;font-size:12px">＋ Add Follow-Up</button>
+    </div>
+
+    <div class="huddle-col">
+      <div class="huddle-col-title">📅 Today's Appointments <span style="margin-left:auto;font-size:10px;color:var(--faint)">${todayAppts.length}</span></div>
+      ${todayAppts.length ? todayAppts.map(e => `
+        <div class="huddle-item" data-action="event-open" data-id="${e.id}" style="cursor:pointer">
+          <span class="ev-dot" style="background:${e.color};flex:none;margin-top:2px"></span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600">${esc(e.title)}</div>
+            ${e.time ? `<div style="font-size:11.5px;color:var(--muted)">${e.time}${e.duration ? ' · ' + e.duration + 'min' : ''}</div>` : ''}
+          </div>
+        </div>`).join('') : '<div class="huddle-empty">No appointments today</div>'}
+      <button class="btn small ghost" data-action="event-new" style="margin-top:4px;font-size:12px">＋ Schedule Appointment</button>
+    </div>
+
+    <div class="huddle-col">
+      <div class="huddle-col-title">🌱 Agent Development</div>
+      ${agentDevItems.length ? agentDevItems.map(a => `
+        <div class="huddle-item" style="border-left:3px solid ${a.priority === 'high' ? 'var(--red)' : a.priority === 'medium' ? 'var(--amber)' : 'var(--accent)'}">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600">${esc(a.text)}</div>
+            ${a.detail ? `<div style="font-size:11px;color:var(--faint)">${esc(a.detail)}</div>` : ''}
+          </div>
+        </div>`).join('') : `<div class="huddle-empty">${biz ? 'All agents on track 🟢' : 'Run sync to see agent data'}</div>`}
+      ${activeAlerts.slice(0, 2).map(a => `
+        <div class="huddle-item level-${a.level}" style="border-left:3px solid ${a.level === 'critical' ? 'var(--red)' : a.level === 'high' ? 'var(--amber)' : 'var(--accent)'}">
+          <span class="alert-badge ab-${a.level}" style="font-size:10px">${a.level.toUpperCase()}</span>
+          <div style="flex:1;font-size:12px">${esc(a.title)}</div>
+        </div>`).join('')}
+      <button class="btn small ghost" data-action="nav" data-id="business" style="margin-top:4px;font-size:12px">Open Agent Tracker →</button>
+    </div>`;
+}
+
 function renderDashboard(){
   const t = todayISO();
   const hour = new Date().getHours();
-  $('#dash-greeting').textContent = hour < 5 ? 'Burning the midnight oil 🌙' : hour < 12 ? 'Good morning ☀️' : hour < 18 ? 'Good afternoon 👋' : 'Good evening 🌆';
+  const greeting = hour < 5 ? 'Burning the midnight oil 🌙' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  $('#dash-greeting').textContent = `${greeting} — GIA Command`;
   const now = new Date();
   $('#dash-date').textContent = `${DOWS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  // mark briefing shown for today
+  const showBriefing = state.meta.lastBriefingDate !== t;
+  if (showBriefing) { state.meta.lastBriefingDate = t; save(); }
 
   const open = state.tasks.filter(x => x.status !== 'done');
   const dueToday = open.filter(x => x.due === t);
   const overdue = open.filter(x => x.due && x.due < t);
   const doneToday = state.tasks.filter(x => x.completedAt && iso(new Date(x.completedAt)) === t).length;
-  const focusToday = focusMinutesOn(t);
 
-  // upcoming events / tasks next 7 days
+  const activeAlerts = (state.alerts || []).filter(a => !a.resolved);
+  const criticalAlerts = activeAlerts.filter(a => a.level === 'critical');
+  const openFollowups = (state.followups || []).filter(f => !f.done);
+  const todayFollowups = openFollowups.filter(f => !f.due || f.due <= t);
+
+  // upcoming appointments next 7 days
   const upcoming = [];
   for (let i = 0; i < 7; i++){
     const ds = addDays(t, i);
@@ -623,42 +967,164 @@ function renderDashboard(){
   upcoming.sort((a, b) => a.ds === b.ds ? (a.e.time || '99') < (b.e.time || '99') ? -1 : 1 : a.ds < b.ds ? -1 : 1);
 
   const focusList = [...overdue, ...dueToday];
-  const pinnedNotes = state.notes.filter(n => n.pinned).slice(0, 3);
+  const biz = BIZ();
+  const recruits = state.recruits || [];
+  const activeRecruits = recruits.filter(r => !['inactive','cold'].includes(r.stage));
+  const hotRecruits = recruits.filter(r => ['interested','licensing','contracting'].includes(r.stage));
+
+  // portals bar
+  const portals = state.portals || {};
+  const portalLinks = [
+    { label: '🎯 Teamtailor', url: portals.teamtailor, cls: 'primary-portal' },
+    { label: '🏢 Back Office', url: portals.backOffice, cls: '' },
+    { label: '🤝 Agent Portal', url: portals.agentPortal, cls: '' },
+    { label: '📋 SuranceBay', url: portals.suranceBay, cls: '' },
+    { label: '🏥 Carrier Portal', url: portals.carrierPortal, cls: '' },
+  ].filter(p => p.url);
+
+  const portalBar = portalLinks.length ? `
+    <div class="gia-portal-bar">
+      ${portalLinks.map(p => `<a class="portal-btn ${p.cls}" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.label)}</a>`).join('')}
+      <button class="portal-btn" data-action="nav" data-id="backoffice">⚙️ Manage Portals</button>
+    </div>` : `
+    <div class="gia-portal-bar">
+      <button class="portal-btn primary-portal" data-action="nav" data-id="backoffice">⚙️ Set Up Portals (Teamtailor, Back Office…)</button>
+    </div>`;
+
+  // briefing banner
+  const briefingItems = [];
+  if (criticalAlerts.length) briefingItems.push(`🔴 ${criticalAlerts.length} critical alert${criticalAlerts.length > 1 ? 's' : ''}`);
+  if (overdue.length) briefingItems.push(`⚠️ ${overdue.length} overdue task${overdue.length > 1 ? 's' : ''}`);
+  if (todayFollowups.length) briefingItems.push(`🤝 ${todayFollowups.length} follow-up${todayFollowups.length > 1 ? 's' : ''} due`);
+  if (upcoming.filter(u => u.ds === t).length) briefingItems.push(`📅 ${upcoming.filter(u => u.ds === t).length} appointment${upcoming.filter(u => u.ds === t).length > 1 ? 's' : ''} today`);
+  const briefingBanner = showBriefing && briefingItems.length ? `
+    <div class="briefing-bar" id="briefing-bar">
+      <span>⚡ Daily briefing:</span>
+      <span style="color:var(--text)">${briefingItems.join(' &nbsp;·&nbsp; ')}</span>
+      <button class="bb-close" data-action="briefing-close">✕</button>
+    </div>` : '';
+
+  // production leaderboard from BIZ data
+  const lbHTML = (() => {
+    if (!biz || !biz.production || !biz.production.agents.length) return '<div class="empty">Connect agency data to see leaderboard.</div>';
+    const agents = biz.production.agents.slice().sort((a, b) => (b.apv || 0) - (a.apv || 0));
+    const maxApv = agents[0]?.apv || 1;
+    return agents.slice(0, 6).map((a, i) => {
+      const pct = Math.round((a.apv || 0) / maxApv * 100);
+      const medals = ['🥇','🥈','🥉'];
+      return `<div class="lb-row">
+        <span class="lb-rank">${medals[i] || (i + 1)}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${esc(a.name)}</div>
+          <div class="lb-bar-wrap" style="margin-top:4px"><div class="lb-bar" style="width:${pct}%"></div></div>
+        </div>
+        <span class="lb-apv" style="color:${pct === 100 ? 'var(--green)' : pct >= 60 ? 'var(--amber)' : 'var(--red)'}">$${(a.apv || 0).toLocaleString()}</span>
+      </div>`;
+    }).join('');
+  })();
+
+  // pending apps
+  const pendingHTML = (() => {
+    if (!biz) return '';
+    const pd = biz.pending || { count: 0, apv: 0 };
+    if (!pd.count) return '';
+    return `<div class="card">
+      <div class="dash-section-title">📬 Pending Applications</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="stat-card" style="padding:10px 14px"><div class="sc-label">Apps</div><div class="sc-num" style="font-size:20px">${pd.count}</div></div>
+        <div class="stat-card" style="padding:10px 14px"><div class="sc-label">In Underwriting</div><div class="sc-num" style="font-size:20px">$${pd.apv.toLocaleString()}</div></div>
+      </div>
+    </div>`;
+  })();
+
+  // recruit pipeline snapshot
+  const recruitSnap = (() => {
+    const STAGES = ['prospect','contacted','interested','licensing','contracting','active'];
+    const counts = {};
+    STAGES.forEach(s => counts[s] = recruits.filter(r => r.stage === s).length);
+    const total = recruits.length;
+    if (!total) return `<div class="empty">No recruits yet.<br><button class="btn small primary" data-action="nav" data-id="recruits" style="margin-top:8px">Open Recruit Tracker</button></div>`;
+    return STAGES.filter(s => counts[s]).map(s =>
+      `<div class="dash-event"><span class="stage-badge stage-${s}">${s}</span><div class="spacer"></div><b>${counts[s]}</b></div>`
+    ).join('') + (portals.teamtailor ? `<a class="btn small ghost" href="${esc(portals.teamtailor)}" target="_blank" rel="noopener" style="margin-top:8px;display:inline-flex">Open Teamtailor ↗</a>` : '');
+  })();
 
   $('#dash-content').innerHTML = `
+    ${portalBar}
+    ${briefingBanner}
     <div class="quick-add">
-      <input id="dash-quick" type="text" placeholder="Quick capture — type a task and press Enter (due today)…">
-      <button class="btn primary" data-action="dash-quick-add">Add</button>
+      <input id="dash-quick" type="text" placeholder="Quick capture — type a task and press Enter…">
+      <button class="btn primary" data-action="dash-quick-add">Add Task</button>
     </div>
-    <div class="dash-grid">
-      <div class="stat-card"><div class="sc-label">Due today</div><div class="sc-num">${dueToday.length}</div><div class="sc-sub">${doneToday} completed today</div></div>
+    <div class="dash-grid" style="grid-template-columns:repeat(6,1fr)">
+      <div class="stat-card"><div class="sc-label">Tasks Due Today</div><div class="sc-num">${dueToday.length}</div><div class="sc-sub">${doneToday} done today</div></div>
       <div class="stat-card"><div class="sc-label">Overdue</div><div class="sc-num" style="color:${overdue.length ? 'var(--red)' : 'var(--text)'}">${overdue.length}</div><div class="sc-sub">${open.length} open total</div></div>
-      <div class="stat-card"><div class="sc-label">Focus today</div><div class="sc-num">${focusToday}<span style="font-size:14px;color:var(--muted)"> min</span></div><div class="sc-sub">${state.pomo.sessions.filter(s => s.date === t).length} sessions</div></div>
-      <div class="stat-card"><div class="sc-label">Focus streak</div><div class="sc-num">${focusStreak()}<span style="font-size:14px;color:var(--muted)"> days</span></div><div class="sc-sub">keep it going 🔥</div></div>
-      <div class="stat-card"><div class="sc-label">Snake best</div><div class="sc-num">${state.game.highScore}</div><div class="sc-sub">beat it on a break 🕹️</div></div>
+      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="alerts"><div class="sc-label">Active Alerts</div><div class="sc-num" style="color:${criticalAlerts.length ? 'var(--red)' : activeAlerts.length ? 'var(--amber)' : 'var(--green)'}">${activeAlerts.length}</div><div class="sc-sub">${criticalAlerts.length ? criticalAlerts.length + ' critical' : 'all clear'}</div></div>
+      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="followups"><div class="sc-label">Follow-Ups Due</div><div class="sc-num" style="color:${todayFollowups.length ? 'var(--amber)' : 'var(--text)'}">${todayFollowups.length}</div><div class="sc-sub">${openFollowups.length} open</div></div>
+      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="calendar"><div class="sc-label">Appts Today</div><div class="sc-num">${upcoming.filter(u => u.ds === t).length}</div><div class="sc-sub">${upcoming.length} next 7 days</div></div>
+      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="recruits"><div class="sc-label">Hot Recruits</div><div class="sc-num" style="color:${hotRecruits.length ? 'var(--cyan)' : 'var(--text)'}">${hotRecruits.length}</div><div class="sc-sub">${activeRecruits.length} in pipeline</div></div>
     </div>
-    <div class="dash-cols">
-      <div class="card">
-        <div class="dash-section-title">Today's Focus ${overdue.length ? `<span style="color:var(--red)">· ${overdue.length} overdue</span>` : ''}</div>
-        ${focusList.length ? focusList.map(taskRowHTML).join('') : '<div class="empty">Nothing due today — add a task above or enjoy the calm 🍃</div>'}
-      </div>
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px">
       <div style="display:flex;flex-direction:column;gap:14px">
-        ${bizSnapshotCardHTML()}
-        <div class="card">
-          <div class="dash-section-title">Next 7 Days</div>
-          ${upcoming.length ? upcoming.slice(0, 8).map(({ds, e}) => `
-            <div class="dash-event" data-action="event-open" data-id="${e.id}" style="cursor:pointer">
-              <span class="ev-dot" style="background:${e.color}"></span>
-              <span style="flex:1;font-size:13.5px">${esc(e.title)}</span>
-              <span class="de-date">${esc(fmtDate(ds))}${e.time ? ' · ' + e.time : ''}</span>
-            </div>`).join('') : '<div class="empty">No events coming up.<br>Add one from the Calendar.</div>'}
+        <div class="card" style="${criticalAlerts.length ? 'border-color:rgba(248,113,113,.5)' : ''}">
+          <div class="dash-section-title" style="display:flex;align-items:center">
+            🚨 Alerts &amp; Threats
+            <div class="spacer"></div>
+            <button class="btn small primary" data-action="alert-new">＋ Add</button>
+            <button class="btn small ghost" data-action="nav" data-id="alerts" style="margin-left:4px">All →</button>
+          </div>
+          ${activeAlerts.length ? activeAlerts.slice(0,4).map(a => `
+            <div class="alert-item level-${a.level}">
+              <span class="alert-badge ab-${a.level}">${a.level.toUpperCase()}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13.5px;font-weight:500">${esc(a.title)}</div>
+                ${a.notes ? `<div style="font-size:11.5px;color:var(--faint)">${esc(a.notes)}</div>` : ''}
+              </div>
+              <button class="btn small primary" data-action="alert-resolve" data-id="${a.id}">✓</button>
+            </div>`).join('') : '<div class="empty">No active alerts 🟢 All clear</div>'}
         </div>
         <div class="card">
-          <div class="dash-section-title">Pinned Notes</div>
-          ${pinnedNotes.length ? pinnedNotes.map(n => `
-            <div class="dash-event" data-action="dash-note" data-id="${n.id}" style="cursor:pointer">
-              <span>📌</span><span style="flex:1;font-size:13.5px">${esc(n.title || 'Untitled')}</span>
-            </div>`).join('') : '<div class="empty">Pin a note to see it here.</div>'}
+          <div class="dash-section-title">Today's Tasks ${overdue.length ? `<span style="color:var(--red)">· ${overdue.length} overdue</span>` : ''}</div>
+          ${focusList.length ? focusList.slice(0,6).map(taskRowHTML).join('') : '<div class="empty">Nothing due today 🍃</div>'}
+        </div>
+        <div class="card">
+          <div class="dash-section-title" style="display:flex;align-items:center">🏆 Agent Production Leaderboard ${biz ? `<span style="margin-left:6px;font-size:11px;color:var(--faint);font-weight:400;text-transform:none">vs $${biz.production.targetApv.toLocaleString()} target</span>` : ''}<div class="spacer"></div><button class="btn small ghost" data-action="nav" data-id="business">Full view →</button></div>
+          ${lbHTML}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div class="dash-section-title" style="display:flex;align-items:center">
+            🤝 Agent Follow-Ups
+            <div class="spacer"></div>
+            <button class="btn small primary" data-action="followup-new">＋ Add</button>
+            <button class="btn small ghost" data-action="nav" data-id="followups" style="margin-left:4px">All →</button>
+          </div>
+          ${todayFollowups.length ? todayFollowups.slice(0,4).map(f => `
+            <div class="followup-item">
+              <div class="agent-avatar">${(f.agentName || '?')[0].toUpperCase()}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:500">${esc(f.agentName || 'Unknown')}</div>
+                <div style="font-size:11.5px;color:var(--muted)">${esc(f.action || '')}</div>
+              </div>
+              <button class="btn small ghost" data-action="followup-done" data-id="${f.id}" title="Mark done">✓</button>
+            </div>`).join('') : openFollowups.length ? `<div class="empty" style="padding:18px">No follow-ups due today.<br><span style="font-size:11.5px">${openFollowups.length} upcoming</span></div>` : '<div class="empty" style="padding:18px">No open follow-ups.</div>'}
+        </div>
+        <div class="card">
+          <div class="dash-section-title" style="display:flex;align-items:center">🎯 Recruit Pipeline<div class="spacer"></div><button class="btn small ghost" data-action="nav" data-id="recruits">All →</button></div>
+          ${recruitSnap}
+        </div>
+        ${pendingHTML}
+        ${bizSnapshotCardHTML()}
+        <div class="card">
+          <div class="dash-section-title">📅 Appointments — Next 7 Days</div>
+          ${upcoming.length ? upcoming.slice(0, 5).map(({ds, e}) => `
+            <div class="dash-event" data-action="event-open" data-id="${e.id}" style="cursor:pointer">
+              <span class="ev-dot" style="background:${e.color}"></span>
+              <span style="flex:1;font-size:13px">${esc(e.title)}</span>
+              <span class="de-date">${esc(fmtDate(ds))}${e.time ? ' · ' + e.time : ''}</span>
+            </div>`).join('') : '<div class="empty">No appointments.</div>'}
+          <button class="btn small ghost" style="margin-top:8px" data-action="event-new">＋ New Appointment</button>
         </div>
       </div>
     </div>`;
@@ -846,6 +1312,296 @@ function bizInboxHTML(biz){
       </div>
     </div>`).join('');
   return `<div class="card"><div class="dash-section-title">📬 Inbox Digest</div>${rows}</div>`;
+}
+
+/* =====================================================================
+   RECRUIT TRACKER
+   ===================================================================== */
+const RECRUIT_STAGES = ['prospect','contacted','interested','licensing','contracting','active','cold','inactive'];
+const stageColor = s => ({ prospect:'#5b6578', contacted:'#7c8cff', interested:'#fbbf24', licensing:'#22d3ee', contracting:'#f472b6', active:'#4ade80', cold:'#5b6578', inactive:'#5b6578' }[s] || '#5b6578');
+
+function renderRecruits(){
+  const recruits = state.recruits || [];
+  const portals = state.portals || {};
+  const byStage = {};
+  RECRUIT_STAGES.forEach(s => { byStage[s] = recruits.filter(r => r.stage === s); });
+
+  const teamtailorBtn = portals.teamtailor
+    ? `<a class="btn" href="${esc(portals.teamtailor)}" target="_blank" rel="noopener" style="margin-bottom:18px;display:inline-flex">🎯 Open Teamtailor ↗</a>`
+    : `<div class="card" style="max-width:500px;margin-bottom:18px;padding:12px 16px;display:flex;align-items:center;gap:12px"><span style="color:var(--faint)">🎯</span><span style="font-size:13px;color:var(--muted)">Add your Teamtailor URL in Back Office to get a quick-launch button.</span><button class="btn small" data-action="nav" data-id="backoffice">Set up →</button></div>`;
+
+  const stageGroups = RECRUIT_STAGES.filter(s => byStage[s].length).map(s => `
+    <div class="dash-section-title" style="margin-top:18px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+      <span class="stage-badge stage-${s}">${s}</span>
+      <span>${byStage[s].length}</span>
+    </div>
+    ${byStage[s].map(r => `
+      <div class="recruit-row">
+        <div class="agent-avatar" style="background:${stageColor(r.stage)}26;color:${stageColor(r.stage)};border:1px solid ${stageColor(r.stage)}44">${(r.name || '?')[0].toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13.5px;font-weight:600">${esc(r.name || 'Unknown')}</div>
+          ${r.phone ? `<div style="font-size:11.5px;color:var(--muted)">${esc(r.phone)}</div>` : ''}
+          ${r.notes ? `<div style="font-size:11.5px;color:var(--faint)">${esc(r.notes)}</div>` : ''}
+        </div>
+        ${r.due ? `<span class="chip ${r.due < todayISO() ? 'overdue' : r.due === todayISO() ? 'today' : ''}">📅 ${fmtDate(r.due)}</span>` : ''}
+        <select class="btn small" style="padding:4px 8px;font-size:12px" data-action="recruit-stage" data-id="${r.id}">
+          ${RECRUIT_STAGES.map(st => `<option value="${st}" ${r.stage === st ? 'selected' : ''}>${st}</option>`).join('')}
+        </select>
+        <button class="btn small primary" data-action="recruit-followup" data-id="${r.id}" title="Add follow-up">🤝</button>
+        <button class="btn small ghost danger" data-action="recruit-delete" data-id="${r.id}">✕</button>
+      </div>`).join('')}`).join('');
+
+  const stageStats = RECRUIT_STAGES.filter(s => byStage[s].length).map(s =>
+    `<span class="chip stage-${s}" style="padding:4px 10px">${s}: <b style="margin-left:4px">${byStage[s].length}</b></span>`).join('');
+
+  $('#recruits-content').innerHTML = `
+    ${teamtailorBtn}
+    ${recruits.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">${stageStats}</div>` : ''}
+    ${recruits.length ? stageGroups : '<div class="card" style="max-width:600px;margin:0 auto"><div class="empty" style="padding:50px">No recruits yet.<br>Add your first recruit below or pull from Teamtailor.</div></div>'}`;
+
+  // wire stage-change selects after render
+  document.querySelectorAll('[data-action="recruit-stage"]').forEach(sel => {
+    sel.addEventListener('change', e => {
+      const r = (state.recruits || []).find(x => x.id === e.target.dataset.id);
+      if (r){ r.stage = e.target.value; save(); renderRecruits(); toast(`Moved to ${r.stage}`); }
+    });
+  });
+}
+function openRecruitModal(){
+  $('#modal-root').innerHTML = `<div class="modal">
+    <div class="modal-head">Add Recruit<div class="spacer"></div><button class="btn ghost small" data-action="modal-close">✕</button></div>
+    <div class="modal-body">
+      <input id="rc-name" type="text" placeholder="Full name…" style="font-size:15px;font-weight:600">
+      <div class="frow">
+        <div class="fcol"><span>Phone / Email</span><input id="rc-phone" type="text" placeholder="Contact info"></div>
+        <div class="fcol"><span>Stage</span><select id="rc-stage">
+          ${RECRUIT_STAGES.map(s => `<option value="${s}" ${s === 'prospect' ? 'selected' : ''}>${s}</option>`).join('')}
+        </select></div>
+      </div>
+      <div class="frow">
+        <div class="fcol"><span>Next Follow-Up</span><input type="date" id="rc-due" value="${todayISO()}"></div>
+      </div>
+      <div class="fcol"><span>Notes</span><textarea id="rc-notes" rows="2" placeholder="Source, referral, background…"></textarea></div>
+    </div>
+    <div class="modal-foot"><div class="spacer"></div>
+      <button class="btn" data-action="modal-close">Cancel</button>
+      <button class="btn primary" data-action="modal-recruit-save">Add Recruit</button>
+    </div>
+  </div>`;
+  $('#modal-root').classList.add('open');
+  $('#rc-name').focus();
+}
+function saveRecruitModal(){
+  const name = $('#rc-name').value.trim();
+  if (!name){ toast('Enter recruit name'); return; }
+  const r = { id: uid(), name, phone: $('#rc-phone').value.trim(), stage: $('#rc-stage').value, due: $('#rc-due').value || null, notes: $('#rc-notes').value.trim(), createdAt: Date.now() };
+  state.recruits.push(r);
+  // auto-create follow-up
+  if (r.due) {
+    state.followups.push({ id: uid(), agentName: r.name, action: `Follow up — stage: ${r.stage}`, due: r.due, notes: '', done: false, createdAt: Date.now() });
+  }
+  save(); closeModal(); renderRecruits(); toast('Recruit added');
+}
+
+/* =====================================================================
+   NOTIFICATIONS & DAILY BRIEFING
+   ===================================================================== */
+function requestNotifPerms(){
+  try { if (Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+}
+function sendBriefingNotif(){
+  try {
+    if (!Notification || Notification.permission !== 'granted') return;
+    const t = todayISO();
+    const critAlerts = (state.alerts || []).filter(a => !a.resolved && a.level === 'critical').length;
+    const overdueTasks = state.tasks.filter(x => x.status !== 'done' && x.due && x.due < t).length;
+    const dueFollowups = (state.followups || []).filter(f => !f.done && f.due && f.due <= t).length;
+    const parts = [];
+    if (critAlerts) parts.push(`${critAlerts} critical alert${critAlerts > 1 ? 's' : ''}`);
+    if (overdueTasks) parts.push(`${overdueTasks} overdue task${overdueTasks > 1 ? 's' : ''}`);
+    if (dueFollowups) parts.push(`${dueFollowups} follow-up${dueFollowups > 1 ? 's' : ''} due`);
+    if (parts.length) new Notification('GIA Command — Daily Briefing', { body: parts.join(' · '), icon: '' });
+  } catch (e) {}
+}
+function scheduleFollowupReminder(){
+  // fire a notification if any follow-ups due today haven't been done — checks every 30 min
+  setInterval(() => {
+    try {
+      if (!Notification || Notification.permission !== 'granted') return;
+      const t = todayISO();
+      const due = (state.followups || []).filter(f => !f.done && f.due === t);
+      if (due.length) new Notification(`GIA Command — ${due.length} follow-up${due.length > 1 ? 's' : ''} due today`, {
+        body: due.slice(0, 3).map(f => `${f.agentName}: ${f.action}`).join('\n'),
+      });
+    } catch (e) {}
+  }, 30 * 60 * 1000);
+}
+
+/* =====================================================================
+   ALERTS
+   ===================================================================== */
+function renderAlerts(){
+  const t = todayISO();
+  const all = state.alerts || [];
+  const active = all.filter(a => !a.resolved);
+  const resolved = all.filter(a => a.resolved);
+  const levelOrder = { critical: 0, high: 1, medium: 2 };
+  const sorted = active.slice().sort((a, b) => (levelOrder[a.level] ?? 3) - (levelOrder[b.level] ?? 3));
+  $('#alerts-content').innerHTML = `
+    ${sorted.length === 0 ? '<div class="card" style="max-width:600px;margin:0 auto"><div class="empty" style="padding:50px 10px">🟢 No active alerts — all clear!</div></div>' :
+      sorted.map(a => `
+      <div class="alert-item level-${a.level}" style="margin-bottom:10px">
+        <span class="alert-badge ab-${a.level}">${a.level.toUpperCase()}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600">${esc(a.title)}</div>
+          ${a.notes ? `<div style="font-size:12.5px;color:var(--muted);margin-top:3px">${esc(a.notes)}</div>` : ''}
+          <div style="font-size:11px;color:var(--faint);margin-top:4px">Added ${fmtDate(a.createdAt ? iso(new Date(a.createdAt)) : t)} · #${esc(a.category || 'general')}</div>
+        </div>
+        <button class="btn small primary" data-action="alert-resolve" data-id="${a.id}">✓ Resolve</button>
+        <button class="btn small ghost danger" data-action="alert-delete" data-id="${a.id}">✕</button>
+      </div>`).join('')}
+    ${resolved.length ? `<div class="dash-section-title" style="margin-top:22px;margin-bottom:10px">Resolved (${resolved.length})</div>
+      ${resolved.slice(0, 10).map(a => `
+        <div class="alert-item resolved" style="margin-bottom:8px">
+          <span class="alert-badge" style="background:var(--surface2);color:var(--faint)">${a.level.toUpperCase()}</span>
+          <div style="flex:1"><div style="font-size:13px">${esc(a.title)}</div></div>
+          <button class="btn small ghost danger" data-action="alert-delete" data-id="${a.id}">✕</button>
+        </div>`).join('')}` : ''}`;
+}
+function openAlertModal(){
+  $('#modal-root').innerHTML = `<div class="modal">
+    <div class="modal-head">New Alert / Threat<div class="spacer"></div><button class="btn ghost small" data-action="modal-close">✕</button></div>
+    <div class="modal-body">
+      <input id="al-title" type="text" placeholder="Alert description…" style="font-size:15px;font-weight:600">
+      <div class="frow">
+        <div class="fcol"><span>Level</span><select id="al-level">
+          <option value="critical">🔴 Critical</option>
+          <option value="high" selected>🟡 High</option>
+          <option value="medium">🔵 Medium</option>
+        </select></div>
+        <div class="fcol"><span>Category</span><select id="al-category">
+          <option value="chargeback">Chargeback</option>
+          <option value="compliance">Compliance</option>
+          <option value="licensing">Licensing</option>
+          <option value="agent">Agent Issue</option>
+          <option value="client">Client Issue</option>
+          <option value="general">General</option>
+        </select></div>
+      </div>
+      <div class="fcol"><span>Notes (optional)</span><textarea id="al-notes" rows="2" placeholder="Details…"></textarea></div>
+    </div>
+    <div class="modal-foot"><div class="spacer"></div>
+      <button class="btn" data-action="modal-close">Cancel</button>
+      <button class="btn primary" data-action="modal-alert-save">Add Alert</button>
+    </div>
+  </div>`;
+  $('#modal-root').classList.add('open');
+  $('#al-title').focus();
+}
+function saveAlertModal(){
+  const title = $('#al-title').value.trim();
+  if (!title){ toast('Enter an alert description'); return; }
+  state.alerts.push({ id: uid(), title, level: $('#al-level').value, category: $('#al-category').value, notes: $('#al-notes').value.trim(), createdAt: Date.now(), resolved: false });
+  save(); closeModal(); rerender();
+  toast('Alert added');
+}
+
+/* =====================================================================
+   AGENT FOLLOW-UPS
+   ===================================================================== */
+function renderFollowups(){
+  const t = todayISO();
+  const all = (state.followups || []).slice().sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return (a.due || '9999') < (b.due || '9999') ? -1 : 1;
+  });
+  $('#followups-content').innerHTML = all.length ? all.map(f => `
+    <div class="followup-item ${f.done ? 'done-fu' : ''}" style="margin-bottom:10px">
+      <div class="agent-avatar">${(f.agentName || '?')[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:600">${esc(f.agentName || 'Unknown Agent')}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px">${esc(f.action || '')}</div>
+        ${f.notes ? `<div style="font-size:11.5px;color:var(--faint);margin-top:2px">${esc(f.notes)}</div>` : ''}
+      </div>
+      ${f.due ? `<span class="chip ${!f.done && f.due < t ? 'overdue' : !f.done && f.due === t ? 'today' : ''}">📅 ${fmtDate(f.due)}</span>` : ''}
+      <button class="btn small ${f.done ? '' : 'primary'}" data-action="followup-done" data-id="${f.id}">${f.done ? '↩ Reopen' : '✓ Done'}</button>
+      <button class="btn small ghost danger" data-action="followup-delete" data-id="${f.id}">✕</button>
+    </div>`).join('') : '<div class="card" style="max-width:600px;margin:0 auto"><div class="empty" style="padding:50px">No follow-ups yet.<br>Track every agent touchpoint here.</div></div>';
+}
+function openFollowupModal(prefillAgent){
+  const biz = BIZ();
+  const agentNames = biz ? biz.production.agents.map(a => a.name) : [];
+  const recruitNames = (state.recruits || []).map(r => r.name);
+  $('#modal-root').innerHTML = `<div class="modal">
+    <div class="modal-head">New Agent Follow-Up<div class="spacer"></div><button class="btn ghost small" data-action="modal-close">✕</button></div>
+    <div class="modal-body">
+      <div class="fcol"><span>Agent Name</span>
+        <input id="fu-agent" list="fu-agent-list" type="text" placeholder="Agent name…" style="font-size:14px" value="${esc(prefillAgent || '')}">
+        <datalist id="fu-agent-list">${[...new Set([...agentNames,...recruitNames])].map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+      </div>
+      <div class="fcol"><span>Follow-Up Action</span>
+        <input id="fu-action" type="text" placeholder="e.g. Call re: pending app, License check…" style="font-size:14px">
+      </div>
+      <div class="frow">
+        <div class="fcol"><span>Due Date</span><input type="date" id="fu-due" value="${todayISO()}"></div>
+      </div>
+      <div class="fcol"><span>Notes (optional)</span><textarea id="fu-notes" rows="2" placeholder="Extra context…"></textarea></div>
+    </div>
+    <div class="modal-foot"><div class="spacer"></div>
+      <button class="btn" data-action="modal-close">Cancel</button>
+      <button class="btn primary" data-action="modal-followup-save">Add Follow-Up</button>
+    </div>
+  </div>`;
+  $('#modal-root').classList.add('open');
+  $('#fu-agent').focus();
+}
+function saveFollowupModal(){
+  const agentName = $('#fu-agent').value.trim();
+  const action = $('#fu-action').value.trim();
+  if (!agentName || !action){ toast('Enter agent name and action'); return; }
+  state.followups.push({ id: uid(), agentName, action, due: $('#fu-due').value || null, notes: $('#fu-notes').value.trim(), done: false, createdAt: Date.now() });
+  save(); closeModal(); rerender();
+  toast('Follow-up added');
+}
+
+/* =====================================================================
+   BACK OFFICE
+   ===================================================================== */
+function renderBackOffice(){
+  const p = state.portals || {};
+  const cards = [
+    { key: 'teamtailor',  icon: '🎯', name: 'Teamtailor',   desc: 'Recruiting & hiring platform' },
+    { key: 'quilityHQ',   icon: '🏛️', name: 'Quility HQ',   desc: 'Agency HQ & resources' },
+    { key: 'slack',       icon: '💬', name: 'Slack',         desc: 'Team communications' },
+    { key: 'backOffice',  icon: '🏢', name: 'Back Office',   desc: 'Admin & operations portal' },
+    { key: 'agentPortal', icon: '🤝', name: 'Agent Portal',  desc: 'Recruit & agent management' },
+    { key: 'suranceBay',  icon: '📋', name: 'SuranceBay',    desc: 'Contracting & onboarding' },
+    { key: 'calendly',    icon: '📅', name: 'Calendly',      desc: 'Scheduling & appointments' },
+    { key: 'carrierPortal',icon:'🏥', name: 'Carrier Portal',desc: 'Carrier submissions & status' },
+  ];
+  const cardHTML = cards.map(c => p[c.key]
+    ? `<a class="bo-card" href="${esc(p[c.key])}" target="_blank" rel="noopener"><div class="bo-icon">${c.icon}</div><div class="bo-name">${c.name}</div><div class="bo-desc">${c.desc}</div></a>`
+    : `<div class="bo-card" style="opacity:.5;cursor:default"><div class="bo-icon">${c.icon}</div><div class="bo-name">${c.name}</div><div class="bo-desc" style="color:var(--faint)">Not configured</div></div>`
+  ).join('');
+
+  $('#backoffice-content').innerHTML = `
+    <div class="backoffice-grid" style="max-width:900px;margin-bottom:28px">${cardHTML}</div>
+    <div class="card" style="max-width:600px">
+      <div class="dash-section-title">Configure Portal Links</div>
+      ${cards.map(c => `
+        <div class="portal-edit-row">
+          <label>${c.icon} ${c.name}</label>
+          <input type="url" id="po-${c.key}" placeholder="https://…" value="${esc(p[c.key] || '')}">
+        </div>`).join('')}
+      <div style="display:flex;justify-content:flex-end;margin-top:14px">
+        <button class="btn primary" data-action="portals-save">Save Links</button>
+      </div>
+    </div>`;
+}
+function savePortals(){
+  const keys = ['teamtailor','quilityHQ','slack','backOffice','agentPortal','suranceBay','calendly','carrierPortal'];
+  keys.forEach(k => { const el = document.getElementById('po-' + k); if (el) state.portals[k] = el.value.trim(); });
+  save(); renderBackOffice(); renderDock(); toast('Portal links saved — dock updated');
 }
 
 /* =====================================================================
@@ -1373,7 +2129,7 @@ function updatePomoUI(){
   mini.classList.toggle('break-mode', pomo.mode !== 'focus');
   $('#mt-time').textContent = fmtClock(pomo.remaining);
   $('#mt-label').textContent = (pomo.running ? '● ' : '❚❚ ') + (pomo.mode === 'focus' ? 'Focus' : pomo.mode === 'short' ? 'Short break' : 'Long break');
-  document.title = pomo.running ? `(${fmtClock(pomo.remaining)}) ${pomo.mode === 'focus' ? 'Focus' : 'Break'} — FlowHub` : 'FlowHub — Personal Productivity';
+  document.title = pomo.running ? `(${fmtClock(pomo.remaining)}) ${pomo.mode === 'focus' ? 'Focus' : 'Break'} — GIA Command` : 'GIA Command — Legacy Planning';
   // full view (only if mounted)
   if (ui.view !== 'pomodoro') return;
   $('#pomo-time').textContent = fmtClock(pomo.remaining);
@@ -1639,6 +2395,41 @@ document.addEventListener('click', e => {
     case 'biz-add': { const s = (BIZ()?.suggestions || []).find(x => x.key === id); if (s){ addBizSuggestion(s); renderBusiness(); toast('Added to today'); } break; }
     case 'biz-add-all': { const n = importBusinessTasks(); renderBusiness(); toast(n ? `💼 ${n} business task${n > 1 ? 's' : ''} added for today` : 'Nothing new to add'); break; }
     case 'biz-auto': state.business.autoImport = !state.business.autoImport; save(); renderBusiness(); break;
+    /* recruits */
+    case 'recruit-new': openRecruitModal(); break;
+    case 'modal-recruit-save': saveRecruitModal(); break;
+    case 'recruit-delete': { state.recruits = (state.recruits || []).filter(x => x.id !== id); save(); rerender(); toast('Recruit removed'); break; }
+    case 'recruit-followup': {
+      const r = (state.recruits || []).find(x => x.id === id);
+      if (r){ openFollowupModal(r.name); }
+      break;
+    }
+    /* huddle */
+    case 'huddle-quick-add': {
+      const inp = $('#huddle-quick-input');
+      const v = inp ? inp.value.trim() : '';
+      if (!v) break;
+      createTask({ title: v, due: todayISO() });
+      inp.value = '';
+      renderHuddle();
+      toast('Task added');
+      break;
+    }
+    /* dashboard */
+    case 'briefing-close': { const b = document.getElementById('briefing-bar'); if (b) b.remove(); break; }
+    /* alerts */
+    case 'alert-new': openAlertModal(); break;
+    case 'modal-alert-save': saveAlertModal(); break;
+    case 'alert-resolve': { const a = state.alerts.find(x => x.id === id); if (a){ a.resolved = true; save(); rerender(); toast('Alert resolved'); } break; }
+    case 'alert-delete': { state.alerts = state.alerts.filter(x => x.id !== id); save(); rerender(); toast('Alert removed'); break; }
+    /* follow-ups */
+    case 'followup-new': openFollowupModal(); break;
+    case 'modal-followup-save': saveFollowupModal(); break;
+    case 'followup-done': { const f = state.followups.find(x => x.id === id); if (f){ f.done = !f.done; save(); rerender(); } break; }
+    case 'followup-delete': { state.followups = state.followups.filter(x => x.id !== id); save(); rerender(); toast('Follow-up removed'); break; }
+    /* back office */
+    case 'portals-edit': switchView('backoffice'); break;
+    case 'portals-save': savePortals(); break;
     /* arcade */
     case 'snake-start': snakeStart(); break;
   }
@@ -1682,6 +2473,15 @@ if (!CanvasRenderingContext2D.prototype.roundRect){
 }
 
 /* init */
+requestNotifPerms();
+if (state.meta.lastBriefingDate !== todayISO()) {
+  setTimeout(() => { sendBriefingNotif(); scheduleFollowupReminder(); }, 1500);
+}
+// dock clock tick
+setInterval(() => {
+  const d = $('#dock-clock');
+  if (d){ const now = new Date(), h = now.getHours(), m = now.getMinutes(); d.textContent = `${h % 12 || 12}:${pad(m)} ${h >= 12 ? 'PM' : 'AM'}`; }
+}, 10000);
 if (BIZ() && state.business.autoImport){
   const n = importBusinessTasks();
   const ne = importBusinessEvents();
@@ -1692,8 +2492,16 @@ if (BIZ() && state.business.autoImport){
 } else if (BIZ()){
   importBusinessEvents(); // meeting times stay current even with auto-add off
 }
-switchView('dashboard');
+renderDock();
+switchView('huddle');
 updatePomoUI();
+// wire huddle quick-input Enter
+document.addEventListener('keydown', e => {
+  if (ui.view === 'huddle' && e.key === 'Enter' && document.activeElement && document.activeElement.id === 'huddle-quick-input'){
+    const v = document.activeElement.value.trim();
+    if (v){ createTask({ title: v, due: todayISO() }); document.activeElement.value = ''; renderHuddle(); toast('Task added'); }
+  }
+});
 </script>
 </body>
 </html>
