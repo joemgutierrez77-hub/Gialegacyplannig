@@ -243,7 +243,7 @@
   .followup-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px}
   .followup-item:hover{border-color:var(--border2)}
   .followup-item.done-fu{opacity:.45}
-  .agent-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#b16cff);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+  .agent-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#b16cff);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;color:#fff}
   .backoffice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
   .bo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;text-align:center;cursor:pointer;transition:all .15s;text-decoration:none;display:block}
   .bo-card:hover{border-color:var(--accent);background:var(--surface2)}
@@ -253,6 +253,26 @@
   .portal-edit-row{display:flex;gap:8px;align-items:center;margin-bottom:10px}
   .portal-edit-row input{flex:1;font-size:13px}
   .portal-edit-row label{font-size:12px;color:var(--muted);width:140px;flex:none}
+  /* leaderboard / production */
+  .lb-row{display:flex;align-items:center;gap:10px;padding:9px 6px;border-bottom:1px solid var(--border)}
+  .lb-row:last-child{border-bottom:none}
+  .lb-rank{font-size:13px;font-weight:700;color:var(--faint);width:22px;text-align:center;flex:none}
+  .lb-bar-wrap{flex:1;height:6px;background:var(--bg2);border-radius:4px;overflow:hidden}
+  .lb-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent2),#b16cff)}
+  .lb-apv{font-size:12.5px;font-weight:700;width:80px;text-align:right;flex:none}
+  /* recruit stages */
+  .stage-badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700}
+  .stage-prospect{background:rgba(91,101,120,.25);color:var(--muted)}
+  .stage-contacted{background:rgba(124,140,255,.18);color:var(--accent)}
+  .stage-interested{background:rgba(251,191,36,.18);color:var(--amber)}
+  .stage-licensing{background:rgba(34,211,238,.18);color:var(--cyan)}
+  .stage-contracting{background:rgba(244,114,182,.18);color:var(--pink)}
+  .stage-active{background:rgba(74,222,128,.18);color:var(--green)}
+  .recruit-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid var(--border);margin-bottom:8px}
+  .recruit-row:hover{border-color:var(--border2)}
+  /* briefing banner */
+  .briefing-bar{display:flex;align-items:center;gap:12px;padding:11px 16px;border-radius:10px;background:linear-gradient(135deg,rgba(124,140,255,.15),rgba(177,108,255,.12));border:1px solid rgba(124,140,255,.3);margin-bottom:16px;font-size:13px}
+  .briefing-bar .bb-close{margin-left:auto;color:var(--faint);font-size:16px}
 
   /* ---------- Arcade ---------- */
   .arcade-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:8px}
@@ -289,6 +309,7 @@
     <button class="nav-item" data-action="nav" data-id="dashboard"><span class="ico">⚡</span>Command</button>
     <button class="nav-item" data-action="nav" data-id="alerts"><span class="ico">🚨</span>Alerts</button>
     <button class="nav-item" data-action="nav" data-id="followups"><span class="ico">🤝</span>Agent Follow-Ups</button>
+    <button class="nav-item" data-action="nav" data-id="recruits"><span class="ico">🎯</span>Recruit Tracker</button>
     <button class="nav-item" data-action="nav" data-id="business"><span class="ico">📊</span>Agent Tracker</button>
     <button class="nav-item" data-action="nav" data-id="tasks"><span class="ico">✅</span>Tasks</button>
     <button class="nav-item" data-action="nav" data-id="calendar"><span class="ico">🗓️</span>Appointments</button>
@@ -440,6 +461,16 @@
       </div>
     </section>
 
+    <section class="view" id="view-recruits">
+      <div class="view-head">
+        <div class="view-title">Recruit Tracker</div>
+        <div class="spacer"></div>
+        ${(() => { const p = (typeof state !== 'undefined' && state.portals && state.portals.teamtailor) ? state.portals.teamtailor : ''; return p ? `<a class="btn" href="${p}" target="_blank" rel="noopener">🎯 Open Teamtailor ↗</a>` : ''; })()}
+        <button class="btn primary" data-action="recruit-new">＋ Add Recruit</button>
+      </div>
+      <div class="view-pad" id="recruits-content"></div>
+    </section>
+
     <section class="view" id="view-alerts">
       <div class="view-head">
         <div class="view-title">Alerts &amp; Threats</div>
@@ -525,7 +556,9 @@ function defaultState(){
     game: { highScore: 0 },
     alerts: [],
     followups: [],
+    recruits: [],
     portals: { teamtailor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '' },
+    meta: { lastBriefingDate: '' },
   };
 }
 let state;
@@ -537,9 +570,11 @@ if (!state.business) state.business = { imported: {}, autoImport: true };
 if (!state.business.importedEvents) state.business.importedEvents = {};
 if (!state.alerts) state.alerts = [];
 if (!state.followups) state.followups = [];
+if (!state.recruits) state.recruits = [];
 if (!state.portals) state.portals = { teamtailor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '' };
-if (!('teamtailor' in state.portals)) state.portals.teamtailor = state.portals.timTaylor || '';
+if (!('teamtailor' in state.portals)) { state.portals.teamtailor = state.portals.timTaylor || ''; }
 delete state.portals.timTaylor;
+if (!state.meta) state.meta = { lastBriefingDate: '' };
 function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ } }
 
 /* ---------- ui state (not persisted) ---------- */
@@ -589,6 +624,7 @@ function renderView(name){
   else if (name === 'arcade') renderArcade();
   else if (name === 'alerts') renderAlerts();
   else if (name === 'followups') renderFollowups();
+  else if (name === 'recruits') renderRecruits();
   else if (name === 'backoffice') renderBackOffice();
 }
 function rerender(){ renderView(ui.view); }
@@ -680,6 +716,9 @@ function renderDashboard(){
   $('#dash-greeting').textContent = `${greeting} — GIA Command`;
   const now = new Date();
   $('#dash-date').textContent = `${DOWS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  // mark briefing shown for today
+  const showBriefing = state.meta.lastBriefingDate !== t;
+  if (showBriefing) { state.meta.lastBriefingDate = t; save(); }
 
   const open = state.tasks.filter(x => x.status !== 'done');
   const dueToday = open.filter(x => x.due === t);
@@ -701,6 +740,9 @@ function renderDashboard(){
 
   const focusList = [...overdue, ...dueToday];
   const biz = BIZ();
+  const recruits = state.recruits || [];
+  const activeRecruits = recruits.filter(r => !['inactive','cold'].includes(r.stage));
+  const hotRecruits = recruits.filter(r => ['interested','licensing','contracting'].includes(r.stage));
 
   // portals bar
   const portals = state.portals || {};
@@ -721,41 +763,105 @@ function renderDashboard(){
       <button class="portal-btn primary-portal" data-action="nav" data-id="backoffice">⚙️ Set Up Portals (Teamtailor, Back Office…)</button>
     </div>`;
 
+  // briefing banner
+  const briefingItems = [];
+  if (criticalAlerts.length) briefingItems.push(`🔴 ${criticalAlerts.length} critical alert${criticalAlerts.length > 1 ? 's' : ''}`);
+  if (overdue.length) briefingItems.push(`⚠️ ${overdue.length} overdue task${overdue.length > 1 ? 's' : ''}`);
+  if (todayFollowups.length) briefingItems.push(`🤝 ${todayFollowups.length} follow-up${todayFollowups.length > 1 ? 's' : ''} due`);
+  if (upcoming.filter(u => u.ds === t).length) briefingItems.push(`📅 ${upcoming.filter(u => u.ds === t).length} appointment${upcoming.filter(u => u.ds === t).length > 1 ? 's' : ''} today`);
+  const briefingBanner = showBriefing && briefingItems.length ? `
+    <div class="briefing-bar" id="briefing-bar">
+      <span>⚡ Daily briefing:</span>
+      <span style="color:var(--text)">${briefingItems.join(' &nbsp;·&nbsp; ')}</span>
+      <button class="bb-close" data-action="briefing-close">✕</button>
+    </div>` : '';
+
+  // production leaderboard from BIZ data
+  const lbHTML = (() => {
+    if (!biz || !biz.production || !biz.production.agents.length) return '<div class="empty">Connect agency data to see leaderboard.</div>';
+    const agents = biz.production.agents.slice().sort((a, b) => (b.apv || 0) - (a.apv || 0));
+    const maxApv = agents[0]?.apv || 1;
+    return agents.slice(0, 6).map((a, i) => {
+      const pct = Math.round((a.apv || 0) / maxApv * 100);
+      const medals = ['🥇','🥈','🥉'];
+      return `<div class="lb-row">
+        <span class="lb-rank">${medals[i] || (i + 1)}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${esc(a.name)}</div>
+          <div class="lb-bar-wrap" style="margin-top:4px"><div class="lb-bar" style="width:${pct}%"></div></div>
+        </div>
+        <span class="lb-apv" style="color:${pct === 100 ? 'var(--green)' : pct >= 60 ? 'var(--amber)' : 'var(--red)'}">$${(a.apv || 0).toLocaleString()}</span>
+      </div>`;
+    }).join('');
+  })();
+
+  // pending apps
+  const pendingHTML = (() => {
+    if (!biz) return '';
+    const pd = biz.pending || { count: 0, apv: 0 };
+    if (!pd.count) return '';
+    return `<div class="card">
+      <div class="dash-section-title">📬 Pending Applications</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="stat-card" style="padding:10px 14px"><div class="sc-label">Apps</div><div class="sc-num" style="font-size:20px">${pd.count}</div></div>
+        <div class="stat-card" style="padding:10px 14px"><div class="sc-label">In Underwriting</div><div class="sc-num" style="font-size:20px">$${pd.apv.toLocaleString()}</div></div>
+      </div>
+    </div>`;
+  })();
+
+  // recruit pipeline snapshot
+  const recruitSnap = (() => {
+    const STAGES = ['prospect','contacted','interested','licensing','contracting','active'];
+    const counts = {};
+    STAGES.forEach(s => counts[s] = recruits.filter(r => r.stage === s).length);
+    const total = recruits.length;
+    if (!total) return `<div class="empty">No recruits yet.<br><button class="btn small primary" data-action="nav" data-id="recruits" style="margin-top:8px">Open Recruit Tracker</button></div>`;
+    return STAGES.filter(s => counts[s]).map(s =>
+      `<div class="dash-event"><span class="stage-badge stage-${s}">${s}</span><div class="spacer"></div><b>${counts[s]}</b></div>`
+    ).join('') + (portals.teamtailor ? `<a class="btn small ghost" href="${esc(portals.teamtailor)}" target="_blank" rel="noopener" style="margin-top:8px;display:inline-flex">Open Teamtailor ↗</a>` : '');
+  })();
+
   $('#dash-content').innerHTML = `
     ${portalBar}
+    ${briefingBanner}
     <div class="quick-add">
       <input id="dash-quick" type="text" placeholder="Quick capture — type a task and press Enter…">
       <button class="btn primary" data-action="dash-quick-add">Add Task</button>
     </div>
-    <div class="dash-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="dash-grid" style="grid-template-columns:repeat(6,1fr)">
       <div class="stat-card"><div class="sc-label">Tasks Due Today</div><div class="sc-num">${dueToday.length}</div><div class="sc-sub">${doneToday} done today</div></div>
       <div class="stat-card"><div class="sc-label">Overdue</div><div class="sc-num" style="color:${overdue.length ? 'var(--red)' : 'var(--text)'}">${overdue.length}</div><div class="sc-sub">${open.length} open total</div></div>
-      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="alerts"><div class="sc-label">Active Alerts</div><div class="sc-num" style="color:${criticalAlerts.length ? 'var(--red)' : activeAlerts.length ? 'var(--amber)' : 'var(--green)'}">${activeAlerts.length}</div><div class="sc-sub">${criticalAlerts.length ? criticalAlerts.length + ' critical' : 'no critical alerts'}</div></div>
-      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="followups"><div class="sc-label">Follow-Ups Due</div><div class="sc-num" style="color:${todayFollowups.length ? 'var(--amber)' : 'var(--text)'}">${todayFollowups.length}</div><div class="sc-sub">${openFollowups.length} open total</div></div>
-      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="calendar"><div class="sc-label">Appointments</div><div class="sc-num">${upcoming.filter(u => u.ds === t).length}</div><div class="sc-sub">today · ${upcoming.length} next 7 days</div></div>
+      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="alerts"><div class="sc-label">Active Alerts</div><div class="sc-num" style="color:${criticalAlerts.length ? 'var(--red)' : activeAlerts.length ? 'var(--amber)' : 'var(--green)'}">${activeAlerts.length}</div><div class="sc-sub">${criticalAlerts.length ? criticalAlerts.length + ' critical' : 'all clear'}</div></div>
+      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="followups"><div class="sc-label">Follow-Ups Due</div><div class="sc-num" style="color:${todayFollowups.length ? 'var(--amber)' : 'var(--text)'}">${todayFollowups.length}</div><div class="sc-sub">${openFollowups.length} open</div></div>
+      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="calendar"><div class="sc-label">Appts Today</div><div class="sc-num">${upcoming.filter(u => u.ds === t).length}</div><div class="sc-sub">${upcoming.length} next 7 days</div></div>
+      <div class="stat-card" style="cursor:pointer" data-action="nav" data-id="recruits"><div class="sc-label">Hot Recruits</div><div class="sc-num" style="color:${hotRecruits.length ? 'var(--cyan)' : 'var(--text)'}">${hotRecruits.length}</div><div class="sc-sub">${activeRecruits.length} in pipeline</div></div>
     </div>
-    <div class="dash-cols">
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="card" style="${criticalAlerts.length ? 'border-color:rgba(248,113,113,.5)' : ''}">
           <div class="dash-section-title" style="display:flex;align-items:center">
             🚨 Alerts &amp; Threats
             <div class="spacer"></div>
             <button class="btn small primary" data-action="alert-new">＋ Add</button>
-            <button class="btn small ghost" data-action="nav" data-id="alerts" style="margin-left:4px">View all →</button>
+            <button class="btn small ghost" data-action="nav" data-id="alerts" style="margin-left:4px">All →</button>
           </div>
           ${activeAlerts.length ? activeAlerts.slice(0,4).map(a => `
-            <div class="alert-item level-${a.level}" data-action="alert-resolve" data-id="${a.id}" title="Click to resolve">
+            <div class="alert-item level-${a.level}">
               <span class="alert-badge ab-${a.level}">${a.level.toUpperCase()}</span>
               <div style="flex:1;min-width:0">
                 <div style="font-size:13.5px;font-weight:500">${esc(a.title)}</div>
                 ${a.notes ? `<div style="font-size:11.5px;color:var(--faint)">${esc(a.notes)}</div>` : ''}
               </div>
-              <span style="font-size:11px;color:var(--faint)">${fmtDate(a.createdAt ? iso(new Date(a.createdAt)) : t)}</span>
+              <button class="btn small primary" data-action="alert-resolve" data-id="${a.id}">✓</button>
             </div>`).join('') : '<div class="empty">No active alerts 🟢 All clear</div>'}
         </div>
         <div class="card">
           <div class="dash-section-title">Today's Tasks ${overdue.length ? `<span style="color:var(--red)">· ${overdue.length} overdue</span>` : ''}</div>
           ${focusList.length ? focusList.slice(0,6).map(taskRowHTML).join('') : '<div class="empty">Nothing due today 🍃</div>'}
+        </div>
+        <div class="card">
+          <div class="dash-section-title" style="display:flex;align-items:center">🏆 Agent Production Leaderboard ${biz ? `<span style="margin-left:6px;font-size:11px;color:var(--faint);font-weight:400;text-transform:none">vs $${biz.production.targetApv.toLocaleString()} target</span>` : ''}<div class="spacer"></div><button class="btn small ghost" data-action="nav" data-id="business">Full view →</button></div>
+          ${lbHTML}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:14px">
@@ -767,25 +873,29 @@ function renderDashboard(){
             <button class="btn small ghost" data-action="nav" data-id="followups" style="margin-left:4px">All →</button>
           </div>
           ${todayFollowups.length ? todayFollowups.slice(0,4).map(f => `
-            <div class="followup-item ${f.done ? 'done-fu' : ''}">
+            <div class="followup-item">
               <div class="agent-avatar">${(f.agentName || '?')[0].toUpperCase()}</div>
               <div style="flex:1;min-width:0">
-                <div style="font-size:13.5px;font-weight:500">${esc(f.agentName || 'Unknown')}</div>
-                <div style="font-size:12px;color:var(--muted)">${esc(f.action || '')}</div>
+                <div style="font-size:13px;font-weight:500">${esc(f.agentName || 'Unknown')}</div>
+                <div style="font-size:11.5px;color:var(--muted)">${esc(f.action || '')}</div>
               </div>
-              ${f.due ? `<span class="chip ${f.due < t ? 'overdue' : f.due === t ? 'today' : ''}">📅 ${fmtDate(f.due)}</span>` : ''}
               <button class="btn small ghost" data-action="followup-done" data-id="${f.id}" title="Mark done">✓</button>
-            </div>`).join('') : openFollowups.length ? `<div class="empty">No follow-ups due today.<br><span style="font-size:11.5px">${openFollowups.length} upcoming</span></div>` : '<div class="empty">No open follow-ups.<br>Add one to track agent touchpoints.</div>'}
+            </div>`).join('') : openFollowups.length ? `<div class="empty" style="padding:18px">No follow-ups due today.<br><span style="font-size:11.5px">${openFollowups.length} upcoming</span></div>` : '<div class="empty" style="padding:18px">No open follow-ups.</div>'}
         </div>
+        <div class="card">
+          <div class="dash-section-title" style="display:flex;align-items:center">🎯 Recruit Pipeline<div class="spacer"></div><button class="btn small ghost" data-action="nav" data-id="recruits">All →</button></div>
+          ${recruitSnap}
+        </div>
+        ${pendingHTML}
         ${bizSnapshotCardHTML()}
         <div class="card">
           <div class="dash-section-title">📅 Appointments — Next 7 Days</div>
-          ${upcoming.length ? upcoming.slice(0, 7).map(({ds, e}) => `
+          ${upcoming.length ? upcoming.slice(0, 5).map(({ds, e}) => `
             <div class="dash-event" data-action="event-open" data-id="${e.id}" style="cursor:pointer">
               <span class="ev-dot" style="background:${e.color}"></span>
-              <span style="flex:1;font-size:13.5px">${esc(e.title)}</span>
+              <span style="flex:1;font-size:13px">${esc(e.title)}</span>
               <span class="de-date">${esc(fmtDate(ds))}${e.time ? ' · ' + e.time : ''}</span>
-            </div>`).join('') : '<div class="empty">No appointments.<br>Add one from Appointments.</div>'}
+            </div>`).join('') : '<div class="empty">No appointments.</div>'}
           <button class="btn small ghost" style="margin-top:8px" data-action="event-new">＋ New Appointment</button>
         </div>
       </div>
@@ -956,6 +1066,129 @@ function bizInboxHTML(biz){
 }
 
 /* =====================================================================
+   RECRUIT TRACKER
+   ===================================================================== */
+const RECRUIT_STAGES = ['prospect','contacted','interested','licensing','contracting','active','cold','inactive'];
+const stageColor = s => ({ prospect:'#5b6578', contacted:'#7c8cff', interested:'#fbbf24', licensing:'#22d3ee', contracting:'#f472b6', active:'#4ade80', cold:'#5b6578', inactive:'#5b6578' }[s] || '#5b6578');
+
+function renderRecruits(){
+  const recruits = state.recruits || [];
+  const portals = state.portals || {};
+  const byStage = {};
+  RECRUIT_STAGES.forEach(s => { byStage[s] = recruits.filter(r => r.stage === s); });
+
+  const teamtailorBtn = portals.teamtailor
+    ? `<a class="btn" href="${esc(portals.teamtailor)}" target="_blank" rel="noopener" style="margin-bottom:18px;display:inline-flex">🎯 Open Teamtailor ↗</a>`
+    : `<div class="card" style="max-width:500px;margin-bottom:18px;padding:12px 16px;display:flex;align-items:center;gap:12px"><span style="color:var(--faint)">🎯</span><span style="font-size:13px;color:var(--muted)">Add your Teamtailor URL in Back Office to get a quick-launch button.</span><button class="btn small" data-action="nav" data-id="backoffice">Set up →</button></div>`;
+
+  const stageGroups = RECRUIT_STAGES.filter(s => byStage[s].length).map(s => `
+    <div class="dash-section-title" style="margin-top:18px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+      <span class="stage-badge stage-${s}">${s}</span>
+      <span>${byStage[s].length}</span>
+    </div>
+    ${byStage[s].map(r => `
+      <div class="recruit-row">
+        <div class="agent-avatar" style="background:${stageColor(r.stage)}26;color:${stageColor(r.stage)};border:1px solid ${stageColor(r.stage)}44">${(r.name || '?')[0].toUpperCase()}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13.5px;font-weight:600">${esc(r.name || 'Unknown')}</div>
+          ${r.phone ? `<div style="font-size:11.5px;color:var(--muted)">${esc(r.phone)}</div>` : ''}
+          ${r.notes ? `<div style="font-size:11.5px;color:var(--faint)">${esc(r.notes)}</div>` : ''}
+        </div>
+        ${r.due ? `<span class="chip ${r.due < todayISO() ? 'overdue' : r.due === todayISO() ? 'today' : ''}">📅 ${fmtDate(r.due)}</span>` : ''}
+        <select class="btn small" style="padding:4px 8px;font-size:12px" data-action="recruit-stage" data-id="${r.id}">
+          ${RECRUIT_STAGES.map(st => `<option value="${st}" ${r.stage === st ? 'selected' : ''}>${st}</option>`).join('')}
+        </select>
+        <button class="btn small primary" data-action="recruit-followup" data-id="${r.id}" title="Add follow-up">🤝</button>
+        <button class="btn small ghost danger" data-action="recruit-delete" data-id="${r.id}">✕</button>
+      </div>`).join('')}`).join('');
+
+  const stageStats = RECRUIT_STAGES.filter(s => byStage[s].length).map(s =>
+    `<span class="chip stage-${s}" style="padding:4px 10px">${s}: <b style="margin-left:4px">${byStage[s].length}</b></span>`).join('');
+
+  $('#recruits-content').innerHTML = `
+    ${teamtailorBtn}
+    ${recruits.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">${stageStats}</div>` : ''}
+    ${recruits.length ? stageGroups : '<div class="card" style="max-width:600px;margin:0 auto"><div class="empty" style="padding:50px">No recruits yet.<br>Add your first recruit below or pull from Teamtailor.</div></div>'}`;
+
+  // wire stage-change selects after render
+  document.querySelectorAll('[data-action="recruit-stage"]').forEach(sel => {
+    sel.addEventListener('change', e => {
+      const r = (state.recruits || []).find(x => x.id === e.target.dataset.id);
+      if (r){ r.stage = e.target.value; save(); renderRecruits(); toast(`Moved to ${r.stage}`); }
+    });
+  });
+}
+function openRecruitModal(){
+  $('#modal-root').innerHTML = `<div class="modal">
+    <div class="modal-head">Add Recruit<div class="spacer"></div><button class="btn ghost small" data-action="modal-close">✕</button></div>
+    <div class="modal-body">
+      <input id="rc-name" type="text" placeholder="Full name…" style="font-size:15px;font-weight:600">
+      <div class="frow">
+        <div class="fcol"><span>Phone / Email</span><input id="rc-phone" type="text" placeholder="Contact info"></div>
+        <div class="fcol"><span>Stage</span><select id="rc-stage">
+          ${RECRUIT_STAGES.map(s => `<option value="${s}" ${s === 'prospect' ? 'selected' : ''}>${s}</option>`).join('')}
+        </select></div>
+      </div>
+      <div class="frow">
+        <div class="fcol"><span>Next Follow-Up</span><input type="date" id="rc-due" value="${todayISO()}"></div>
+      </div>
+      <div class="fcol"><span>Notes</span><textarea id="rc-notes" rows="2" placeholder="Source, referral, background…"></textarea></div>
+    </div>
+    <div class="modal-foot"><div class="spacer"></div>
+      <button class="btn" data-action="modal-close">Cancel</button>
+      <button class="btn primary" data-action="modal-recruit-save">Add Recruit</button>
+    </div>
+  </div>`;
+  $('#modal-root').classList.add('open');
+  $('#rc-name').focus();
+}
+function saveRecruitModal(){
+  const name = $('#rc-name').value.trim();
+  if (!name){ toast('Enter recruit name'); return; }
+  const r = { id: uid(), name, phone: $('#rc-phone').value.trim(), stage: $('#rc-stage').value, due: $('#rc-due').value || null, notes: $('#rc-notes').value.trim(), createdAt: Date.now() };
+  state.recruits.push(r);
+  // auto-create follow-up
+  if (r.due) {
+    state.followups.push({ id: uid(), agentName: r.name, action: `Follow up — stage: ${r.stage}`, due: r.due, notes: '', done: false, createdAt: Date.now() });
+  }
+  save(); closeModal(); renderRecruits(); toast('Recruit added');
+}
+
+/* =====================================================================
+   NOTIFICATIONS & DAILY BRIEFING
+   ===================================================================== */
+function requestNotifPerms(){
+  try { if (Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+}
+function sendBriefingNotif(){
+  try {
+    if (!Notification || Notification.permission !== 'granted') return;
+    const t = todayISO();
+    const critAlerts = (state.alerts || []).filter(a => !a.resolved && a.level === 'critical').length;
+    const overdueTasks = state.tasks.filter(x => x.status !== 'done' && x.due && x.due < t).length;
+    const dueFollowups = (state.followups || []).filter(f => !f.done && f.due && f.due <= t).length;
+    const parts = [];
+    if (critAlerts) parts.push(`${critAlerts} critical alert${critAlerts > 1 ? 's' : ''}`);
+    if (overdueTasks) parts.push(`${overdueTasks} overdue task${overdueTasks > 1 ? 's' : ''}`);
+    if (dueFollowups) parts.push(`${dueFollowups} follow-up${dueFollowups > 1 ? 's' : ''} due`);
+    if (parts.length) new Notification('GIA Command — Daily Briefing', { body: parts.join(' · '), icon: '' });
+  } catch (e) {}
+}
+function scheduleFollowupReminder(){
+  // fire a notification if any follow-ups due today haven't been done — checks every 30 min
+  setInterval(() => {
+    try {
+      if (!Notification || Notification.permission !== 'granted') return;
+      const t = todayISO();
+      const due = (state.followups || []).filter(f => !f.done && f.due === t);
+      if (due.length) new Notification(`GIA Command — ${due.length} follow-up${due.length > 1 ? 's' : ''} due today`, {
+        body: due.slice(0, 3).map(f => `${f.agentName}: ${f.action}`).join('\n'),
+      });
+    } catch (e) {}
+  }, 30 * 60 * 1000);
+}
+
+/* =====================================================================
    ALERTS
    ===================================================================== */
 function renderAlerts(){
@@ -1046,15 +1279,16 @@ function renderFollowups(){
       <button class="btn small ghost danger" data-action="followup-delete" data-id="${f.id}">✕</button>
     </div>`).join('') : '<div class="card" style="max-width:600px;margin:0 auto"><div class="empty" style="padding:50px">No follow-ups yet.<br>Track every agent touchpoint here.</div></div>';
 }
-function openFollowupModal(){
+function openFollowupModal(prefillAgent){
   const biz = BIZ();
   const agentNames = biz ? biz.production.agents.map(a => a.name) : [];
+  const recruitNames = (state.recruits || []).map(r => r.name);
   $('#modal-root').innerHTML = `<div class="modal">
     <div class="modal-head">New Agent Follow-Up<div class="spacer"></div><button class="btn ghost small" data-action="modal-close">✕</button></div>
     <div class="modal-body">
       <div class="fcol"><span>Agent Name</span>
-        <input id="fu-agent" list="fu-agent-list" type="text" placeholder="Agent name…" style="font-size:14px">
-        <datalist id="fu-agent-list">${agentNames.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+        <input id="fu-agent" list="fu-agent-list" type="text" placeholder="Agent name…" style="font-size:14px" value="${esc(prefillAgent || '')}">
+        <datalist id="fu-agent-list">${[...new Set([...agentNames,...recruitNames])].map(n => `<option value="${esc(n)}">`).join('')}</datalist>
       </div>
       <div class="fcol"><span>Follow-Up Action</span>
         <input id="fu-action" type="text" placeholder="e.g. Call re: pending app, License check…" style="font-size:14px">
@@ -1909,6 +2143,17 @@ document.addEventListener('click', e => {
     case 'biz-add': { const s = (BIZ()?.suggestions || []).find(x => x.key === id); if (s){ addBizSuggestion(s); renderBusiness(); toast('Added to today'); } break; }
     case 'biz-add-all': { const n = importBusinessTasks(); renderBusiness(); toast(n ? `💼 ${n} business task${n > 1 ? 's' : ''} added for today` : 'Nothing new to add'); break; }
     case 'biz-auto': state.business.autoImport = !state.business.autoImport; save(); renderBusiness(); break;
+    /* recruits */
+    case 'recruit-new': openRecruitModal(); break;
+    case 'modal-recruit-save': saveRecruitModal(); break;
+    case 'recruit-delete': { state.recruits = (state.recruits || []).filter(x => x.id !== id); save(); rerender(); toast('Recruit removed'); break; }
+    case 'recruit-followup': {
+      const r = (state.recruits || []).find(x => x.id === id);
+      if (r){ openFollowupModal(r.name); }
+      break;
+    }
+    /* dashboard */
+    case 'briefing-close': { const b = document.getElementById('briefing-bar'); if (b) b.remove(); break; }
     /* alerts */
     case 'alert-new': openAlertModal(); break;
     case 'modal-alert-save': saveAlertModal(); break;
@@ -1965,6 +2210,11 @@ if (!CanvasRenderingContext2D.prototype.roundRect){
 }
 
 /* init */
+requestNotifPerms();
+// send briefing notification once per day on first open
+if (state.meta.lastBriefingDate !== todayISO()) {
+  setTimeout(() => { sendBriefingNotif(); scheduleFollowupReminder(); }, 1500);
+}
 if (BIZ() && state.business.autoImport){
   const n = importBusinessTasks();
   const ne = importBusinessEvents();
