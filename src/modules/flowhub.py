@@ -318,4 +318,10 @@ def export_flowhub() -> str:
         f.write("window.BUSINESS_DATA = ")
         json.dump(snapshot, f, indent=2)
         f.write(";\n")
+    # Also feed the standalone Jarvis command center (dashboard.html).
+    try:
+        from src.modules.dashboard_export import write_dashboard
+        write_dashboard(snapshot)
+    except Exception as e:  # never let the dashboard feed break the FlowHub sync
+        print(f"  ⚠ Dashboard feed skipped: {e}")
     return path
