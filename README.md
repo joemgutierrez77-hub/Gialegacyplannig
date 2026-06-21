@@ -118,6 +118,8 @@ that case ask your admin to enable IMAP, or use your personal Gmail/Hotmail.
 
 - **`FlowHub.command`** (project root) — double-click to sync business data and open FlowHub
   in your browser in one step. macOS may ask you to right-click → Open the first time.
+- **`Dashboard.command`** (project root) — double-click to refresh live data and open the
+  G.I.A. command center (`dashboard.html`) — a Jarvis-style Now / Next / Later cockpit.
 - **`scripts/setup-daily-sync.command`** — double-click once to schedule the sync to run
   automatically every morning at 7:00 (uses a launchd agent; catches up after sleep,
   logs to `~/Library/Logs/flowhub-sync.log`).
