@@ -634,6 +634,21 @@ if (!state.portals) state.portals = { teamtailor: '', backOffice: '', agentPorta
 if (!('teamtailor' in state.portals)) { state.portals.teamtailor = state.portals.timTaylor || ''; }
 delete state.portals.timTaylor;
 if (!state.meta) state.meta = { lastBriefingDate: '' };
+// One-time seeding of known standard portal URLs so the dock works out of the box.
+// Org-specific links (Teamtailor subdomain, Slack workspace, back office) use the
+// standard sign-in pages — refine them in Back Office anytime.
+const PORTAL_DEFAULTS = {
+  teamtailor:   'https://app.teamtailor.com',
+  quilityHQ:    'https://hq.quility.com',
+  slack:        'https://app.slack.com/client',
+  suranceBay:   'https://surelc.surancebay.com',
+  calendly:     'https://calendly.com/app',
+};
+if (!state.meta.portalsSeeded){
+  Object.keys(PORTAL_DEFAULTS).forEach(k => { if (!state.portals[k]) state.portals[k] = PORTAL_DEFAULTS[k]; });
+  state.meta.portalsSeeded = true;
+  save();
+}
 function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ } }
 
 /* ---------- ui state (not persisted) ---------- */
