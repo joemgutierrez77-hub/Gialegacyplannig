@@ -72,6 +72,37 @@
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px}
   .empty{color:var(--faint);text-align:center;padding:34px 10px;font-size:13.5px}
 
+  /* ---------- Bottom Dock ---------- */
+  #bottom-dock{position:fixed;bottom:0;left:218px;right:0;height:52px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:8px;z-index:50}
+  .dock-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-decoration:none;white-space:nowrap;transition:all .12s;cursor:pointer}
+  .dock-btn:hover{border-color:var(--accent);color:var(--text);background:var(--surface2)}
+  .dock-btn.dock-primary{background:linear-gradient(135deg,var(--accent2),#b16cff);border-color:transparent;color:#fff}
+  .dock-btn.dock-primary:hover{filter:brightness(1.1)}
+  .dock-spacer{flex:1}
+  .dock-clock{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--faint);font-weight:600;padding:0 8px}
+  /* push main content above dock */
+  #main{padding-bottom:52px}
+
+  /* ---------- Huddle / Jarvis View ---------- */
+  .huddle-header{padding:22px 26px 16px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,rgba(124,140,255,.06),rgba(177,108,255,.04))}
+  .huddle-clock{font-size:38px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent),#b16cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+  .huddle-date{font-size:13.5px;color:var(--muted);margin-top:4px;font-weight:500}
+  .top3-wrap{padding:18px 26px 0}
+  .top3-title{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+  .top3-title::after{content:'';flex:1;height:1px;background:var(--border)}
+  .top3-item{display:flex;align-items:flex-start;gap:14px;padding:12px 16px;border-radius:12px;border:1px solid var(--border);margin-bottom:10px;background:var(--surface);cursor:pointer;transition:border-color .12s}
+  .top3-item:hover{border-color:var(--accent)}
+  .top3-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),#b16cff);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+  .top3-num.done-num{background:var(--green)}
+  .huddle-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:14px 26px 18px}
+  .huddle-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+  .huddle-col-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:7px}
+  .huddle-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-size:13px;background:var(--bg2)}
+  .huddle-item:hover{border-color:var(--border2)}
+  .huddle-empty{font-size:12.5px;color:var(--faint);text-align:center;padding:14px 8px}
+  .huddle-quick{display:flex;gap:8px;padding:0 26px 14px}
+  .huddle-quick input{flex:1;font-size:14px}
+
   /* ---------- Dashboard ---------- */
   .dash-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
   .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px}
@@ -306,7 +337,8 @@
 <div id="app">
   <aside id="sidebar">
     <div class="brand"><div class="logo">🏛️</div>GIA Command</div>
-    <button class="nav-item" data-action="nav" data-id="dashboard"><span class="ico">⚡</span>Command</button>
+    <button class="nav-item" data-action="nav" data-id="huddle"><span class="ico">⚡</span>Daily Huddle</button>
+    <button class="nav-item" data-action="nav" data-id="dashboard"><span class="ico">🏠</span>Command Center</button>
     <button class="nav-item" data-action="nav" data-id="alerts"><span class="ico">🚨</span>Alerts</button>
     <button class="nav-item" data-action="nav" data-id="followups"><span class="ico">🤝</span>Agent Follow-Ups</button>
     <button class="nav-item" data-action="nav" data-id="recruits"><span class="ico">🎯</span>Recruit Tracker</button>
@@ -327,6 +359,27 @@
   </aside>
 
   <main id="main">
+
+    <section class="view" id="view-huddle">
+      <div class="huddle-header">
+        <div style="display:flex;align-items:flex-end;gap:18px">
+          <div>
+            <div class="huddle-clock" id="huddle-clock">9:00 AM</div>
+            <div class="huddle-date" id="huddle-date"></div>
+          </div>
+          <div style="flex:1"></div>
+          <div id="huddle-stats" style="display:flex;gap:10px;padding-bottom:4px"></div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto">
+        <div class="top3-wrap" id="huddle-top3"></div>
+        <div class="huddle-quick">
+          <input id="huddle-quick-input" type="text" placeholder="Quick capture — type anything, press Enter to add as a task…">
+          <button class="btn primary" data-action="huddle-quick-add">Add</button>
+        </div>
+        <div class="huddle-cols" id="huddle-cols"></div>
+      </div>
+    </section>
 
     <section class="view" id="view-dashboard">
       <div class="view-head"><div class="view-title" id="dash-greeting">Dashboard</div><div class="spacer"></div><span class="chip" id="dash-date"></span></div>
@@ -500,6 +553,11 @@
 
   </main>
 </div>
+<div id="bottom-dock">
+  <div id="dock-portals"></div>
+  <div class="dock-spacer"></div>
+  <span class="dock-clock" id="dock-clock"></span>
+</div>
 <div id="modal-root"></div>
 <div id="toast-root"></div>
 
@@ -557,7 +615,7 @@ function defaultState(){
     alerts: [],
     followups: [],
     recruits: [],
-    portals: { teamtailor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '' },
+    portals: { teamtailor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '', slack: '', quilityHQ: '', calendly: '' },
     meta: { lastBriefingDate: '' },
   };
 }
@@ -571,7 +629,8 @@ if (!state.business.importedEvents) state.business.importedEvents = {};
 if (!state.alerts) state.alerts = [];
 if (!state.followups) state.followups = [];
 if (!state.recruits) state.recruits = [];
-if (!state.portals) state.portals = { teamtailor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '' };
+if (!state.portals) state.portals = { teamtailor: '', backOffice: '', agentPortal: '', carrierPortal: '', suranceBay: '', slack: '', quilityHQ: '', calendly: '' };
+['slack','quilityHQ','calendly'].forEach(k => { if (!(k in state.portals)) state.portals[k] = ''; });
 if (!('teamtailor' in state.portals)) { state.portals.teamtailor = state.portals.timTaylor || ''; }
 delete state.portals.timTaylor;
 if (!state.meta) state.meta = { lastBriefingDate: '' };
@@ -611,10 +670,12 @@ function switchView(name){
   ui.view = name;
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view' + '-' + name));
   document.querySelectorAll('#sidebar .nav-item').forEach(b => b.classList.toggle('active', b.dataset.id === name));
+  if (name !== 'huddle') clearInterval(huddleClockInterval);
   renderView(name);
 }
 function renderView(name){
-  if (name === 'dashboard') renderDashboard();
+  if (name === 'huddle') renderHuddle();
+  else if (name === 'dashboard') renderDashboard();
   else if (name === 'business') renderBusiness();
   else if (name === 'tasks') renderTasks();
   else if (name === 'board') renderBoard();
@@ -709,6 +770,158 @@ function focusStreak(){
   while (focusMinutesOn(d) > 0){ streak++; d = addDays(d, -1); }
   return streak;
 }
+/* =====================================================================
+   BOTTOM DOCK
+   ===================================================================== */
+const DOCK_PORTALS = [
+  { key: 'teamtailor', icon: '🎯', label: 'Teamtailor', primary: true },
+  { key: 'quilityHQ',  icon: '🏛️', label: 'Quility HQ' },
+  { key: 'slack',      icon: '💬', label: 'Slack' },
+  { key: 'backOffice', icon: '🏢', label: 'Back Office' },
+  { key: 'suranceBay', icon: '📋', label: 'SuranceBay' },
+  { key: 'agentPortal',icon: '🤝', label: 'Agent Portal' },
+  { key: 'calendly',   icon: '📅', label: 'Calendly' },
+  { key: 'carrierPortal', icon: '🏥', label: 'Carrier' },
+];
+function renderDock(){
+  const p = state.portals || {};
+  const active = DOCK_PORTALS.filter(d => p[d.key]);
+  if (!active.length){
+    $('#dock-portals').innerHTML = `<button class="dock-btn" data-action="nav" data-id="backoffice">⚙️ Set up quick-launch links</button>`;
+    return;
+  }
+  $('#dock-portals').innerHTML = active.map(d =>
+    `<a class="dock-btn ${d.primary ? 'dock-primary' : ''}" href="${esc(p[d.key])}" target="_blank" rel="noopener">${d.icon} ${d.label}</a>`
+  ).join('');
+}
+
+/* =====================================================================
+   DAILY HUDDLE (Jarvis default view)
+   ===================================================================== */
+let huddleClockInterval = null;
+function updateHuddleClock(){
+  const now = new Date();
+  const hh = now.getHours(), mm = now.getMinutes(), ss = now.getSeconds();
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  const h = hh % 12 || 12;
+  const clockEl = $('#huddle-clock');
+  const dockClock = $('#dock-clock');
+  if (clockEl) clockEl.textContent = `${h}:${pad(mm)}:${pad(ss)} ${ampm}`;
+  if (dockClock) dockClock.textContent = `${h}:${pad(mm)} ${ampm}`;
+}
+function renderHuddle(){
+  const t = todayISO();
+  const now = new Date();
+  const DOWS_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  $('#huddle-date').textContent = `${DOWS_FULL[now.getDay()]}, ${MONTHS_FULL[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()} · GIA Legacy Planning`;
+
+  // live clock
+  clearInterval(huddleClockInterval);
+  huddleClockInterval = setInterval(updateHuddleClock, 1000);
+  updateHuddleClock();
+
+  // data
+  const open = state.tasks.filter(x => x.status !== 'done');
+  const overdue = open.filter(x => x.due && x.due < t);
+  const dueToday = open.filter(x => x.due === t);
+  const activeAlerts = (state.alerts || []).filter(a => !a.resolved);
+  const openFollowups = (state.followups || []).filter(f => !f.done && f.due && f.due <= t);
+  const todayAppts = [];
+  state.events.forEach(e => { if (eventOccursOn(e, t)) todayAppts.push(e); });
+  todayAppts.sort((a, b) => (a.time || '99') < (b.time || '99') ? -1 : 1);
+  const biz = BIZ();
+
+  // stat chips in header
+  const statChips = [
+    { val: activeAlerts.length, label: 'Alerts', color: activeAlerts.length ? 'var(--red)' : 'var(--green)', nav: 'alerts' },
+    { val: overdue.length, label: 'Overdue', color: overdue.length ? 'var(--amber)' : 'var(--text)', nav: 'tasks' },
+    { val: openFollowups.length, label: 'Follow-Ups Due', color: openFollowups.length ? 'var(--cyan)' : 'var(--text)', nav: 'followups' },
+    { val: todayAppts.length, label: "Appts Today", color: 'var(--text)', nav: 'calendar' },
+  ];
+  $('#huddle-stats').innerHTML = statChips.map(s =>
+    `<div class="stat-card" style="padding:8px 14px;cursor:pointer;min-width:80px;text-align:center" data-action="nav" data-id="${s.nav}">
+      <div class="sc-num" style="font-size:20px;color:${s.color}">${s.val}</div>
+      <div class="sc-label" style="font-size:10.5px">${s.label}</div>
+    </div>`
+  ).join('');
+
+  // TOP 3: overdue high → overdue → due today high → due today
+  const prioRank = { high: 0, medium: 1, low: 2, none: 3 };
+  const candidates = [...overdue, ...dueToday].slice().sort((a, b) =>
+    prioRank[a.priority || 'none'] - prioRank[b.priority || 'none']
+  );
+  const top3 = candidates.slice(0, 3);
+  $('#huddle-top3').innerHTML = `
+    <div class="top3-title">⚡ Top 3 Priorities Today</div>
+    ${top3.length ? top3.map((t2, i) => `
+      <div class="top3-item ${t2.status === 'done' ? 'done' : ''}" data-action="task-open" data-id="${t2.id}">
+        <div class="top3-num ${t2.status === 'done' ? 'done-num' : ''}">${t2.status === 'done' ? '✓' : i + 1}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:14.5px;${t2.status === 'done' ? 'text-decoration:line-through;color:var(--faint)' : ''}">${esc(t2.title)}</div>
+          ${t2.due && t2.due < t ? `<span style="font-size:11.5px;color:var(--red)">⚠️ Overdue · ${fmtDate(t2.due)}</span>` : t2.due === t ? '<span style="font-size:11.5px;color:var(--amber)">Due today</span>' : ''}
+        </div>
+        <div class="t-check ${t2.priority === 'high' ? 'p-high' : t2.priority === 'medium' ? 'p-med' : ''}" data-action="task-toggle" data-id="${t2.id}" style="width:22px;height:22px">✓</div>
+      </div>`).join('') : '<div class="empty" style="padding:18px 10px">No tasks due today — add one below or enjoy the clear slate 🍃</div>'}`;
+
+  // agent dev items from BIZ
+  const agentDevItems = [];
+  if (biz) {
+    (biz.suggestions || []).filter(s => ['agent','coaching','production'].some(k => s.tag?.includes(k))).slice(0, 4).forEach(s => {
+      agentDevItems.push({ text: s.title, detail: s.detail || '', priority: s.priority });
+    });
+  }
+  // also add any high-priority follow-ups that aren't yet in the list
+  const futureFollowups = (state.followups || []).filter(f => !f.done && f.due && f.due > t).slice(0, 4);
+
+  // three-column huddle
+  $('#huddle-cols').innerHTML = `
+    <div class="huddle-col">
+      <div class="huddle-col-title">🤝 Agent &amp; Client Follow-Ups <span style="margin-left:auto;font-size:10px;color:var(--faint)">${openFollowups.length} due</span></div>
+      ${openFollowups.length ? openFollowups.slice(0, 5).map(f => `
+        <div class="huddle-item">
+          <div class="agent-avatar" style="width:26px;height:26px;font-size:11px">${(f.agentName || '?')[0].toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600">${esc(f.agentName || '')}</div>
+            <div style="font-size:11.5px;color:var(--muted)">${esc(f.action || '')}</div>
+          </div>
+          <button class="btn small ghost" data-action="followup-done" data-id="${f.id}" style="padding:3px 7px;font-size:11px">✓</button>
+        </div>`).join('') : `<div class="huddle-empty">No follow-ups due today</div>`}
+      ${futureFollowups.length ? `<div style="font-size:11px;color:var(--faint);padding:4px 4px 0">Upcoming: ${futureFollowups.map(f => `${esc(f.agentName)} (${fmtDate(f.due)})`).join(' · ')}</div>` : ''}
+      <button class="btn small ghost" data-action="followup-new" style="margin-top:4px;font-size:12px">＋ Add Follow-Up</button>
+    </div>
+
+    <div class="huddle-col">
+      <div class="huddle-col-title">📅 Today's Appointments <span style="margin-left:auto;font-size:10px;color:var(--faint)">${todayAppts.length}</span></div>
+      ${todayAppts.length ? todayAppts.map(e => `
+        <div class="huddle-item" data-action="event-open" data-id="${e.id}" style="cursor:pointer">
+          <span class="ev-dot" style="background:${e.color};flex:none;margin-top:2px"></span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600">${esc(e.title)}</div>
+            ${e.time ? `<div style="font-size:11.5px;color:var(--muted)">${e.time}${e.duration ? ' · ' + e.duration + 'min' : ''}</div>` : ''}
+          </div>
+        </div>`).join('') : '<div class="huddle-empty">No appointments today</div>'}
+      <button class="btn small ghost" data-action="event-new" style="margin-top:4px;font-size:12px">＋ Schedule Appointment</button>
+    </div>
+
+    <div class="huddle-col">
+      <div class="huddle-col-title">🌱 Agent Development</div>
+      ${agentDevItems.length ? agentDevItems.map(a => `
+        <div class="huddle-item" style="border-left:3px solid ${a.priority === 'high' ? 'var(--red)' : a.priority === 'medium' ? 'var(--amber)' : 'var(--accent)'}">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:600">${esc(a.text)}</div>
+            ${a.detail ? `<div style="font-size:11px;color:var(--faint)">${esc(a.detail)}</div>` : ''}
+          </div>
+        </div>`).join('') : `<div class="huddle-empty">${biz ? 'All agents on track 🟢' : 'Run sync to see agent data'}</div>`}
+      ${activeAlerts.slice(0, 2).map(a => `
+        <div class="huddle-item level-${a.level}" style="border-left:3px solid ${a.level === 'critical' ? 'var(--red)' : a.level === 'high' ? 'var(--amber)' : 'var(--accent)'}">
+          <span class="alert-badge ab-${a.level}" style="font-size:10px">${a.level.toUpperCase()}</span>
+          <div style="flex:1;font-size:12px">${esc(a.title)}</div>
+        </div>`).join('')}
+      <button class="btn small ghost" data-action="nav" data-id="business" style="margin-top:4px;font-size:12px">Open Agent Tracker →</button>
+    </div>`;
+}
+
 function renderDashboard(){
   const t = todayISO();
   const hour = new Date().getHours();
@@ -1321,11 +1534,14 @@ function saveFollowupModal(){
 function renderBackOffice(){
   const p = state.portals || {};
   const cards = [
-    { key: 'teamtailor', icon: '🎯', name: 'Teamtailor', desc: 'Recruiting & hiring platform' },
-    { key: 'backOffice', icon: '🏢', name: 'Back Office', desc: 'Admin & operations portal' },
-    { key: 'agentPortal', icon: '🤝', name: 'Agent Portal', desc: 'Recruit & agent management' },
-    { key: 'suranceBay', icon: '📋', name: 'SuranceBay', desc: 'Contracting & onboarding' },
-    { key: 'carrierPortal', icon: '🏥', name: 'Carrier Portal', desc: 'Carrier submissions & status' },
+    { key: 'teamtailor',  icon: '🎯', name: 'Teamtailor',   desc: 'Recruiting & hiring platform' },
+    { key: 'quilityHQ',   icon: '🏛️', name: 'Quility HQ',   desc: 'Agency HQ & resources' },
+    { key: 'slack',       icon: '💬', name: 'Slack',         desc: 'Team communications' },
+    { key: 'backOffice',  icon: '🏢', name: 'Back Office',   desc: 'Admin & operations portal' },
+    { key: 'agentPortal', icon: '🤝', name: 'Agent Portal',  desc: 'Recruit & agent management' },
+    { key: 'suranceBay',  icon: '📋', name: 'SuranceBay',    desc: 'Contracting & onboarding' },
+    { key: 'calendly',    icon: '📅', name: 'Calendly',      desc: 'Scheduling & appointments' },
+    { key: 'carrierPortal',icon:'🏥', name: 'Carrier Portal',desc: 'Carrier submissions & status' },
   ];
   const cardHTML = cards.map(c => p[c.key]
     ? `<a class="bo-card" href="${esc(p[c.key])}" target="_blank" rel="noopener"><div class="bo-icon">${c.icon}</div><div class="bo-name">${c.name}</div><div class="bo-desc">${c.desc}</div></a>`
@@ -1347,9 +1563,9 @@ function renderBackOffice(){
     </div>`;
 }
 function savePortals(){
-  const keys = ['teamtailor','backOffice','agentPortal','suranceBay','carrierPortal'];
+  const keys = ['teamtailor','quilityHQ','slack','backOffice','agentPortal','suranceBay','calendly','carrierPortal'];
   keys.forEach(k => { const el = document.getElementById('po-' + k); if (el) state.portals[k] = el.value.trim(); });
-  save(); renderBackOffice(); toast('Portal links saved');
+  save(); renderBackOffice(); renderDock(); toast('Portal links saved — dock updated');
 }
 
 /* =====================================================================
@@ -2152,6 +2368,17 @@ document.addEventListener('click', e => {
       if (r){ openFollowupModal(r.name); }
       break;
     }
+    /* huddle */
+    case 'huddle-quick-add': {
+      const inp = $('#huddle-quick-input');
+      const v = inp ? inp.value.trim() : '';
+      if (!v) break;
+      createTask({ title: v, due: todayISO() });
+      inp.value = '';
+      renderHuddle();
+      toast('Task added');
+      break;
+    }
     /* dashboard */
     case 'briefing-close': { const b = document.getElementById('briefing-bar'); if (b) b.remove(); break; }
     /* alerts */
@@ -2211,10 +2438,14 @@ if (!CanvasRenderingContext2D.prototype.roundRect){
 
 /* init */
 requestNotifPerms();
-// send briefing notification once per day on first open
 if (state.meta.lastBriefingDate !== todayISO()) {
   setTimeout(() => { sendBriefingNotif(); scheduleFollowupReminder(); }, 1500);
 }
+// dock clock tick
+setInterval(() => {
+  const d = $('#dock-clock');
+  if (d){ const now = new Date(), h = now.getHours(), m = now.getMinutes(); d.textContent = `${h % 12 || 12}:${pad(m)} ${h >= 12 ? 'PM' : 'AM'}`; }
+}, 10000);
 if (BIZ() && state.business.autoImport){
   const n = importBusinessTasks();
   const ne = importBusinessEvents();
@@ -2225,8 +2456,16 @@ if (BIZ() && state.business.autoImport){
 } else if (BIZ()){
   importBusinessEvents(); // meeting times stay current even with auto-add off
 }
-switchView('dashboard');
+renderDock();
+switchView('huddle');
 updatePomoUI();
+// wire huddle quick-input Enter
+document.addEventListener('keydown', e => {
+  if (ui.view === 'huddle' && e.key === 'Enter' && document.activeElement && document.activeElement.id === 'huddle-quick-input'){
+    const v = document.activeElement.value.trim();
+    if (v){ createTask({ title: v, due: todayISO() }); document.activeElement.value = ''; renderHuddle(); toast('Task added'); }
+  }
+});
 </script>
 </body>
 </html>
