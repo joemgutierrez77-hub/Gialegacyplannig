@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a1428">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>G.I.A. Legacy Planning — Command Center</title>
+
+<!-- Fonts: the ONLY external resource. If you ever want a 100% offline file,
+     delete the two <link> lines below — the CSS falls back to system fonts. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================= *
+ *  THEME — navy / white / gold                                  *
+ * ============================================================= */
+:root{
+  --navy-0:#070f1f;          /* deepest bg            */
+  --navy-1:#0a1428;          /* page bg               */
+  --navy-2:#0f1d3a;          /* panel bg              */
+  --navy-3:#16264a;          /* raised / hover        */
+  --line:rgba(201,162,39,.16);
+  --line-soft:rgba(255,255,255,.07);
+  --gold:#d4af37;
+  --gold-bright:#f0cf6b;
+  --gold-dim:rgba(212,175,55,.12);
+  --white:#f5f7fa;
+  --muted:#9fb0c9;
+  --faint:#6c7d99;
+  --green:#34d399;
+  --green-bg:rgba(52,211,153,.12);
+  --yellow:#f5c542;
+  --yellow-bg:rgba(245,197,66,.12);
+  --red:#f87171;
+  --red-bg:rgba(248,113,113,.13);
+  --radius:16px;
+  --shadow:0 8px 30px rgba(0,0,0,.35);
+  font-synthesis:none;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(212,175,55,.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 10%, rgba(34,99,180,.10), transparent 55%),
+    linear-gradient(180deg,var(--navy-1),var(--navy-0));
+  background-attachment:fixed;
+  color:var(--white);
+  min-height:100vh;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
+h1,h2,h3,.font-head{font-family:'Space Grotesk','Inter',sans-serif}
+
+/* ---------- header ---------- */
+header{
+  position:sticky;top:0;z-index:50;
+  padding:14px 18px calc(14px) 18px;
+  padding-top:calc(14px + env(safe-area-inset-top));
+  background:rgba(7,15,31,.78);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:13px;
+}
+.crest{
+  width:42px;height:42px;border-radius:11px;flex:none;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#1a2c52,#0c1830);
+  border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+.crest span{
+  font-family:'Space Grotesk';font-weight:700;font-size:18px;
+  background:linear-gradient(160deg,var(--gold-bright),var(--gold));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.brand-l1{font-family:'Space Grotesk';font-weight:700;font-size:16px;letter-spacing:.3px;line-height:1.15}
+.brand-l1 b{color:var(--gold)}
+.brand-l2{font-size:11px;color:var(--faint);letter-spacing:2.5px;text-transform:uppercase;margin-top:1px}
+.header-meta{margin-left:auto;text-align:right}
+.clock{font-family:'Space Grotesk';font-weight:600;font-size:15px;color:var(--white);font-variant-numeric:tabular-nums}
+.datel{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;margin-top:1px}
+
+/* ---------- layout ---------- */
+main{
+  max-width:1180px;margin:0 auto;padding:18px 16px 60px;
+  display:grid;grid-template-columns:1fr;gap:16px;
+}
+.panel{
+  background:linear-gradient(180deg,var(--navy-2),rgba(15,29,58,.55));
+  border:1px solid var(--line-soft);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.panel-h{
+  display:flex;align-items:center;gap:9px;
+  padding:15px 17px 13px;
+  border-bottom:1px solid var(--line-soft);
+}
+.panel-h .tick{width:4px;height:17px;border-radius:3px;background:linear-gradient(var(--gold-bright),var(--gold));flex:none}
+.panel-h h2{
+  font-size:12.5px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);
+}
+.panel-h .count{
+  margin-left:auto;font-family:'Space Grotesk';font-weight:600;font-size:12px;
+  color:var(--faint);background:var(--gold-dim);border:1px solid var(--line);
+  padding:2px 9px;border-radius:20px;letter-spacing:.5px;
+}
+.panel-b{padding:14px 17px 17px}
+
+/* ---------- Top 3 ---------- */
+.top3{display:grid;gap:11px}
+.t3-card{
+  position:relative;display:flex;gap:13px;align-items:flex-start;
+  padding:14px 15px 14px 14px;border-radius:13px;
+  background:linear-gradient(135deg,rgba(212,175,55,.10),rgba(212,175,55,.02));
+  border:1px solid var(--line);
+}
+.t3-num{
+  width:30px;height:30px;border-radius:9px;flex:none;display:grid;place-items:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:15px;color:var(--navy-0);
+  background:linear-gradient(150deg,var(--gold-bright),var(--gold));
+  box-shadow:0 3px 10px rgba(212,175,55,.25);
+}
+.t3-body{flex:1;min-width:0}
+.t3-title{font-family:'Space Grotesk';font-weight:600;font-size:15.5px;letter-spacing:.2px}
+.t3-sub{font-size:12.8px;color:var(--muted);margin-top:3px;line-height:1.45}
+.t3-tag{
+  display:inline-block;margin-top:8px;font-size:10.5px;font-weight:600;letter-spacing:1px;
+  text-transform:uppercase;padding:3px 9px;border-radius:6px;
+  background:var(--navy-3);color:var(--gold-bright);border:1px solid var(--line);
+}
+
+/* ---------- Meetings ---------- */
+.mtg{display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid var(--line-soft)}
+.mtg:last-child{border-bottom:none}
+.mtg-time{
+  font-family:'Space Grotesk';font-weight:600;font-size:13px;color:var(--gold-bright);
+  width:74px;flex:none;text-align:right;font-variant-numeric:tabular-nums;
+}
+.mtg-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex:none;box-shadow:0 0 0 4px var(--gold-dim)}
+.mtg-main{flex:1;min-width:0}
+.mtg-title{font-size:14px;font-weight:500}
+.mtg-meta{font-size:11.5px;color:var(--faint);margin-top:1px}
+
+/* ---------- Inbox ---------- */
+.inbox-item{display:flex;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line-soft)}
+.inbox-item:last-child{border-bottom:none}
+.pri{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+.pri.high{background:var(--red);box-shadow:0 0 0 4px var(--red-bg)}
+.pri.med{background:var(--yellow);box-shadow:0 0 0 4px var(--yellow-bg)}
+.pri.low{background:var(--green);box-shadow:0 0 0 4px var(--green-bg)}
+.inbox-main{flex:1;min-width:0}
+.inbox-from{font-size:11px;color:var(--gold-bright);font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+.inbox-subj{font-size:14px;font-weight:500;margin-top:2px}
+.inbox-act{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.45}
+
+/* ---------- Pipeline ---------- */
+.pipe{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.pipe-card{
+  background:var(--navy-1);border:1px solid var(--line-soft);border-radius:12px;
+  padding:12px 13px;position:relative;overflow:hidden;
+}
+.pipe-num{font-family:'Space Grotesk';font-weight:700;font-size:26px;line-height:1;color:var(--white)}
+.pipe-label{font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:.3px;line-height:1.3}
+.pipe-bar{height:3px;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));margin-top:9px;opacity:.85}
+.pipe-stage-i{position:absolute;top:11px;right:12px;font-size:10px;color:var(--faint);font-family:'Space Grotesk';font-weight:600}
+
+/* ---------- Agents ---------- */
+.agent{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line-soft)}
+.agent:last-child{border-bottom:none}
+.avatar{
+  width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:14px;color:var(--gold-bright);
+  background:linear-gradient(145deg,var(--navy-3),var(--navy-1));border:1px solid var(--line);
+}
+.agent-main{flex:1;min-width:0}
+.agent-name{font-size:14.5px;font-weight:600;font-family:'Space Grotesk'}
+.agent-next{font-size:12.3px;color:var(--muted);margin-top:2px;line-height:1.4}
+.agent-next b{color:var(--gold-bright);font-weight:600}
+.status-pill{
+  font-size:10px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;
+  padding:3px 9px;border-radius:20px;flex:none;white-space:nowrap;
+  background:var(--gold-dim);color:var(--gold-bright);border:1px solid var(--line);
+}
+
+/* ---------- Production table ---------- */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:-2px;padding:2px}
+table.prod{width:100%;border-collapse:collapse;min-width:560px}
+table.prod th{
+  font-family:'Space Grotesk';font-weight:600;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--faint);text-align:right;padding:0 12px 10px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+table.prod th:first-child{text-align:left}
+table.prod td{
+  font-size:13.5px;padding:11px 12px;border-bottom:1px solid var(--line-soft);text-align:right;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+table.prod td:first-child{text-align:left;font-weight:600;font-family:'Space Grotesk'}
+table.prod tr:last-child td{border-bottom:none}
+.tier-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.tier-green .tier-dot{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
+.tier-yellow .tier-dot{background:var(--yellow);box-shadow:0 0 0 3px var(--yellow-bg)}
+.tier-red .tier-dot{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+.tier-green td:first-child{color:var(--green)}
+.tier-yellow td:first-child{color:var(--yellow)}
+.tier-red td:first-child{color:var(--red)}
+.comm{color:var(--gold-bright);font-weight:600}
+.prod-foot{
+  display:flex;gap:16px;flex-wrap:wrap;padding:13px 2px 2px;margin-top:4px;
+  font-size:11px;color:var(--faint);border-top:1px solid var(--line-soft);
+}
+.legend{display:flex;align-items:center;gap:6px}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.totals-row td{font-weight:700 !important;color:var(--white) !important;border-top:1px solid var(--line);border-bottom:none !important}
+.totals-row td:first-child{font-family:'Space Grotesk';color:var(--muted) !important}
+
+footer{text-align:center;color:var(--faint);font-size:11px;padding:8px 16px 30px;letter-spacing:.4px}
+footer b{color:var(--gold)}
+
+/* ---------- responsive ---------- */
+@media (min-width:760px){
+  main{grid-template-columns:1fr 1fr;padding:22px}
+  .span-2{grid-column:1 / -1}
+  .pipe{grid-template-columns:repeat(4,1fr)}
+  .top3{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:1080px){
+  .pipe{grid-template-columns:repeat(7,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!--                                                              -->
+<!--   ☀️  GOOD MORNING — UPDATE YOUR NUMBERS HERE                -->
+<!--                                                              -->
+<!--   Everything on this screen is driven by ONE object below    -->
+<!--   called  DATA  (scroll down a few lines). Edit the values,  -->
+<!--   save the file, refresh the page. Nothing else to touch.    -->
+<!--                                                              -->
+<!--   WHERE EACH NUMBER GOES — daily 5-minute routine:           -->
+<!--                                                              -->
+<!--   1. DATA.top3 ......... your 3 must-do priorities today     -->
+<!--   2. DATA.meetings ..... today's calendar (time + title)     -->
+<!--   3. DATA.inbox ........ emails needing a reply/decision     -->
+<!--   4. DATA.pipeline ..... the 7 Teamtailor stage counts       -->
+<!--   5. DATA.agents ....... who's in motion + their next step   -->
+<!--   6. DATA.production ... this week's Dials/Contacts/Apps/     -->
+<!--                          Closes/Commission per agent. Tier    -->
+<!--                          color is AUTOMATIC from apps + apv:  -->
+<!--                            GREEN  = apps >= 2  AND  apv >= 3000 -->
+<!--                            YELLOW = apps >= 1  OR   apv >= 1500 -->
+<!--                            RED    = below that  (needs help)  -->
+<!--                          (apv is the policy volume you book;  -->
+<!--                           it drives the color, Commission is  -->
+<!--                           what shows in the table.)           -->
+<!--                                                              -->
+<!--   Tip: keep last week's file as a backup so you can compare.  -->
+<!--                                                              -->
+<!-- ============================================================ -->
+
+<header>
+  <div class="crest"><span>GIA</span></div>
+  <div>
+    <div class="brand-l1">G.I.A. <b>Legacy</b> Planning</div>
+    <div class="brand-l2">Command Center</div>
+  </div>
+  <div class="header-meta">
+    <div class="clock" id="clock">--:--</div>
+    <div class="datel" id="dateLabel">—</div>
+  </div>
+</header>
+
+<main id="root"><!-- panels render here --></main>
+
+<footer>G.I.A. Legacy Planning · Built to run the day · <b id="updatedTag">—</b></footer>
+
+<script>
+/* ===================================================================== *
+ *                                                                       *
+ *   ▼▼▼   DATA — THE ONLY THING YOU EDIT EACH MORNING   ▼▼▼            *
+ *                                                                       *
+ *   Replace the numbers / text below, save, refresh. See the comment    *
+ *   block at the top of the file for what each section feeds.           *
+ * ===================================================================== */
+
+const DATA = {
+
+  /* Optional: stamp showing when you last refreshed these numbers. */
+  meta: { updated: "Mon, Jun 22 · 7:30 AM" },
+
+  /* 1 ── TODAY'S TOP 3 ────────────────────────────────────────────────
+     Your three non-negotiables. tag = a short label (e.g. CLOSE, MONEY). */
+  top3: [
+    { title: "Fix Zapier — 71 tasks held",
+      sub: "Automations are PAUSED until the limit resets/upgrades. Everything downstream is frozen. Clear this first.",
+      tag: "Unblock" },
+    { title: "Close Anthony Trevino",
+      sub: "Warm — replied 'looking forward to talking.' Wants his existing policy info pulled. Present the marketplace options and write it.",
+      tag: "Close" },
+    { title: "Sign Isabel Govea DocuSign",
+      sub: "Only you can sign. Access code = last 4 of SSN + DOB (MMDDYYYY). 4th day outstanding — do it before noon.",
+      tag: "Sign" },
+  ],
+
+  /* 2 ── MEETINGS // TODAY ─────────────────────────────────────────────
+     time = how it prints. title + meta (location / who). */
+  meetings: [
+    { time: "8:00 AM",  title: "Pull HQ → import + work Send Queue", meta: "Onboarding Tracker · 2 min" },
+    { time: "8:45 AM",  title: "PNL review",                          meta: "Office" },
+    { time: "11:00 AM", title: "Lyric Crudup × Life Insurance",       meta: "Zoom · first appointment" },
+    { time: "12:00 PM", title: "Lyric Crudup × Infinite Banking",     meta: "Zoom" },
+    { time: "3:00 PM",  title: "Yolanda Lemus × Infinite Banking",    meta: "Zoom" },
+  ],
+
+  /* 3 ── INBOX // ACTION REQUIRED ──────────────────────────────────────
+     priority = "high" | "med" | "low" (sets the dot color).
+     from = sender/source, subject = what it is, action = your next move. */
+  inbox: [
+    { priority: "high", from: "Zapier",        subject: "71 held tasks · plan limit reached",
+      action: "Upgrade plan or wait for reset, then replay held tasks." },
+    { priority: "high", from: "Anthony Trevino", subject: "Re: Marketplace Options",
+      action: "Send his existing policy summary + finalize coverage choice." },
+    { priority: "med",  from: "Teamtailor",     subject: "Invoice #135708 · payment method",
+      action: "Push for Stripe (not Revolut). Camille back Mon 6/22." },
+    { priority: "med",  from: "ExamFX",         subject: "Licensing study package",
+      action: "Choose Option 1 or Option 2 to move pre-licensing forward." },
+    { priority: "low",  from: "Squarespace",    subject: "insurancebrokercareer.com expired",
+      action: "Renew the domain (lapsed 5/22) or release it." },
+  ],
+
+  /* 4 ── PIPELINE // SNAPSHOT ──────────────────────────────────────────
+     Your 7 Teamtailor stages. Just update each count. */
+  pipeline: [
+    { stage: "Applied / Connected",  count: 12 },
+    { stage: "Interview Scheduled",  count: 5  },
+    { stage: "Hired / Onboarding",   count: 4  },
+    { stage: "Pre-Licensing",        count: 6  },
+    { stage: "Exam Scheduled",       count: 3  },
+    { stage: "Licensed",             count: 2  },
+    { stage: "Active Producer",      count: 8  },
+  ],
+
+  /* 5 ── AGENTS // IN MOTION ───────────────────────────────────────────
+     status = short pill text. next = their very next action. */
+  agents: [
+    { name: "Lyric Crudup",     status: "Onboarding", next: "First 2 appts today (Life + IBC). Finish SureLC carrier requests." },
+    { name: "Yolanda Lemus",    status: "Active",     next: "Infinite Banking presentation today 3:00 PM." },
+    { name: "Kem Gaskin",       status: "Onboarding", next: "Work the essential onboarding links sent Friday." },
+    { name: "Nicole Wells",     status: "Contracted", next: "Foresters appointment done — schedule first writing." },
+    { name: "Richard Aguilera", status: "Approved",   next: "Symmetry candidate approved — kick off onboarding." },
+  ],
+
+  /* 6 ── PRODUCTION // THIS WEEK ───────────────────────────────────────
+     Per agent: dials, contacts, apps, closes, commission ($), apv ($).
+       • commission = the $ shown in the table
+       • apv        = policy volume — drives the GREEN/YELLOW/RED tier
+                      (see rules in the top comment block)
+     Add/remove rows freely. */
+  production: [
+    { name: "Lyric Crudup",     dials: 64, contacts: 21, apps: 3, closes: 2, commission: 1850, apv: 4200 },
+    { name: "Yolanda Lemus",    dials: 51, contacts: 18, apps: 2, closes: 1, commission: 1200, apv: 3100 },
+    { name: "Nicole Wells",     dials: 38, contacts: 12, apps: 1, closes: 1, commission:  640, apv: 1750 },
+    { name: "Richard Aguilera", dials: 22, contacts:  6, apps: 0, closes: 0, commission:    0, apv:    0 },
+    { name: "Kem Gaskin",       dials: 17, contacts:  4, apps: 0, closes: 0, commission:    0, apv:  400 },
+  ],
+};
+
+/* ===================================================================== *
+ *   ▲▲▲   END OF EDITABLE DATA — you can stop here.   ▲▲▲              *
+ *   (The rendering code below just paints DATA onto the screen.)         *
+ * ===================================================================== */
+
+
+/* ---------- tiny helpers ---------- */
+const $  = (sel, el=document) => el.querySelector(sel);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const money = n => "$" + Number(n || 0).toLocaleString("en-US");
+const initials = name => name.trim().split(/\s+/).slice(0,2).map(w => w[0]).join("").toUpperCase();
+
+/* Production tier — the one piece of logic the dashboard computes for you. */
+function prodTier(row){
+  if (row.apps >= 2 && row.apv >= 3000) return "green";
+  if (row.apps >= 1 || row.apv >= 1500) return "yellow";
+  return "red";
+}
+
+/* ---------- panel builders ---------- */
+function panel(label, count, bodyHTML, spanFull=false){
+  const c = (count !== null && count !== undefined)
+    ? `<span class="count">${esc(count)}</span>` : "";
+  return `<section class="panel${spanFull ? " span-2" : ""}">
+    <div class="panel-h"><span class="tick"></span><h2>${esc(label)}</h2>${c}</div>
+    <div class="panel-b">${bodyHTML}</div>
+  </section>`;
+}
+
+function buildTop3(){
+  const cards = DATA.top3.map((t,i) => `
+    <div class="t3-card">
+      <div class="t3-num">${i+1}</div>
+      <div class="t3-body">
+        <div class="t3-title">${esc(t.title)}</div>
+        <div class="t3-sub">${esc(t.sub)}</div>
+        ${t.tag ? `<span class="t3-tag">${esc(t.tag)}</span>` : ""}
+      </div>
+    </div>`).join("");
+  return panel("Today's Top 3", null, `<div class="top3">${cards}</div>`, true);
+}
+
+function buildMeetings(){
+  const rows = DATA.meetings.length ? DATA.meetings.map(m => `
+    <div class="mtg">
+      <div class="mtg-time">${esc(m.time)}</div>
+      <div class="mtg-dot"></div>
+      <div class="mtg-main">
+        <div class="mtg-title">${esc(m.title)}</div>
+        ${m.meta ? `<div class="mtg-meta">${esc(m.meta)}</div>` : ""}
+      </div>
+    </div>`).join("")
+    : `<div class="mtg-meta">No meetings scheduled. 🎯</div>`;
+  return panel("Meetings // Today", DATA.meetings.length, rows);
+}
+
+function buildInbox(){
+  const rows = DATA.inbox.length ? DATA.inbox.map(it => `
+    <div class="inbox-item">
+      <div class="pri ${esc(it.priority)}"></div>
+      <div class="inbox-main">
+        <div class="inbox-from">${esc(it.from)}</div>
+        <div class="inbox-subj">${esc(it.subject)}</div>
+        ${it.action ? `<div class="inbox-act">→ ${esc(it.action)}</div>` : ""}
+      </div>
+    </div>`).join("")
+    : `<div class="inbox-act">Inbox zero. 📭</div>`;
+  return panel("Inbox // Action Required", DATA.inbox.length, rows);
+}
+
+function buildPipeline(){
+  const max = Math.max(1, ...DATA.pipeline.map(s => s.count));
+  const total = DATA.pipeline.reduce((a,s) => a + s.count, 0);
+  const cards = DATA.pipeline.map((s,i) => `
+    <div class="pipe-card">
+      <div class="pipe-stage-i">${i+1}</div>
+      <div class="pipe-num">${esc(s.count)}</div>
+      <div class="pipe-label">${esc(s.stage)}</div>
+      <div class="pipe-bar" style="width:${Math.round(s.count/max*100)}%"></div>
+    </div>`).join("");
+  return panel("Pipeline // Snapshot", total + " in pipe", `<div class="pipe">${cards}</div>`, true);
+}
+
+function buildAgents(){
+  const rows = DATA.agents.map(a => `
+    <div class="agent">
+      <div class="avatar">${esc(initials(a.name))}</div>
+      <div class="agent-main">
+        <div class="agent-name">${esc(a.name)}</div>
+        <div class="agent-next"><b>Next:</b> ${esc(a.next)}</div>
+      </div>
+      <div class="status-pill">${esc(a.status)}</div>
+    </div>`).join("");
+  return panel("Agents // In Motion", DATA.agents.length, rows);
+}
+
+function buildProduction(){
+  let T = { dials:0, contacts:0, apps:0, closes:0, commission:0 };
+  const rows = DATA.production.map(r => {
+    T.dials += r.dials; T.contacts += r.contacts; T.apps += r.apps;
+    T.closes += r.closes; T.commission += r.commission;
+    const tier = prodTier(r);
+    return `<tr class="tier-${tier}">
+      <td><span class="tier-dot"></span>${esc(r.name)}</td>
+      <td>${esc(r.dials)}</td>
+      <td>${esc(r.contacts)}</td>
+      <td>${esc(r.apps)}</td>
+      <td>${esc(r.closes)}</td>
+      <td class="comm">${money(r.commission)}</td>
+    </tr>`;
+  }).join("");
+  const totals = `<tr class="totals-row">
+      <td>TEAM TOTAL</td>
+      <td>${T.dials}</td><td>${T.contacts}</td><td>${T.apps}</td><td>${T.closes}</td>
+      <td class="comm">${money(T.commission)}</td>
+    </tr>`;
+  const body = `
+    <div class="table-wrap">
+      <table class="prod">
+        <thead><tr>
+          <th>Agent</th><th>Dials</th><th>Contacts</th><th>Apps</th><th>Closes</th><th>Commission</th>
+        </tr></thead>
+        <tbody>${rows}${totals}</tbody>
+      </table>
+    </div>
+    <div class="prod-foot">
+      <span class="legend"><i style="background:var(--green)"></i>On pace · ≥2 apps & ≥$3K APV</span>
+      <span class="legend"><i style="background:var(--yellow)"></i>Warning</span>
+      <span class="legend"><i style="background:var(--red)"></i>Needs help</span>
+    </div>`;
+  return panel("Production // This Week", DATA.production.length + " agents", body, true);
+}
+
+/* ---------- render ---------- */
+function render(){
+  $("#root").innerHTML =
+    buildTop3() +
+    buildMeetings() +
+    buildInbox() +
+    buildPipeline() +
+    buildAgents() +
+    buildProduction();
+  if (DATA.meta && DATA.meta.updated) $("#updatedTag").textContent = "Updated " + DATA.meta.updated;
+}
+
+/* ---------- live clock / date (local only — no network) ---------- */
+function tick(){
+  const now = new Date();
+  $("#clock").textContent = now.toLocaleTimeString("en-US",
+    { hour:"numeric", minute:"2-digit" });
+  $("#dateLabel").textContent = now.toLocaleDateString("en-US",
+    { weekday:"short", month:"short", day:"numeric" }).toUpperCase();
+}
+
+render();
+tick();
+setInterval(tick, 1000 * 20);
+</script>
+</body>
+</html>
