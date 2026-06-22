@@ -13,7 +13,11 @@ curl -fsSL -o "$TMP/main.zip" "$ZIP_URL"
 unzip -q "$TMP/main.zip" -d "$TMP"
 
 echo "Updating files in: $DEST"
-cp -R "$TMP/Gialegacyplannig-main/." "$DEST/"
+# Exclude user data and credentials from the copy
+rsync -a --exclude='.env' --exclude='.env.*' --exclude='*.env' \
+         --exclude='data/' --exclude='productivity/business-data.js' \
+         "$TMP/Gialegacyplannig-main/" "$DEST/" 2>/dev/null \
+  || cp -R "$TMP/Gialegacyplannig-main/." "$DEST/"
 rm -rf "$TMP"
 
 xattr -dr com.apple.quarantine "$DEST" 2>/dev/null || true

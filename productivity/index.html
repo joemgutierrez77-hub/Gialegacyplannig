@@ -1616,6 +1616,7 @@ function exportJSON(){
   toast('Backup downloaded ✓');
 }
 function importJSON(){
+  if (!confirm('Restore backup? This will REPLACE all current data.')) return;
   const file = document.getElementById('import-file');
   file.onchange = () => {
     const reader = new FileReader();
@@ -1623,7 +1624,6 @@ function importJSON(){
       try {
         const data = JSON.parse(e.target.result);
         if (!data.tasks || !data.notes) { toast('⚠️ Invalid backup file'); return; }
-        if (!confirm('Restore backup? This will REPLACE all current data.')) return;
         Object.assign(state, data);
         save();
         renderView(ui.view);
