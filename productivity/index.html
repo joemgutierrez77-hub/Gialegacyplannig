@@ -1239,7 +1239,8 @@ function renderBusiness(){
         <li>Reload this page — your business dashboard appears here</li>
       </ol>
       <p style="margin-top:14px;color:var(--faint);font-size:12.5px">Keep <code>business-data.js</code> in the same folder as this file. Re-run the sync whenever your agency data changes — each new run refreshes the numbers and adds any new daily tasks (never duplicates old ones).</p>
-    </div>`;
+    </div>
+    ${bizQuickLinksHTML()}`;
     return;
   }
   const r = biz.recruiting, pr = biz.production, pf = biz.profitability;
@@ -1294,8 +1295,28 @@ function renderBusiness(){
         ${bizInboxHTML(biz)}
         <div class="card"><div class="dash-section-title">Recruiting Pipeline</div>${stages || '<div class="empty">No recruits yet</div>'}</div>
         <div class="card"><div class="dash-section-title">Agent Production (vs $${pr.targetApv.toLocaleString()} APV target)</div>${agentRows || '<div class="empty">No agents tracked</div>'}</div>
+        ${bizQuickLinksHTML()}
       </div>
     </div>`;
+}
+function bizQuickLinksHTML(){
+  const links = [
+    { label: 'Teamtailor', icon: '👥', url: 'https://app.teamtailor.com/', desc: 'Recruiting' },
+    { label: 'Calendly', icon: '🗓️', url: 'https://calendly.com/event_types/user/me', desc: 'Meetings' },
+    { label: 'Quility HQ', icon: '📊', url: 'https://hq.quility.com/', desc: 'Production' },
+    { label: 'Gmail', icon: '📧', url: 'https://mail.google.com/', desc: 'joe.m.gutierrez77' },
+    { label: 'Outlook', icon: '📬', url: 'https://outlook.live.com/', desc: 'josephandjoegutierrez' },
+  ];
+  const btns = links.map(l =>
+    `<a href="${l.url}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:12px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background='var(--surface2)'">
+      <span style="font-size:20px">${l.icon}</span>
+      <b style="font-size:12.5px">${l.label}</b>
+      <span style="font-size:10.5px;color:var(--faint)">${l.desc}</span>
+    </a>`).join('');
+  return `<div class="card">
+    <div class="dash-section-title">Quick Access</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px">${btns}</div>
+  </div>`;
 }
 function bizInboxHTML(biz){
   const inbox = (biz && biz.inbox) || [];

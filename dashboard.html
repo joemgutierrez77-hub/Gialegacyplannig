@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#070f1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GIA Command">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>G.I.A. Command Center</title>
+
+<!-- Fonts = the ONLY external resource. Delete these two lines for a 100%
+     offline file; the CSS falls back to clean system fonts automatically. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- Optional live feed: if your Mac's `flowhub sync` has written a
+     dashboard-data.js next to this file, it loads here and overrides the
+     hand-typed numbers below. If the file isn't there, nothing breaks. -->
+<script>window.DASHBOARD_DATA = null;</script>
+<script src="dashboard-data.js" onerror="void 0"></script>
+
+<style>
+:root{
+  --navy-0:#070f1f; --navy-1:#0a1428; --navy-2:#0f1d3a; --navy-3:#16264a;
+  --line:rgba(201,162,39,.18); --line-soft:rgba(255,255,255,.07);
+  --gold:#d4af37; --gold-bright:#f5d56b; --gold-dim:rgba(212,175,55,.12);
+  --white:#f5f7fa; --muted:#9fb0c9; --faint:#64748b;
+  --green:#34d399; --green-bg:rgba(52,211,153,.12);
+  --yellow:#f5c542; --yellow-bg:rgba(245,197,66,.12);
+  --red:#f87171; --red-bg:rgba(248,113,113,.13);
+  --radius:18px; --shadow:0 10px 34px rgba(0,0,0,.4);
+  font-synthesis:none;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:
+    radial-gradient(1100px 560px at 100% -8%, rgba(212,175,55,.07), transparent 58%),
+    radial-gradient(900px 520px at -10% 6%, rgba(34,99,180,.12), transparent 56%),
+    linear-gradient(180deg,var(--navy-1),var(--navy-0));
+  background-attachment:fixed;color:var(--white);min-height:100vh;line-height:1.5;
+  -webkit-font-smoothing:antialiased;padding-bottom:calc(28px + env(safe-area-inset-bottom));
+}
+h1,h2,h3,.fh{font-family:'Space Grotesk','Inter',sans-serif}
+
+/* header */
+header{
+  position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:13px;
+  padding:13px 18px;padding-top:calc(13px + env(safe-area-inset-top));
+  background:rgba(7,15,31,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+}
+.crest{width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;
+  background:linear-gradient(145deg,#1b2e56,#0b1730);border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.crest span{font-family:'Space Grotesk';font-weight:700;font-size:17px;
+  background:linear-gradient(160deg,var(--gold-bright),var(--gold));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.greet{font-family:'Space Grotesk';font-weight:700;font-size:17px;letter-spacing:.2px;line-height:1.15}
+.greet b{color:var(--gold)}
+.subline{font-size:11px;color:var(--faint);letter-spacing:1.6px;text-transform:uppercase;margin-top:2px}
+.hclock{margin-left:auto;text-align:right}
+.hclock .t{font-family:'Space Grotesk';font-weight:600;font-size:16px;font-variant-numeric:tabular-nums}
+.hclock .d{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.3px;margin-top:1px}
+
+main{max-width:1120px;margin:0 auto;padding:16px 15px 50px;display:grid;gap:15px;grid-template-columns:1fr}
+
+/* mission strip */
+.mission{display:flex;align-items:center;gap:11px;padding:13px 16px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(212,175,55,.03));
+  border:1px solid var(--line)}
+.mission .ic{font-size:17px}
+.mission .lbl{font-family:'Space Grotesk';font-weight:600;font-size:10.5px;letter-spacing:1.8px;
+  text-transform:uppercase;color:var(--gold);margin-bottom:1px}
+.mission .txt{font-size:13.5px;color:var(--white);line-height:1.4}
+
+/* ===== NOW / NEXT / LATER spine ===== */
+.spine{display:grid;gap:13px}
+.lane-label{font-family:'Space Grotesk';font-weight:600;font-size:11px;letter-spacing:2.4px;
+  text-transform:uppercase;color:var(--faint);margin:2px 2px -3px;display:flex;align-items:center;gap:8px}
+.lane-label .ln{flex:1;height:1px;background:var(--line-soft)}
+
+/* NOW card */
+.now-card{position:relative;overflow:hidden;border-radius:var(--radius);padding:20px 18px;
+  background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(15,29,58,.6));
+  border:1px solid var(--line);box-shadow:var(--shadow)}
+.now-card::before{content:"";position:absolute;inset:0;border-radius:var(--radius);
+  box-shadow:inset 0 0 0 1px rgba(245,213,107,.16);pointer-events:none}
+.now-kicker{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk';font-weight:600;
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-bright);margin-bottom:11px}
+.pulse{width:9px;height:9px;border-radius:50%;background:var(--gold-bright);
+  box-shadow:0 0 0 0 rgba(245,213,107,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(245,213,107,.55)}70%{box-shadow:0 0 0 12px rgba(245,213,107,0)}100%{box-shadow:0 0 0 0 rgba(245,213,107,0)}}
+.now-title{font-family:'Space Grotesk';font-weight:700;font-size:23px;line-height:1.2;letter-spacing:.2px}
+.now-sub{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+.now-cta{display:inline-flex;align-items:center;gap:7px;margin-top:15px;padding:11px 17px;border-radius:11px;
+  background:linear-gradient(150deg,var(--gold-bright),var(--gold));color:var(--navy-0);
+  font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 5px 16px rgba(212,175,55,.28)}
+.now-window{font-family:'Space Grotesk';font-variant-numeric:tabular-nums}
+
+/* NEXT card */
+.next-card{display:flex;align-items:center;gap:15px;border-radius:16px;padding:15px 17px;
+  background:var(--navy-2);border:1px solid var(--line-soft)}
+.count-badge{flex:none;min-width:72px;text-align:center;padding:9px 8px;border-radius:12px;
+  background:var(--navy-1);border:1px solid var(--line)}
+.count-badge .big{font-family:'Space Grotesk';font-weight:700;font-size:19px;color:var(--gold-bright);
+  line-height:1;font-variant-numeric:tabular-nums}
+.count-badge .sm{font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.next-main{flex:1;min-width:0}
+.next-when{font-size:11px;color:var(--gold-bright);font-weight:600;letter-spacing:.5px}
+.next-title{font-family:'Space Grotesk';font-weight:600;font-size:16px;margin-top:2px}
+.next-meta{font-size:12px;color:var(--faint);margin-top:2px}
+
+/* LATER timeline */
+.tl{position:relative;padding-left:6px}
+.tl-item{display:flex;gap:13px;padding:10px 2px;align-items:flex-start}
+.tl-time{font-family:'Space Grotesk';font-weight:600;font-size:12.5px;color:var(--muted);
+  width:66px;flex:none;text-align:right;font-variant-numeric:tabular-nums;padding-top:1px}
+.tl-rail{position:relative;width:14px;flex:none;align-self:stretch}
+.tl-dot{position:absolute;left:3px;top:5px;width:8px;height:8px;border-radius:50%;
+  background:var(--navy-3);border:1.5px solid var(--gold);}
+.tl-line{position:absolute;left:6.5px;top:13px;bottom:-12px;width:1.5px;background:var(--line-soft)}
+.tl-item:last-child .tl-line{display:none}
+.tl-body{flex:1;min-width:0;padding-bottom:1px}
+.tl-title{font-size:14px;font-weight:500}
+.tl-meta{font-size:11.5px;color:var(--faint);margin-top:1px}
+.tl-empty{color:var(--faint);font-size:13px;padding:8px 2px}
+
+/* generic panel */
+.panel{background:linear-gradient(180deg,var(--navy-2),rgba(15,29,58,.55));
+  border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.panel-h{display:flex;align-items:center;gap:9px;padding:15px 16px 12px;border-bottom:1px solid var(--line-soft)}
+.panel-h .tick{width:4px;height:16px;border-radius:3px;background:linear-gradient(var(--gold-bright),var(--gold))}
+.panel-h h2{font-size:12px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--gold)}
+.panel-h .cc{margin-left:auto;font-family:'Space Grotesk';font-weight:600;font-size:11.5px;color:var(--faint);
+  background:var(--gold-dim);border:1px solid var(--line);padding:2px 9px;border-radius:20px}
+.panel-b{padding:13px 16px 16px}
+
+/* TOP 3 focus (checkable) */
+.foc{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--line-soft);cursor:pointer}
+.foc:last-child{border-bottom:none}
+.box{width:24px;height:24px;border-radius:8px;border:2px solid var(--line);flex:none;display:grid;place-items:center;
+  margin-top:1px;transition:.15s;color:transparent;font-size:14px;font-weight:800}
+.foc.done .box{background:linear-gradient(150deg,var(--gold-bright),var(--gold));border-color:transparent;color:var(--navy-0)}
+.foc-b{flex:1;min-width:0}
+.foc-rank{font-family:'Space Grotesk';font-weight:700;font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase}
+.foc-title{font-family:'Space Grotesk';font-weight:600;font-size:15px;margin-top:1px;transition:.15s}
+.foc.done .foc-title{color:var(--faint);text-decoration:line-through}
+.foc-sub{font-size:12.3px;color:var(--muted);margin-top:3px;line-height:1.45}
+.foc.done .foc-sub{opacity:.5}
+
+/* wins meter */
+.wins{display:flex;align-items:center;gap:13px;padding:13px 16px;border-radius:14px;
+  background:var(--navy-2);border:1px solid var(--line-soft)}
+.wins-ring{--p:0;width:46px;height:46px;border-radius:50%;flex:none;
+  background:conic-gradient(var(--gold) calc(var(--p)*1%), var(--navy-3) 0);
+  display:grid;place-items:center}
+.wins-ring::after{content:"";width:34px;height:34px;border-radius:50%;background:var(--navy-1);grid-area:1/1}
+.wins-ring b{grid-area:1/1;z-index:1;font-family:'Space Grotesk';font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.wins-txt .l1{font-family:'Space Grotesk';font-weight:600;font-size:14px}
+.wins-txt .l2{font-size:11.5px;color:var(--faint);margin-top:1px}
+
+/* inbox */
+.inbox-item{display:flex;gap:11px;padding:11px 4px;border-bottom:1px solid var(--line-soft)}
+.inbox-item:last-child{border-bottom:none}
+.pri{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+.pri.high{background:var(--red);box-shadow:0 0 0 4px var(--red-bg)}
+.pri.med{background:var(--yellow);box-shadow:0 0 0 4px var(--yellow-bg)}
+.pri.low{background:var(--green);box-shadow:0 0 0 4px var(--green-bg)}
+.inbox-main{flex:1;min-width:0}
+.inbox-from{font-size:10.5px;color:var(--gold-bright);font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+.inbox-subj{font-size:13.8px;font-weight:500;margin-top:2px}
+.inbox-act{font-size:12.3px;color:var(--muted);margin-top:3px;line-height:1.45}
+
+/* pipeline */
+.pipe{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.pipe-card{background:var(--navy-1);border:1px solid var(--line-soft);border-radius:12px;padding:11px 12px;position:relative}
+.pipe-num{font-family:'Space Grotesk';font-weight:700;font-size:24px;line-height:1}
+.pipe-label{font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.3}
+.pipe-bar{height:3px;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));margin-top:8px}
+.pipe-i{position:absolute;top:10px;right:11px;font-size:9.5px;color:var(--faint);font-family:'Space Grotesk';font-weight:600}
+
+/* agents */
+.agent{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid var(--line-soft)}
+.agent:last-child{border-bottom:none}
+.avatar{width:36px;height:36px;border-radius:11px;flex:none;display:grid;place-items:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:13px;color:var(--gold-bright);
+  background:linear-gradient(145deg,var(--navy-3),var(--navy-1));border:1px solid var(--line)}
+.agent-main{flex:1;min-width:0}
+.agent-name{font-size:14px;font-weight:600;font-family:'Space Grotesk'}
+.agent-next{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
+.agent-next b{color:var(--gold-bright);font-weight:600}
+.status-pill{font-size:9.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:3px 9px;border-radius:20px;
+  flex:none;white-space:nowrap;background:var(--gold-dim);color:var(--gold-bright);border:1px solid var(--line)}
+
+/* production table */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.prod{width:100%;border-collapse:collapse;min-width:540px}
+table.prod th{font-family:'Space Grotesk';font-weight:600;font-size:10px;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--faint);text-align:right;padding:0 11px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.prod th:first-child{text-align:left}
+table.prod td{font-size:13px;padding:10px 11px;border-bottom:1px solid var(--line-soft);text-align:right;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+table.prod td:first-child{text-align:left;font-weight:600;font-family:'Space Grotesk'}
+table.prod tr:last-child td{border-bottom:none}
+.tier-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.tier-green .tier-dot{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
+.tier-yellow .tier-dot{background:var(--yellow);box-shadow:0 0 0 3px var(--yellow-bg)}
+.tier-red .tier-dot{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
+.tier-green td:first-child{color:var(--green)}
+.tier-yellow td:first-child{color:var(--yellow)}
+.tier-red td:first-child{color:var(--red)}
+.comm{color:var(--gold-bright);font-weight:600}
+.totals-row td{font-weight:700 !important;color:var(--white) !important;border-top:1px solid var(--line);border-bottom:none !important}
+.totals-row td:first-child{color:var(--muted) !important}
+.prod-foot{display:flex;gap:14px;flex-wrap:wrap;padding:12px 2px 0;margin-top:3px;font-size:10.5px;color:var(--faint);border-top:1px solid var(--line-soft)}
+.legend{display:flex;align-items:center;gap:6px}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+footer{text-align:center;color:var(--faint);font-size:11px;padding:6px 16px 24px;letter-spacing:.3px}
+footer b{color:var(--gold)}
+
+@media (min-width:780px){
+  main{grid-template-columns:1fr 1fr;align-items:start}
+  .span-2{grid-column:1 / -1}
+  .pipe{grid-template-columns:repeat(4,1fr)}
+}
+@media (min-width:1080px){ .pipe{grid-template-columns:repeat(7,1fr)} }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!--   ☀️  G.I.A. COMMAND CENTER — Jarvis-style daily cockpit      -->
+<!--                                                              -->
+<!--   TWO WAYS THIS GETS ITS DATA:                               -->
+<!--                                                              -->
+<!--   A) AUTOMATIC (hands-off): if `flowhub sync` runs on your   -->
+<!--      Mac (it already runs at 7am), it writes dashboard-data.js -->
+<!--      right next to this file and these screens fill in from   -->
+<!--      your real email + pipeline + production. Nothing to type.-->
+<!--                                                              -->
+<!--   B) BY HAND: edit the DATA object far below and refresh.     -->
+<!--      (Anything in dashboard-data.js wins over what you type.) -->
+<!--                                                              -->
+<!--   THE NOW / NEXT / LATER ENGINE is automatic: give every      -->
+<!--   meeting a real start/end time and the page figures out, in  -->
+<!--   real time, what's happening NOW, what's NEXT (with a live    -->
+<!--   countdown), and what's LATER today. You never sort it.       -->
+<!-- ============================================================ -->
+
+<header>
+  <div class="crest"><span>GIA</span></div>
+  <div>
+    <div class="greet" id="greet">Good morning, <b>Joe</b></div>
+    <div class="subline" id="sub">Command Center</div>
+  </div>
+  <div class="hclock">
+    <div class="t" id="clk">--:--</div>
+    <div class="d" id="dte">—</div>
+  </div>
+</header>
+
+<main id="root"></main>
+
+<footer>G.I.A. Legacy Planning · <b id="src">live cockpit</b></footer>
+
+<script>
+/* ===================================================================== *
+ *   ▼▼▼   DATA — edit by hand here, OR let flowhub sync fill it   ▼▼▼   *
+ *                                                                       *
+ *   Times use 24h "YYYY-MM-DDTHH:MM" in YOUR local (Central) time.       *
+ *   The Now/Next/Later engine reads these and sorts everything live.     *
+ * ===================================================================== */
+const DATA = {
+  meta: { owner: "Joe", agency: "G.I.A. Legacy Planning", updated: "Sun Jun 21" },
+
+  /* One-line theme for the day. */
+  mission: "Close the Trevinos, unblock Zapier, and protect Monday's 3 appointments.",
+
+  /* TOP 3 — your non-negotiables. Tap to check off (feeds the Wins ring). */
+  top3: [
+    { id:"t1", rank:"Priority 1", title:"Close the Trevino policy",
+      sub:"Two options + submission already sent Sat night. Confirm which one and write it." },
+    { id:"t2", rank:"Priority 2", title:"Fix Zapier — 71 tasks held",
+      sub:"Automations PAUSED at the task limit. Upgrade or reset, then replay. Everything downstream is frozen." },
+    { id:"t3", rank:"Priority 3", title:"Mutual of Omaha conversion",
+      sub:"You flagged the conversion that didn't process. Chase a human if no reply by midday." },
+  ],
+
+  /* MEETINGS — give real start/end; the page buckets them Now/Next/Later. */
+  events: [
+    { start:"2026-06-22T08:00", end:"2026-06-22T08:15", title:"Pull HQ → work Send Queue", where:"Onboarding Tracker · 2 min" },
+    { start:"2026-06-22T08:45", end:"2026-06-22T09:15", title:"PNL review", where:"Office" },
+    { start:"2026-06-22T11:00", end:"2026-06-22T11:30", title:"Lyric Crudup × Life Insurance", where:"Zoom · first appointment", link:"https://us02web.zoom.us/j/3613062923" },
+    { start:"2026-06-22T12:00", end:"2026-06-22T12:30", title:"Lyric Crudup × Infinite Banking", where:"Zoom", link:"https://us02web.zoom.us/j/3613062923" },
+    { start:"2026-06-22T15:00", end:"2026-06-22T15:30", title:"Yolanda Lemus × Infinite Banking", where:"Zoom", link:"https://us02web.zoom.us/j/3613062923" },
+    { start:"2026-06-23T07:00", end:"2026-06-23T07:30", title:"Adelita payment (Alisha & daughter)", where:"As-earned" },
+    { start:"2026-06-23T09:30", end:"2026-06-23T10:00", title:"Mentor Check-ins", where:"Symmetry Virtual Office" },
+    { start:"2026-06-23T10:00", end:"2026-06-23T10:45", title:"Advance Markets weekly training", where:"Zoom" },
+    { start:"2026-06-23T18:00", end:"2026-06-23T18:30", title:"Kingdom Club Meeting", where:"Zoom" },
+    { start:"2026-06-24T10:30", end:"2026-06-24T11:30", title:"AO call", where:"" },
+    { start:"2026-06-24T11:30", end:"2026-06-24T13:00", title:"National Call", where:"Symmetry · Zoom" },
+  ],
+
+  /* INBOX — needs a reply/decision. priority: high | med | low */
+  inbox: [
+    { priority:"high", from:"Trevino (client)", subject:"Policy options + submission sent",
+      action:"Waiting on Anthony & Isabel's pick — follow up to lock it in." },
+    { priority:"high", from:"Zapier", subject:"71 held tasks · limit reached",
+      action:"Upgrade/reset, then replay held tasks." },
+    { priority:"high", from:"Mutual of Omaha", subject:"Conversion not processing",
+      action:"You emailed Life Requirements; call 800-775-7896 if silent by noon." },
+    { priority:"med",  from:"National Life", subject:"3 outstanding requirements",
+      action:"Clear the open items blocking policy finalization." },
+    { priority:"med",  from:"Teamtailor", subject:"Invoice #135708 · payment method",
+      action:"Camille back today (6/22) — push for Stripe, not Revolut." },
+    { priority:"low",  from:"ExamFX", subject:"Licensing study package",
+      action:"Pick Option 1 or Option 2 to move pre-licensing." },
+  ],
+
+  /* PIPELINE — your 7 Teamtailor stages. */
+  pipeline: [
+    { stage:"Applied / Connected", count:12 },
+    { stage:"Interview Scheduled", count:5 },
+    { stage:"Hired / Onboarding",  count:4 },
+    { stage:"Pre-Licensing",       count:6 },
+    { stage:"Exam Scheduled",      count:3 },
+    { stage:"Licensed",            count:2 },
+    { stage:"Active Producer",     count:8 },
+  ],
+
+  /* AGENTS in motion. */
+  agents: [
+    { name:"Lyric Crudup",     status:"Onboarding", next:"First 2 appts today (Life + IBC). Finish SureLC carrier requests." },
+    { name:"Yolanda Lemus",    status:"Active",     next:"Infinite Banking presentation today 3:00 PM." },
+    { name:"Kem Gaskin",       status:"Onboarding", next:"Work the essential onboarding links." },
+    { name:"Nicole Wells",     status:"Contracted", next:"Foresters done — schedule first writing." },
+    { name:"Richard Aguilera", status:"Approved",   next:"Symmetry approved — kick off onboarding." },
+  ],
+
+  /* PRODUCTION this week. commission = $ shown; apv drives the tier color:
+     GREEN = apps>=2 & apv>=3000 · YELLOW = apps>=1 or apv>=1500 · RED = below. */
+  production: [
+    { name:"Lyric Crudup",     dials:64, contacts:21, apps:3, closes:2, commission:1850, apv:4200 },
+    { name:"Yolanda Lemus",    dials:51, contacts:18, apps:2, closes:1, commission:1200, apv:3100 },
+    { name:"Nicole Wells",     dials:38, contacts:12, apps:1, closes:1, commission:640,  apv:1750 },
+    { name:"Richard Aguilera", dials:22, contacts:6,  apps:0, closes:0, commission:0,    apv:0 },
+    { name:"Kem Gaskin",       dials:17, contacts:4,  apps:0, closes:0, commission:0,    apv:400 },
+  ],
+};
+/* ▲▲▲  END EDITABLE DATA — rendering engine below.  ▲▲▲ */
+
+
+/* If the Mac sync wrote dashboard-data.js, let it override the hand data. */
+const D = Object.assign({}, DATA, (window.DASHBOARD_DATA || {}));
+
+/* ---------- helpers ---------- */
+const $ = (s,e=document)=>e.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => "$"+Number(n||0).toLocaleString("en-US");
+const initials = n => n.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+const parseLocal = s => { const [d,t]=String(s).split("T"); const[Y,M,Dd]=d.split("-").map(Number);
+  const[h,mi]=(t||"0:0").split(":").map(Number); return new Date(Y,M-1,Dd,h||0,mi||0); };
+const fmtTime = dt => dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+const sameDay = (a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+function humanGap(ms){
+  const m=Math.round(ms/60000); if(m<1)return "now";
+  if(m<60)return `in ${m}m`;
+  const h=Math.floor(m/60), r=m%60;
+  if(h<24)return r?`in ${h}h ${r}m`:`in ${h}h`;
+  const d=Math.round(h/24); return `in ${d}d`;
+}
+function prodTier(r){ if(r.apps>=2&&r.apv>=3000)return"green"; if(r.apps>=1||r.apv>=1500)return"yellow"; return"red"; }
+
+/* wins persistence (per day) */
+const todayKey = ()=> new Date().toISOString().slice(0,10);
+function loadDone(){ try{ const o=JSON.parse(localStorage.getItem("gia-done")||"{}"); return o.day===todayKey()?(o.ids||[]):[]; }catch{ return []; } }
+function saveDone(ids){ localStorage.setItem("gia-done",JSON.stringify({day:todayKey(),ids})); }
+let doneIds = loadDone();
+
+/* ---------- builders ---------- */
+function panel(label,count,body,full){
+  const c=(count!=null)?`<span class="cc">${esc(count)}</span>`:"";
+  return `<section class="panel${full?" span-2":""}"><div class="panel-h"><span class="tick"></span><h2>${esc(label)}</h2>${c}</div><div class="panel-b">${body}</div></section>`;
+}
+
+function buildSpine(){
+  const now=new Date();
+  const ev=(D.events||[]).map(e=>({...e,s:parseLocal(e.start),e_:parseLocal(e.end)})).sort((a,b)=>a.s-b.s);
+  const current=ev.find(e=>e.s<=now&&now<e.e_);
+  const upcoming=ev.filter(e=>e.s>now);
+  const next=upcoming[0];
+
+  /* NOW */
+  let nowHTML;
+  if(current){
+    nowHTML=`<div class="now-kicker"><span class="pulse"></span>Happening now · <span class="now-window">until ${fmtTime(current.e_)}</span></div>
+      <div class="now-title">${esc(current.title)}</div>
+      ${current.where?`<div class="now-sub">${esc(current.where)}</div>`:""}
+      ${current.link?`<a class="now-cta" href="${esc(current.link)}" target="_blank" rel="noopener">Join now →</a>`:""}`;
+  } else {
+    const top=(D.top3||[]).find(t=>!doneIds.includes(t.id))||(D.top3||[])[0];
+    nowHTML=`<div class="now-kicker"><span class="pulse"></span>Focus right now</div>
+      <div class="now-title">${top?esc(top.title):"You're clear — breathe."}</div>
+      ${top&&top.sub?`<div class="now-sub">${esc(top.sub)}</div>`:""}
+      ${next?`<div class="now-sub" style="margin-top:12px">⏭ Then: <b style="color:var(--gold-bright)">${esc(next.title)}</b> · ${humanGap(next.s-now)}</div>`:""}`;
+  }
+
+  /* NEXT */
+  let nextHTML="";
+  if(next){
+    const dayTag=sameDay(next.s,now)?fmtTime(next.s):next.s.toLocaleDateString("en-US",{weekday:"short"})+" "+fmtTime(next.s);
+    nextHTML=`<div class="lane-label">Next up<span class="ln"></span></div>
+      <div class="next-card">
+        <div class="count-badge"><div class="big" data-countdown="${next.s.getTime()}">${humanGap(next.s-now).replace("in ","")}</div><div class="sm">${sameDay(next.s,now)?"away":next.s.toLocaleDateString("en-US",{weekday:"short"})}</div></div>
+        <div class="next-main">
+          <div class="next-when">${esc(dayTag)}</div>
+          <div class="next-title">${esc(next.title)}</div>
+          ${next.where?`<div class="next-meta">${esc(next.where)}</div>`:""}
+        </div>
+      </div>`;
+  }
+
+  /* LATER (rest of today after 'next') */
+  const laterToday=upcoming.slice(1).filter(e=>sameDay(e.s,now));
+  let laterHTML;
+  if(laterToday.length){
+    laterHTML=`<div class="tl">`+laterToday.map(e=>`
+      <div class="tl-item">
+        <div class="tl-time">${esc(fmtTime(e.s))}</div>
+        <div class="tl-rail"><span class="tl-dot"></span><span class="tl-line"></span></div>
+        <div class="tl-body"><div class="tl-title">${esc(e.title)}</div>${e.where?`<div class="tl-meta">${esc(e.where)}</div>`:""}</div>
+      </div>`).join("")+`</div>`;
+  } else {
+    laterHTML=`<div class="tl-empty">Nothing else on the calendar today. 🎯</div>`;
+  }
+  const laterPanel=panel("Later // Today",laterToday.length||null,laterHTML);
+
+  return `<div class="spine">
+      <div class="now-card">${nowHTML}</div>
+      ${nextHTML}
+    </div>
+    ${laterPanel}`;
+}
+
+function buildMission(){
+  if(!D.mission)return"";
+  return `<div class="mission"><span class="ic">🎯</span><div><div class="lbl">Today's mission</div><div class="txt">${esc(D.mission)}</div></div></div>`;
+}
+
+function buildTop3(){
+  const total=(D.top3||[]).length;
+  const rows=(D.top3||[]).map(t=>{
+    const done=doneIds.includes(t.id);
+    return `<div class="foc${done?" done":""}" data-toggle="${esc(t.id)}">
+      <div class="box">✓</div>
+      <div class="foc-b"><div class="foc-rank">${esc(t.rank||"")}</div>
+        <div class="foc-title">${esc(t.title)}</div>
+        ${t.sub?`<div class="foc-sub">${esc(t.sub)}</div>`:""}</div>
+    </div>`;
+  }).join("");
+  const done=(D.top3||[]).filter(t=>doneIds.includes(t.id)).length;
+  const pct=total?Math.round(done/total*100):0;
+  const wins=`<div class="wins" style="margin-bottom:13px">
+      <div class="wins-ring" style="--p:${pct}"><b>${done}/${total}</b></div>
+      <div class="wins-txt"><div class="l1">${done===total&&total?"All wins logged 🔥":"Momentum"}</div>
+        <div class="l2">${done} of ${total} priorities done today · tap to check off</div></div>
+    </div>`;
+  return panel("Today's Top 3", null, wins+rows, false);
+}
+
+function buildInbox(){
+  const rows=(D.inbox||[]).map(it=>`
+    <div class="inbox-item"><div class="pri ${esc(it.priority)}"></div>
+      <div class="inbox-main"><div class="inbox-from">${esc(it.from)}</div>
+        <div class="inbox-subj">${esc(it.subject)}</div>
+        ${it.action?`<div class="inbox-act">→ ${esc(it.action)}</div>`:""}</div>
+    </div>`).join("") || `<div class="inbox-act">Inbox clear. 📭</div>`;
+  return panel("Inbox // Action Required",(D.inbox||[]).length,rows);
+}
+
+function buildPipeline(){
+  const max=Math.max(1,...(D.pipeline||[]).map(s=>s.count));
+  const total=(D.pipeline||[]).reduce((a,s)=>a+s.count,0);
+  const cards=(D.pipeline||[]).map((s,i)=>`
+    <div class="pipe-card"><div class="pipe-i">${i+1}</div>
+      <div class="pipe-num">${esc(s.count)}</div>
+      <div class="pipe-label">${esc(s.stage)}</div>
+      <div class="pipe-bar" style="width:${Math.round(s.count/max*100)}%"></div></div>`).join("");
+  return panel("Pipeline // Snapshot",total+" in pipe",`<div class="pipe">${cards}</div>`,true);
+}
+
+function buildAgents(){
+  const rows=(D.agents||[]).map(a=>`
+    <div class="agent"><div class="avatar">${esc(initials(a.name))}</div>
+      <div class="agent-main"><div class="agent-name">${esc(a.name)}</div>
+        <div class="agent-next"><b>Next:</b> ${esc(a.next)}</div></div>
+      <div class="status-pill">${esc(a.status)}</div></div>`).join("");
+  return panel("Agents // In Motion",(D.agents||[]).length,rows);
+}
+
+function buildProduction(){
+  let T={dials:0,contacts:0,apps:0,closes:0,commission:0};
+  const rows=(D.production||[]).map(r=>{
+    T.dials+=r.dials;T.contacts+=r.contacts;T.apps+=r.apps;T.closes+=r.closes;T.commission+=r.commission;
+    return `<tr class="tier-${prodTier(r)}"><td><span class="tier-dot"></span>${esc(r.name)}</td>
+      <td>${esc(r.dials)}</td><td>${esc(r.contacts)}</td><td>${esc(r.apps)}</td><td>${esc(r.closes)}</td>
+      <td class="comm">${money(r.commission)}</td></tr>`;
+  }).join("");
+  const totals=`<tr class="totals-row"><td>TEAM TOTAL</td><td>${T.dials}</td><td>${T.contacts}</td><td>${T.apps}</td><td>${T.closes}</td><td class="comm">${money(T.commission)}</td></tr>`;
+  const body=`<div class="table-wrap"><table class="prod">
+      <thead><tr><th>Agent</th><th>Dials</th><th>Contacts</th><th>Apps</th><th>Closes</th><th>Commission</th></tr></thead>
+      <tbody>${rows}${totals}</tbody></table></div>
+    <div class="prod-foot">
+      <span class="legend"><i style="background:var(--green)"></i>On pace · ≥2 apps & ≥$3K APV</span>
+      <span class="legend"><i style="background:var(--yellow)"></i>Warning</span>
+      <span class="legend"><i style="background:var(--red)"></i>Needs help</span></div>`;
+  return panel("Production // This Week",(D.production||[]).length+" agents",body,true);
+}
+
+/* ---------- render + live loop ---------- */
+function render(){
+  $("#root").innerHTML =
+    buildMission()+
+    buildSpine()+
+    buildTop3()+
+    buildInbox()+
+    buildPipeline()+
+    buildAgents()+
+    buildProduction();
+  if(D.meta&&D.meta.updated) $("#src").textContent = "updated "+D.meta.updated;
+}
+
+function tickClock(){
+  const now=new Date();
+  $("#clk").textContent=fmtTime(now);
+  $("#dte").textContent=now.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase();
+  const h=now.getHours();
+  $("#greet").innerHTML=(h<12?"Good morning, ":h<17?"Good afternoon, ":"Good evening, ")+"<b>"+esc((D.meta&&D.meta.owner)||"Joe")+"</b>";
+  // live countdown chips
+  document.querySelectorAll("[data-countdown]").forEach(el=>{
+    const t=Number(el.dataset.countdown)-Date.now();
+    el.textContent=t<=0?"now":humanGap(t).replace("in ","");
+  });
+}
+
+/* tap to check off a priority */
+$("#root").addEventListener("click",e=>{
+  const el=e.target.closest("[data-toggle]"); if(!el)return;
+  const id=el.dataset.toggle;
+  doneIds = doneIds.includes(id) ? doneIds.filter(x=>x!==id) : [...doneIds,id];
+  saveDone(doneIds); render();
+});
+
+render();
+tickClock();
+setInterval(tickClock,15000);     // refresh clock + countdowns
+setInterval(render,60000);        // re-bucket Now/Next/Later every minute
+</script>
+</body>
+</html>

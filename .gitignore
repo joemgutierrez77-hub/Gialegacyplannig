@@ -7,3 +7,4 @@ data/
 *.env
 *.jsonl
 productivity/business-data.js
+dashboard-data.js

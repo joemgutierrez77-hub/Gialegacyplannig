@@ -13,11 +13,20 @@ curl -fsSL -o "$TMP/main.zip" "$ZIP_URL"
 unzip -q "$TMP/main.zip" -d "$TMP"
 
 echo "Updating files in: $DEST"
-# Exclude user data and credentials from the copy
-rsync -a --exclude='.env' --exclude='.env.*' --exclude='*.env' \
+# Exclude user data and credentials from the copy. Require rsync — never fall back
+# to an unfiltered copy that could overwrite .env, data/, or business-data.js.
+if ! command -v rsync >/dev/null 2>&1; then
+  echo "❌ rsync not found — can't update safely without it. Nothing was changed."
+  rm -rf "$TMP"
+  exit 1
+fi
+if ! rsync -a --exclude='.env' --exclude='.env.*' --exclude='*.env' \
          --exclude='data/' --exclude='productivity/business-data.js' \
-         "$TMP/Gialegacyplannig-main/" "$DEST/" 2>/dev/null \
-  || cp -R "$TMP/Gialegacyplannig-main/." "$DEST/"
+         "$TMP/Gialegacyplannig-main/" "$DEST/"; then
+  echo "❌ Update failed during copy. Your existing files were not removed."
+  rm -rf "$TMP"
+  exit 1
+fi
 rm -rf "$TMP"
 
 xattr -dr com.apple.quarantine "$DEST" 2>/dev/null || true
