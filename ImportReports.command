@@ -27,8 +27,9 @@ esac
 echo ""
 echo "Now DRAG the CSV file from Finder into this window, then press Return:"
 read -r rawpath
-# Dragged paths arrive with backslash-escaped spaces — unescape them
-file=$(eval echo "$rawpath" 2>/dev/null || echo "$rawpath")
+# Dragged paths arrive backslash-escaped (spaces, parens, etc). macOS paths don't
+# contain literal backslashes, so removing them safely unescapes the whole path.
+file="${rawpath//\\/}"
 
 if [ ! -f "$file" ]; then
   echo "Could not find a file at: $file"

@@ -649,7 +649,17 @@ if (!state.meta.portalsSeeded){
   state.meta.portalsSeeded = true;
   save();
 }
-function save(){ try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage full/blocked */ } }
+function save(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch (e) {
+    if (e.name === 'QuotaExceededError') {
+      toast('⚠️ STORAGE FULL — changes NOT saved! Delete old tasks or notes to free space.');
+    } else {
+      toast('⚠️ Save failed: ' + e.message);
+    }
+  }
+}
 
 /* ---------- ui state (not persisted) ---------- */
 const ui = {
@@ -1209,7 +1219,16 @@ function bizSnapshotCardHTML(){
 }
 function renderBusiness(){
   const biz = BIZ();
-  $('#biz-synced').textContent = biz ? `Synced ${biz.generatedAt} · ${biz.source}` : 'Not connected';
+  if (biz) {
+    const genMs = biz.generatedAt ? Date.parse(biz.generatedAt.replace(' ','T')) : 0;
+    const hoursOld = genMs ? Math.round((Date.now() - genMs) / 36e5) : 999;
+    const staleWarn = hoursOld > 24 ? ` ⚠️ ${hoursOld}h old — run flowhub sync` : '';
+    $('#biz-synced').textContent = `Synced ${biz.generatedAt} · ${biz.source}${staleWarn}`;
+    $('#biz-synced').style.color = hoursOld > 24 ? 'var(--amber)' : '';
+  } else {
+    $('#biz-synced').textContent = 'Not connected';
+    $('#biz-synced').style.color = '';
+  }
   if (!biz){
     $('#biz-content').innerHTML = `<div class="card" style="max-width:640px;margin:30px auto">
       <div class="dash-section-title">Connect your agency data</div>
@@ -1596,11 +1615,59 @@ function renderBackOffice(){
       <div style="display:flex;justify-content:flex-end;margin-top:14px">
         <button class="btn primary" data-action="portals-save">Save Links</button>
       </div>
+    </div>
+    <div class="card" style="max-width:600px;margin-top:18px">
+      <div class="dash-section-title">Data Backup</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Download a backup of all your tasks, notes, calendar, alerts, recruits, and follow-ups as a JSON file. Keep it safe — you can use it to restore your data if your browser storage is cleared.</p>
+      <div style="display:flex;gap:10px">
+        <button class="btn primary" data-action="export-json">⬇️ Export Backup (JSON)</button>
+        <button class="btn ghost" data-action="import-json">⬆️ Restore from Backup</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none">
     </div>`;
+}
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `gia-command-backup-${todayISO()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded ✓');
+}
+function importJSON(){
+  if (!confirm('Restore backup? This will REPLACE all current data.')) return;
+  const file = document.getElementById('import-file');
+  file.onchange = () => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.tasks || !data.notes) { toast('⚠️ Invalid backup file'); return; }
+        Object.assign(state, data);
+        save();
+        renderView(ui.view);
+        toast('Backup restored ✓');
+      } catch { toast('⚠️ Could not read file'); }
+    };
+    reader.readAsText(file.files[0]);
+    file.value = '';
+  };
+  file.click();
 }
 function savePortals(){
   const keys = ['teamtailor','quilityHQ','slack','backOffice','agentPortal','suranceBay','calendly','carrierPortal'];
-  keys.forEach(k => { const el = document.getElementById('po-' + k); if (el) state.portals[k] = el.value.trim(); });
+  for (const k of keys) {
+    const el = document.getElementById('po-' + k);
+    if (!el) continue;
+    const url = el.value.trim();
+    if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+      toast(`⚠️ "${k}" URL must start with https:// — not saved`);
+      return;
+    }
+    state.portals[k] = url;
+  }
   save(); renderBackOffice(); renderDock(); toast('Portal links saved — dock updated');
 }
 
@@ -2430,6 +2497,8 @@ document.addEventListener('click', e => {
     /* back office */
     case 'portals-edit': switchView('backoffice'); break;
     case 'portals-save': savePortals(); break;
+    case 'export-json': exportJSON(); break;
+    case 'import-json': importJSON(); break;
     /* arcade */
     case 'snake-start': snakeStart(); break;
   }
