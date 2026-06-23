@@ -1,0 +1,29 @@
+# Render Blueprint — one-click deploy of the GIA Legacy Planning mobile API.
+# https://render.com/docs/blueprint-spec
+#
+# How to use (no terminal needed):
+#   1. Push this repo to GitHub (already done).
+#   2. Go to https://dashboard.render.com → New → Blueprint → pick this repo.
+#   3. Render reads this file, builds the app, and gives you a permanent URL.
+#   4. (Optional) Paste your ANTHROPIC_API_KEY / Airtable keys when prompted to
+#      turn on the AI reports and persistent Airtable storage.
+services:
+  - type: web
+    name: gia-legacy-planning
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # Secrets — left blank on purpose. Set these in the Render dashboard.
+      # The home screen and all data endpoints work even if these are empty.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AIRTABLE_API_KEY
+        sync: false
+      - key: AIRTABLE_BASE_ID
+        sync: false
