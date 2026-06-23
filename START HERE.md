@@ -1,19 +1,32 @@
 # 🚀 GIA Legacy Planning — Command Center
 
-Your one-stop daily portal. No login. No Terminal. Your data stays on your Mac.
+Your one-stop daily portal. No login. No Terminal. No downloading.
 
 ---
 
-## ✅ THE EASY WAY (do this once)
+## ✅ THE EASIEST WAY — just click this link
+
+**https://joemgutierrez77-hub.github.io/Gialegacyplannig/**
+
+1. Click the link above (it opens your portal like a normal website).
+2. Press **Cmd + D** to **bookmark it**.
+3. Done. From now on, **just click the bookmark** every morning. ☕
+
+Works on your Mac, iPhone, iPad — anywhere with a browser. Your data is saved
+privately in each browser you use.
+
+> Note: the very first time, it can take a couple minutes to come online after setup.
+
+---
+
+## 💾 The offline way (optional backup)
+
+If you ever want it without internet:
 
 1. Open **Finder** and go to this folder.
 2. Open the **`productivity`** folder.
 3. **Drag `index.html` onto your Chrome (or Safari) icon** in the dock.
-4. When it opens, press **Cmd + D** to **bookmark it**.
-
-That's it. From now on, **just click the bookmark** every morning. ☕
-
-> No "malware" warning ever happens this way — it's just a web page.
+4. Press **Cmd + D** to bookmark it.
 
 ---
 
