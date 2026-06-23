@@ -3,294 +3,298 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#070f1f">
+<meta name="theme-color" content="#020608">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="GIA Command">
+<meta name="apple-mobile-web-app-title" content="GIA Core">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>G.I.A. Command Center</title>
+<title>G.I.A. // OPERATIONS CORE</title>
 
-<!-- Fonts = the ONLY external resource. Delete these two lines for a 100%
-     offline file; the CSS falls back to clean system fonts automatically. -->
+<!-- Fonts = the only external resource. Orbitron + Share Tech Mono give the
+     HUD its look; remove these two lines for a 100% offline file (system
+     fonts take over). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Optional live feed: if your Mac's `flowhub sync` has written a
-     dashboard-data.js next to this file, it loads here and overrides the
-     hand-typed numbers below. If the file isn't there, nothing breaks. -->
+<!-- Live feed: if `flowhub sync` wrote dashboard-data.js next to this file, it
+     loads here and overrides the sample data below. Missing file = no problem. -->
 <script>window.DASHBOARD_DATA = null;</script>
 <script src="dashboard-data.js" onerror="void 0"></script>
 
 <style>
 :root{
-  --navy-0:#070f1f; --navy-1:#0a1428; --navy-2:#0f1d3a; --navy-3:#16264a;
-  --line:rgba(201,162,39,.18); --line-soft:rgba(255,255,255,.07);
-  --gold:#d4af37; --gold-bright:#f5d56b; --gold-dim:rgba(212,175,55,.12);
-  --white:#f5f7fa; --muted:#9fb0c9; --faint:#64748b;
-  --green:#34d399; --green-bg:rgba(52,211,153,.12);
-  --yellow:#f5c542; --yellow-bg:rgba(245,197,66,.12);
-  --red:#f87171; --red-bg:rgba(248,113,113,.13);
-  --radius:18px; --shadow:0 10px 34px rgba(0,0,0,.4);
+  --bg:#020608; --bg2:#04101a;
+  --cy:#35e2ff; --cy-soft:#9fe9ff; --cy-deep:#0bbbe6;
+  --gold:#ffc94d; --gold-soft:#ffe39a;
+  --txt:#c8ecf7; --muted:#5d8394; --faint:#3c5a6b;
+  --green:#2cf5a0; --amber:#ffc94d; --red:#ff5d6c;
+  --line:rgba(53,226,255,.16); --line-soft:rgba(53,226,255,.09);
+  --glow:0 0 18px rgba(53,226,255,.5);
   font-synthesis:none;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
 body{
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  color:var(--txt);background:var(--bg);min-height:100vh;line-height:1.5;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;position:relative;
+  padding-bottom:calc(30px + env(safe-area-inset-bottom));
+}
+/* layered HUD atmosphere */
+body::before{ /* grid + radial glows */
+  content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
   background:
-    radial-gradient(1100px 560px at 100% -8%, rgba(212,175,55,.07), transparent 58%),
-    radial-gradient(900px 520px at -10% 6%, rgba(34,99,180,.12), transparent 56%),
-    linear-gradient(180deg,var(--navy-1),var(--navy-0));
-  background-attachment:fixed;color:var(--white);min-height:100vh;line-height:1.5;
-  -webkit-font-smoothing:antialiased;padding-bottom:calc(28px + env(safe-area-inset-bottom));
+    radial-gradient(900px 600px at 50% -5%, rgba(53,226,255,.10), transparent 60%),
+    radial-gradient(700px 500px at 100% 100%, rgba(255,201,77,.06), transparent 55%),
+    linear-gradient(rgba(53,226,255,.05) 1px, transparent 1px) 0 0/100% 38px,
+    linear-gradient(90deg, rgba(53,226,255,.05) 1px, transparent 1px) 0 0/38px 100%,
+    var(--bg);
 }
-h1,h2,h3,.fh{font-family:'Space Grotesk','Inter',sans-serif}
-
-/* header */
-header{
-  position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:13px;
-  padding:13px 18px;padding-top:calc(13px + env(safe-area-inset-top));
-  background:rgba(7,15,31,.8);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--line);
+body::after{ /* moving scanline */
+  content:"";position:fixed;left:0;right:0;height:140px;z-index:-1;pointer-events:none;
+  background:linear-gradient(rgba(53,226,255,0), rgba(53,226,255,.06), rgba(53,226,255,0));
+  animation:scan 7s linear infinite;
 }
-.crest{width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;
-  background:linear-gradient(145deg,#1b2e56,#0b1730);border:1px solid var(--line);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
-.crest span{font-family:'Space Grotesk';font-weight:700;font-size:17px;
-  background:linear-gradient(160deg,var(--gold-bright),var(--gold));
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.greet{font-family:'Space Grotesk';font-weight:700;font-size:17px;letter-spacing:.2px;line-height:1.15}
-.greet b{color:var(--gold)}
-.subline{font-size:11px;color:var(--faint);letter-spacing:1.6px;text-transform:uppercase;margin-top:2px}
-.hclock{margin-left:auto;text-align:right}
-.hclock .t{font-family:'Space Grotesk';font-weight:600;font-size:16px;font-variant-numeric:tabular-nums}
-.hclock .d{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.3px;margin-top:1px}
+@keyframes scan{0%{top:-140px}100%{top:100%}}
 
-main{max-width:1120px;margin:0 auto;padding:16px 15px 50px;display:grid;gap:15px;grid-template-columns:1fr}
+.mono{font-family:'Share Tech Mono',monospace}
+.orb{font-family:'Orbitron','Share Tech Mono',sans-serif}
 
-/* mission strip */
-.mission{display:flex;align-items:center;gap:11px;padding:13px 16px;border-radius:14px;
-  background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(212,175,55,.03));
-  border:1px solid var(--line)}
-.mission .ic{font-size:17px}
-.mission .lbl{font-family:'Space Grotesk';font-weight:600;font-size:10.5px;letter-spacing:1.8px;
-  text-transform:uppercase;color:var(--gold);margin-bottom:1px}
-.mission .txt{font-size:13.5px;color:var(--white);line-height:1.4}
+/* ---------- HUD frame primitive ---------- */
+.hud{position:relative;border:1px solid var(--line);background:linear-gradient(180deg,rgba(6,20,32,.78),rgba(3,11,19,.66));
+  box-shadow:inset 0 0 26px rgba(53,226,255,.05), 0 6px 26px rgba(0,0,0,.5);border-radius:4px}
+.hud::before{content:"";position:absolute;inset:-1px;pointer-events:none;
+  background:
+    linear-gradient(var(--cy),var(--cy)) left top/15px 2px no-repeat,
+    linear-gradient(var(--cy),var(--cy)) left top/2px 15px no-repeat,
+    linear-gradient(var(--cy),var(--cy)) right top/15px 2px no-repeat,
+    linear-gradient(var(--cy),var(--cy)) right top/2px 15px no-repeat,
+    linear-gradient(var(--cy),var(--cy)) left bottom/15px 2px no-repeat,
+    linear-gradient(var(--cy),var(--cy)) left bottom/2px 15px no-repeat,
+    linear-gradient(var(--cy),var(--cy)) right bottom/15px 2px no-repeat,
+    linear-gradient(var(--cy),var(--cy)) right bottom/2px 15px no-repeat;
+  filter:drop-shadow(0 0 4px rgba(53,226,255,.55));opacity:.85}
 
-/* ===== NOW / NEXT / LATER spine ===== */
-.spine{display:grid;gap:13px}
-.lane-label{font-family:'Space Grotesk';font-weight:600;font-size:11px;letter-spacing:2.4px;
-  text-transform:uppercase;color:var(--faint);margin:2px 2px -3px;display:flex;align-items:center;gap:8px}
-.lane-label .ln{flex:1;height:1px;background:var(--line-soft)}
-
-/* NOW card */
-.now-card{position:relative;overflow:hidden;border-radius:var(--radius);padding:20px 18px;
-  background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(15,29,58,.6));
-  border:1px solid var(--line);box-shadow:var(--shadow)}
-.now-card::before{content:"";position:absolute;inset:0;border-radius:var(--radius);
-  box-shadow:inset 0 0 0 1px rgba(245,213,107,.16);pointer-events:none}
-.now-kicker{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk';font-weight:600;
-  font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-bright);margin-bottom:11px}
-.pulse{width:9px;height:9px;border-radius:50%;background:var(--gold-bright);
-  box-shadow:0 0 0 0 rgba(245,213,107,.6);animation:pulse 2s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(245,213,107,.55)}70%{box-shadow:0 0 0 12px rgba(245,213,107,0)}100%{box-shadow:0 0 0 0 rgba(245,213,107,0)}}
-.now-title{font-family:'Space Grotesk';font-weight:700;font-size:23px;line-height:1.2;letter-spacing:.2px}
-.now-sub{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.5}
-.now-cta{display:inline-flex;align-items:center;gap:7px;margin-top:15px;padding:11px 17px;border-radius:11px;
-  background:linear-gradient(150deg,var(--gold-bright),var(--gold));color:var(--navy-0);
-  font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 5px 16px rgba(212,175,55,.28)}
-.now-window{font-family:'Space Grotesk';font-variant-numeric:tabular-nums}
-
-/* NEXT card */
-.next-card{display:flex;align-items:center;gap:15px;border-radius:16px;padding:15px 17px;
-  background:var(--navy-2);border:1px solid var(--line-soft)}
-.count-badge{flex:none;min-width:72px;text-align:center;padding:9px 8px;border-radius:12px;
-  background:var(--navy-1);border:1px solid var(--line)}
-.count-badge .big{font-family:'Space Grotesk';font-weight:700;font-size:19px;color:var(--gold-bright);
-  line-height:1;font-variant-numeric:tabular-nums}
-.count-badge .sm{font-size:9.5px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
-.next-main{flex:1;min-width:0}
-.next-when{font-size:11px;color:var(--gold-bright);font-weight:600;letter-spacing:.5px}
-.next-title{font-family:'Space Grotesk';font-weight:600;font-size:16px;margin-top:2px}
-.next-meta{font-size:12px;color:var(--faint);margin-top:2px}
-
-/* LATER timeline */
-.tl{position:relative;padding-left:6px}
-.tl-item{display:flex;gap:13px;padding:10px 2px;align-items:flex-start}
-.tl-time{font-family:'Space Grotesk';font-weight:600;font-size:12.5px;color:var(--muted);
-  width:66px;flex:none;text-align:right;font-variant-numeric:tabular-nums;padding-top:1px}
-.tl-rail{position:relative;width:14px;flex:none;align-self:stretch}
-.tl-dot{position:absolute;left:3px;top:5px;width:8px;height:8px;border-radius:50%;
-  background:var(--navy-3);border:1.5px solid var(--gold);}
-.tl-line{position:absolute;left:6.5px;top:13px;bottom:-12px;width:1.5px;background:var(--line-soft)}
-.tl-item:last-child .tl-line{display:none}
-.tl-body{flex:1;min-width:0;padding-bottom:1px}
-.tl-title{font-size:14px;font-weight:500}
-.tl-meta{font-size:11.5px;color:var(--faint);margin-top:1px}
-.tl-empty{color:var(--faint);font-size:13px;padding:8px 2px}
-
-/* generic panel */
-.panel{background:linear-gradient(180deg,var(--navy-2),rgba(15,29,58,.55));
-  border:1px solid var(--line-soft);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.panel-h{display:flex;align-items:center;gap:9px;padding:15px 16px 12px;border-bottom:1px solid var(--line-soft)}
-.panel-h .tick{width:4px;height:16px;border-radius:3px;background:linear-gradient(var(--gold-bright),var(--gold))}
-.panel-h h2{font-size:12px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:var(--gold)}
-.panel-h .cc{margin-left:auto;font-family:'Space Grotesk';font-weight:600;font-size:11.5px;color:var(--faint);
-  background:var(--gold-dim);border:1px solid var(--line);padding:2px 9px;border-radius:20px}
-.panel-b{padding:13px 16px 16px}
-
-/* TOP 3 focus (checkable) */
-.foc{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--line-soft);cursor:pointer}
-.foc:last-child{border-bottom:none}
-.box{width:24px;height:24px;border-radius:8px;border:2px solid var(--line);flex:none;display:grid;place-items:center;
-  margin-top:1px;transition:.15s;color:transparent;font-size:14px;font-weight:800}
-.foc.done .box{background:linear-gradient(150deg,var(--gold-bright),var(--gold));border-color:transparent;color:var(--navy-0)}
-.foc-b{flex:1;min-width:0}
-.foc-rank{font-family:'Space Grotesk';font-weight:700;font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase}
-.foc-title{font-family:'Space Grotesk';font-weight:600;font-size:15px;margin-top:1px;transition:.15s}
-.foc.done .foc-title{color:var(--faint);text-decoration:line-through}
-.foc-sub{font-size:12.3px;color:var(--muted);margin-top:3px;line-height:1.45}
-.foc.done .foc-sub{opacity:.5}
-
-/* wins meter */
-.wins{display:flex;align-items:center;gap:13px;padding:13px 16px;border-radius:14px;
-  background:var(--navy-2);border:1px solid var(--line-soft)}
-.wins-ring{--p:0;width:46px;height:46px;border-radius:50%;flex:none;
-  background:conic-gradient(var(--gold) calc(var(--p)*1%), var(--navy-3) 0);
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:13px;
+  padding:11px 16px;padding-top:calc(11px + env(safe-area-inset-top));
+  background:rgba(2,6,8,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line)}
+.diamond{width:30px;height:30px;flex:none;transform:rotate(45deg);
+  border:2px solid var(--cy);box-shadow:var(--glow),inset 0 0 10px rgba(53,226,255,.4);
   display:grid;place-items:center}
-.wins-ring::after{content:"";width:34px;height:34px;border-radius:50%;background:var(--navy-1);grid-area:1/1}
-.wins-ring b{grid-area:1/1;z-index:1;font-family:'Space Grotesk';font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
-.wins-txt .l1{font-family:'Space Grotesk';font-weight:600;font-size:14px}
-.wins-txt .l2{font-size:11.5px;color:var(--faint);margin-top:1px}
+.diamond b{transform:rotate(-45deg);font-family:'Orbitron';font-weight:900;font-size:11px;color:var(--cy);text-shadow:var(--glow)}
+.hbrand{font-family:'Orbitron';font-weight:700;font-size:14px;letter-spacing:2.5px;color:var(--cy-soft);text-shadow:0 0 10px rgba(53,226,255,.4)}
+.hbrand i{color:var(--gold);font-style:normal}
+.hstat{font-family:'Share Tech Mono';font-size:9.5px;letter-spacing:1px;color:var(--muted);margin-top:1px}
+.hstat .ok{color:var(--green)}
+.eq{margin-left:auto;display:flex;align-items:flex-end;gap:2px;height:22px}
+.eq i{width:3px;background:var(--cy);box-shadow:0 0 6px var(--cy);animation:eq 1.1s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}
+.eq i:nth-child(4){animation-delay:.45s}.eq i:nth-child(5){animation-delay:.6s}
+@keyframes eq{0%,100%{height:5px;opacity:.5}50%{height:20px;opacity:1}}
+.hclock{text-align:right;min-width:78px}
+.hclock .t{font-family:'Share Tech Mono';font-size:16px;color:var(--cy-soft);letter-spacing:1px;text-shadow:0 0 8px rgba(53,226,255,.4)}
+.hclock .d{font-family:'Share Tech Mono';font-size:9px;color:var(--muted);letter-spacing:1.4px}
+
+main{max-width:1140px;margin:0 auto;padding:14px 13px 50px;display:grid;gap:14px;grid-template-columns:1fr;
+  animation:boot .7s ease both}
+@keyframes boot{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- telemetry strip ---------- */
+.telem{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.tcell{padding:10px 12px}
+.tcell .k{font-family:'Share Tech Mono';font-size:9px;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase}
+.tcell .v{font-family:'Orbitron';font-weight:700;font-size:21px;color:var(--cy-soft);margin-top:3px;text-shadow:0 0 10px rgba(53,226,255,.35);line-height:1}
+.tcell .v small{font-family:'Share Tech Mono';font-size:11px;color:var(--muted);letter-spacing:0}
+.tcell .meter{height:3px;margin-top:8px;background:rgba(53,226,255,.12);overflow:hidden}
+.tcell .meter i{display:block;height:100%;background:linear-gradient(90deg,var(--cy-deep),var(--cy));box-shadow:0 0 8px var(--cy)}
+
+/* ---------- ARC REACTOR CORE ---------- */
+.core-wrap{display:flex;flex-direction:column;align-items:center;padding:20px 14px 22px}
+.lane-tag{align-self:stretch;display:flex;align-items:center;gap:9px;margin:0 2px 4px;
+  font-family:'Share Tech Mono';font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.lane-tag::before{content:"▸";color:var(--cy);text-shadow:var(--glow)}
+.lane-tag .ln{flex:1;height:1px;background:var(--line-soft)}
+.reactor{position:relative;width:min(78vw,300px);aspect-ratio:1}
+.reactor svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.spin-cw{transform-box:fill-box;transform-origin:center;animation:spin 16s linear infinite}
+.spin-ccw{transform-box:fill-box;transform-origin:center;animation:spin 24s linear infinite reverse}
+.spin-slow{transform-box:fill-box;transform-origin:center;animation:spin 60s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.radar{position:absolute;left:50%;top:50%;width:62%;height:62%;transform:translate(-50%,-50%);border-radius:50%;
+  overflow:hidden;pointer-events:none;mask:radial-gradient(circle, #000 60%, transparent 71%);-webkit-mask:radial-gradient(circle,#000 60%,transparent 71%)}
+.radar i{position:absolute;inset:-25%;background:conic-gradient(from 0deg, transparent 0deg, transparent 300deg, rgba(53,226,255,.28) 355deg, rgba(53,226,255,.5) 360deg);animation:spin 4.5s linear infinite}
+.core-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 16%}
+.core-label{font-family:'Share Tech Mono';font-size:10px;letter-spacing:3px;color:var(--cy);text-shadow:var(--glow);text-transform:uppercase}
+.core-label.live{color:var(--gold);text-shadow:0 0 12px rgba(255,201,77,.6)}
+.core-count{font-family:'Orbitron';font-weight:900;font-size:clamp(26px,9vw,40px);letter-spacing:1px;color:#eafbff;
+  text-shadow:0 0 16px rgba(53,226,255,.6);line-height:1;margin:7px 0 6px;font-variant-numeric:tabular-nums}
+.core-title{font-family:'Orbitron';font-weight:600;font-size:13.5px;color:var(--cy-soft);line-height:1.3;letter-spacing:.3px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.core-sub{font-family:'Share Tech Mono';font-size:10.5px;color:var(--muted);margin-top:5px;letter-spacing:.5px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.core-join{margin-top:16px;display:inline-flex;align-items:center;gap:8px;padding:10px 20px;
+  font-family:'Orbitron';font-weight:700;font-size:13px;letter-spacing:1px;text-decoration:none;color:#021118;
+  background:linear-gradient(120deg,var(--cy),var(--cy-soft));border-radius:3px;
+  box-shadow:0 0 22px rgba(53,226,255,.55);text-transform:uppercase}
+.core-join.hide{display:none}
+
+/* ---------- generic panel header ---------- */
+.p-head{display:flex;align-items:center;gap:9px;padding:12px 14px 10px;border-bottom:1px solid var(--line-soft)}
+.p-head h2{font-family:'Orbitron';font-weight:600;font-size:11px;letter-spacing:2px;color:var(--cy);text-transform:uppercase;text-shadow:0 0 8px rgba(53,226,255,.3)}
+.p-head .hx{font-family:'Share Tech Mono';color:var(--gold);font-size:11px}
+.p-head .cc{margin-left:auto;font-family:'Share Tech Mono';font-size:11px;color:var(--muted);
+  border:1px solid var(--line);padding:1px 8px;letter-spacing:1px}
+.p-body{padding:11px 14px 14px}
+
+/* NEXT mini */
+.next-row{display:flex;align-items:center;gap:13px;padding:12px 14px}
+.next-clock{flex:none;min-width:84px;text-align:center;padding:8px 6px;border:1px solid var(--line);background:rgba(53,226,255,.05)}
+.next-clock .big{font-family:'Share Tech Mono';font-size:17px;color:var(--gold-soft);letter-spacing:1px;text-shadow:0 0 8px rgba(255,201,77,.4)}
+.next-clock .sm{font-family:'Share Tech Mono';font-size:8.5px;color:var(--muted);letter-spacing:1.5px;margin-top:3px}
+.next-main{flex:1;min-width:0}
+.next-when{font-family:'Share Tech Mono';font-size:10px;color:var(--cy);letter-spacing:1px}
+.next-title{font-family:'Orbitron';font-weight:600;font-size:14.5px;margin-top:3px;color:var(--cy-soft)}
+.next-meta{font-family:'Share Tech Mono';font-size:10.5px;color:var(--muted);margin-top:3px}
+
+/* timeline */
+.tl-item{display:flex;gap:12px;padding:9px 2px;align-items:flex-start}
+.tl-time{font-family:'Share Tech Mono';font-size:12px;color:var(--cy);width:62px;flex:none;text-align:right;padding-top:1px;letter-spacing:.5px}
+.tl-rail{position:relative;width:12px;flex:none;align-self:stretch}
+.tl-dot{position:absolute;left:2px;top:5px;width:8px;height:8px;transform:rotate(45deg);border:1.5px solid var(--cy);box-shadow:0 0 7px rgba(53,226,255,.6);background:var(--bg)}
+.tl-line{position:absolute;left:5.5px;top:14px;bottom:-10px;width:1px;background:var(--line-soft)}
+.tl-item:last-child .tl-line{display:none}
+.tl-title{font-size:13.5px;font-weight:500;color:var(--txt)}
+.tl-meta{font-family:'Share Tech Mono';font-size:10px;color:var(--muted);margin-top:1px}
+.empty{font-family:'Share Tech Mono';color:var(--muted);font-size:11.5px;padding:8px 2px;letter-spacing:.5px}
+
+/* TOP 3 + wins */
+.wins{display:flex;align-items:center;gap:13px;padding:11px 12px;margin-bottom:11px;border:1px solid var(--line-soft);background:rgba(53,226,255,.04)}
+.wins-ring{--p:0;width:48px;height:48px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:conic-gradient(var(--cy) calc(var(--p)*1%), rgba(53,226,255,.12) 0);box-shadow:0 0 16px rgba(53,226,255,.3)}
+.wins-ring::after{content:"";width:36px;height:36px;border-radius:50%;background:var(--bg2);grid-area:1/1}
+.wins-ring b{grid-area:1/1;z-index:1;font-family:'Orbitron';font-size:12px;font-weight:700;color:var(--cy-soft)}
+.wins .l1{font-family:'Orbitron';font-weight:600;font-size:13px;color:var(--cy-soft)}
+.wins .l2{font-family:'Share Tech Mono';font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:.5px}
+.foc{display:flex;gap:12px;align-items:flex-start;padding:11px 2px;border-bottom:1px solid var(--line-soft);cursor:pointer}
+.foc:last-child{border-bottom:none}
+.fbox{width:24px;height:24px;flex:none;transform:rotate(45deg);border:1.5px solid var(--line);display:grid;place-items:center;margin-top:2px;transition:.15s}
+.fbox b{transform:rotate(-45deg);font-size:12px;font-weight:900;color:transparent}
+.foc.done .fbox{border-color:var(--cy);box-shadow:0 0 12px rgba(53,226,255,.5);background:rgba(53,226,255,.12)}
+.foc.done .fbox b{color:var(--cy)}
+.frank{font-family:'Share Tech Mono';font-size:9.5px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase}
+.ftitle{font-family:'Orbitron';font-weight:600;font-size:14px;margin-top:2px;color:var(--cy-soft);transition:.15s}
+.foc.done .ftitle{color:var(--muted);text-decoration:line-through}
+.fsub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
+.foc.done .fsub{opacity:.45}
 
 /* inbox */
-.inbox-item{display:flex;gap:11px;padding:11px 4px;border-bottom:1px solid var(--line-soft)}
+.inbox-item{display:flex;gap:11px;padding:10px 2px;border-bottom:1px solid var(--line-soft)}
 .inbox-item:last-child{border-bottom:none}
-.pri{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
-.pri.high{background:var(--red);box-shadow:0 0 0 4px var(--red-bg)}
-.pri.med{background:var(--yellow);box-shadow:0 0 0 4px var(--yellow-bg)}
-.pri.low{background:var(--green);box-shadow:0 0 0 4px var(--green-bg)}
-.inbox-main{flex:1;min-width:0}
-.inbox-from{font-size:10.5px;color:var(--gold-bright);font-weight:600;letter-spacing:.6px;text-transform:uppercase}
-.inbox-subj{font-size:13.8px;font-weight:500;margin-top:2px}
-.inbox-act{font-size:12.3px;color:var(--muted);margin-top:3px;line-height:1.45}
+.pri{width:8px;height:8px;flex:none;margin-top:5px;transform:rotate(45deg)}
+.pri.high{background:var(--red);box-shadow:0 0 9px var(--red)}
+.pri.med{background:var(--amber);box-shadow:0 0 9px var(--amber)}
+.pri.low{background:var(--green);box-shadow:0 0 9px var(--green)}
+.inbox-from{font-family:'Share Tech Mono';font-size:10px;color:var(--cy);letter-spacing:1px;text-transform:uppercase}
+.inbox-subj{font-size:13.5px;font-weight:500;margin-top:2px;color:var(--txt)}
+.inbox-act{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
 
-/* pipeline */
-.pipe{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
-.pipe-card{background:var(--navy-1);border:1px solid var(--line-soft);border-radius:12px;padding:11px 12px;position:relative}
-.pipe-num{font-family:'Space Grotesk';font-weight:700;font-size:24px;line-height:1}
-.pipe-label{font-size:10.5px;color:var(--muted);margin-top:5px;line-height:1.3}
-.pipe-bar{height:3px;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));margin-top:8px}
-.pipe-i{position:absolute;top:10px;right:11px;font-size:9.5px;color:var(--faint);font-family:'Space Grotesk';font-weight:600}
+/* pipeline gauges */
+.pipe{display:flex;flex-direction:column;gap:9px}
+.pg{display:flex;align-items:center;gap:11px}
+.pg-n{font-family:'Orbitron';font-weight:700;font-size:16px;color:var(--cy-soft);width:30px;text-align:right;text-shadow:0 0 8px rgba(53,226,255,.3);flex:none}
+.pg-mid{flex:1;min-width:0}
+.pg-lbl{font-family:'Share Tech Mono';font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.pg-bar{height:6px;background:rgba(53,226,255,.1);position:relative;overflow:hidden}
+.pg-bar i{position:absolute;inset:0;width:var(--w,0%);background:linear-gradient(90deg,var(--cy-deep),var(--cy));box-shadow:0 0 10px var(--cy)}
+.pg-idx{font-family:'Share Tech Mono';font-size:9px;color:var(--faint);width:16px;flex:none}
 
 /* agents */
-.agent{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid var(--line-soft)}
+.agent{display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--line-soft)}
 .agent:last-child{border-bottom:none}
-.avatar{width:36px;height:36px;border-radius:11px;flex:none;display:grid;place-items:center;
-  font-family:'Space Grotesk';font-weight:700;font-size:13px;color:var(--gold-bright);
-  background:linear-gradient(145deg,var(--navy-3),var(--navy-1));border:1px solid var(--line)}
+.av{width:36px;height:36px;flex:none;transform:rotate(45deg);border:1px solid var(--line);display:grid;place-items:center;box-shadow:inset 0 0 10px rgba(53,226,255,.15)}
+.av b{transform:rotate(-45deg);font-family:'Orbitron';font-weight:700;font-size:12px;color:var(--cy)}
 .agent-main{flex:1;min-width:0}
-.agent-name{font-size:14px;font-weight:600;font-family:'Space Grotesk'}
-.agent-next{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4}
-.agent-next b{color:var(--gold-bright);font-weight:600}
-.status-pill{font-size:9.5px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:3px 9px;border-radius:20px;
-  flex:none;white-space:nowrap;background:var(--gold-dim);color:var(--gold-bright);border:1px solid var(--line)}
+.agent-name{font-family:'Orbitron';font-weight:600;font-size:13.5px;color:var(--cy-soft)}
+.agent-next{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.4}
+.agent-next b{color:var(--cy);font-weight:600}
+.pill{font-family:'Share Tech Mono';font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;flex:none;
+  white-space:nowrap;border:1px solid var(--line);color:var(--cy);background:rgba(53,226,255,.06)}
 
 /* production table */
-.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table.prod{width:100%;border-collapse:collapse;min-width:540px}
-table.prod th{font-family:'Space Grotesk';font-weight:600;font-size:10px;letter-spacing:.8px;text-transform:uppercase;
-  color:var(--faint);text-align:right;padding:0 11px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.prod th{font-family:'Share Tech Mono';font-weight:400;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);text-align:right;padding:0 11px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
 table.prod th:first-child{text-align:left}
-table.prod td{font-size:13px;padding:10px 11px;border-bottom:1px solid var(--line-soft);text-align:right;
-  font-variant-numeric:tabular-nums;white-space:nowrap}
-table.prod td:first-child{text-align:left;font-weight:600;font-family:'Space Grotesk'}
+table.prod td{font-family:'Share Tech Mono';font-size:13px;padding:9px 11px;border-bottom:1px solid var(--line-soft);text-align:right;white-space:nowrap;color:var(--txt)}
+table.prod td:first-child{text-align:left;font-family:'Orbitron';font-weight:600;font-size:12.5px}
 table.prod tr:last-child td{border-bottom:none}
-.tier-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
-.tier-green .tier-dot{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
-.tier-yellow .tier-dot{background:var(--yellow);box-shadow:0 0 0 3px var(--yellow-bg)}
-.tier-red .tier-dot{background:var(--red);box-shadow:0 0 0 3px var(--red-bg)}
-.tier-green td:first-child{color:var(--green)}
-.tier-yellow td:first-child{color:var(--yellow)}
-.tier-red td:first-child{color:var(--red)}
-.comm{color:var(--gold-bright);font-weight:600}
-.totals-row td{font-weight:700 !important;color:var(--white) !important;border-top:1px solid var(--line);border-bottom:none !important}
-.totals-row td:first-child{color:var(--muted) !important}
-.prod-foot{display:flex;gap:14px;flex-wrap:wrap;padding:12px 2px 0;margin-top:3px;font-size:10.5px;color:var(--faint);border-top:1px solid var(--line-soft)}
-.legend{display:flex;align-items:center;gap:6px}
-.legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.td-dot{display:inline-block;width:7px;height:7px;margin-right:8px;transform:rotate(45deg);vertical-align:middle}
+.t-green td:first-child{color:var(--green)} .t-green .td-dot{background:var(--green);box-shadow:0 0 7px var(--green)}
+.t-yellow td:first-child{color:var(--amber)} .t-yellow .td-dot{background:var(--amber);box-shadow:0 0 7px var(--amber)}
+.t-red td:first-child{color:var(--red)} .t-red .td-dot{background:var(--red);box-shadow:0 0 7px var(--red)}
+.comm{color:var(--gold-soft) !important}
+.totals td{border-top:1px solid var(--line) !important;border-bottom:none !important;color:#eafbff !important;font-weight:700}
+.totals td:first-child{color:var(--muted) !important}
+.legend{display:flex;gap:13px;flex-wrap:wrap;padding:11px 2px 0;margin-top:3px;border-top:1px solid var(--line-soft);
+  font-family:'Share Tech Mono';font-size:9.5px;color:var(--muted);letter-spacing:.5px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:7px;height:7px;transform:rotate(45deg)}
 
-footer{text-align:center;color:var(--faint);font-size:11px;padding:6px 16px 24px;letter-spacing:.3px}
-footer b{color:var(--gold)}
+footer{text-align:center;font-family:'Share Tech Mono';color:var(--faint);font-size:10px;letter-spacing:1.5px;padding:4px 16px 22px;text-transform:uppercase}
+footer b{color:var(--cy)}
 
 @media (min-width:780px){
   main{grid-template-columns:1fr 1fr;align-items:start}
   .span-2{grid-column:1 / -1}
-  .pipe{grid-template-columns:repeat(4,1fr)}
+  .telem{grid-template-columns:repeat(4,1fr)}
 }
-@media (min-width:1080px){ .pipe{grid-template-columns:repeat(7,1fr)} }
 </style>
 </head>
 <body>
 
 <!-- ============================================================ -->
-<!--   ☀️  G.I.A. COMMAND CENTER — Jarvis-style daily cockpit      -->
+<!--  G.I.A. OPERATIONS CORE — Jarvis-style HUD command center.    -->
 <!--                                                              -->
-<!--   TWO WAYS THIS GETS ITS DATA:                               -->
-<!--                                                              -->
-<!--   A) AUTOMATIC (hands-off): if `flowhub sync` runs on your   -->
-<!--      Mac (it already runs at 7am), it writes dashboard-data.js -->
-<!--      right next to this file and these screens fill in from   -->
-<!--      your real email + pipeline + production. Nothing to type.-->
-<!--                                                              -->
-<!--   B) BY HAND: edit the DATA object far below and refresh.     -->
-<!--      (Anything in dashboard-data.js wins over what you type.) -->
-<!--                                                              -->
-<!--   THE NOW / NEXT / LATER ENGINE is automatic: give every      -->
-<!--   meeting a real start/end time and the page figures out, in  -->
-<!--   real time, what's happening NOW, what's NEXT (with a live    -->
-<!--   countdown), and what's LATER today. You never sort it.       -->
+<!--  DATA comes from one of two places:                          -->
+<!--   • AUTO: `flowhub sync` on your Mac writes dashboard-data.js  -->
+<!--     beside this file (real email, pipeline, meetings, prod).   -->
+<!--     The 7am job does this for you. Nothing to type.            -->
+<!--   • HAND: edit the DATA object below and refresh.              -->
+<!--  Meeting times use "YYYY-MM-DDTHH:MM" (your local time); the   -->
+<!--  reactor core sorts Now/Next/Later live and counts down.       -->
 <!-- ============================================================ -->
 
 <header>
-  <div class="crest"><span>GIA</span></div>
+  <div class="diamond"><b>GIA</b></div>
   <div>
-    <div class="greet" id="greet">Good morning, <b>Joe</b></div>
-    <div class="subline" id="sub">Command Center</div>
+    <div class="hbrand">G.I.A. <i>//</i> CORE</div>
+    <div class="hstat">SYS <span class="ok">●</span> ONLINE · <span id="hsrc">LOCAL CACHE</span></div>
   </div>
-  <div class="hclock">
-    <div class="t" id="clk">--:--</div>
-    <div class="d" id="dte">—</div>
-  </div>
+  <div class="eq"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="hclock"><div class="t" id="clk">--:--:--</div><div class="d" id="dte">—</div></div>
 </header>
 
 <main id="root"></main>
 
-<footer>G.I.A. Legacy Planning · <b id="src">live cockpit</b></footer>
+<footer>G.I.A. LEGACY PLANNING · <b>OPERATIONS CORE</b></footer>
 
 <script>
 /* ===================================================================== *
- *   ▼▼▼   DATA — edit by hand here, OR let flowhub sync fill it   ▼▼▼   *
- *                                                                       *
- *   Times use 24h "YYYY-MM-DDTHH:MM" in YOUR local (Central) time.       *
- *   The Now/Next/Later engine reads these and sorts everything live.     *
+ *   ▼▼▼  DATA — edit by hand, OR let `flowhub sync` fill it.  ▼▼▼        *
  * ===================================================================== */
 const DATA = {
-  meta: { owner: "Joe", agency: "G.I.A. Legacy Planning", updated: "Sun Jun 21" },
-
-  /* One-line theme for the day. */
-  mission: "Close the Trevinos, unblock Zapier, and protect Monday's 3 appointments.",
-
-  /* TOP 3 — your non-negotiables. Tap to check off (feeds the Wins ring). */
+  meta: { owner:"Joe", agency:"G.I.A. Legacy Planning", updated:"Sun Jun 21" },
+  mission: "Close the Trevinos, unblock Zapier, protect Monday's 3 appointments.",
   top3: [
-    { id:"t1", rank:"Priority 1", title:"Close the Trevino policy",
-      sub:"Two options + submission already sent Sat night. Confirm which one and write it." },
-    { id:"t2", rank:"Priority 2", title:"Fix Zapier — 71 tasks held",
-      sub:"Automations PAUSED at the task limit. Upgrade or reset, then replay. Everything downstream is frozen." },
-    { id:"t3", rank:"Priority 3", title:"Mutual of Omaha conversion",
-      sub:"You flagged the conversion that didn't process. Chase a human if no reply by midday." },
+    { id:"t1", rank:"Priority 01", title:"Close the Trevino policy",
+      sub:"Two options + submission already sent. Confirm the pick and write it." },
+    { id:"t2", rank:"Priority 02", title:"Fix Zapier — 71 tasks held",
+      sub:"Automations paused at the task limit. Upgrade/reset, then replay." },
+    { id:"t3", rank:"Priority 03", title:"Mutual of Omaha conversion",
+      sub:"Flagged conversion that didn't process. Chase a human if silent by midday." },
   ],
-
-  /* MEETINGS — give real start/end; the page buckets them Now/Next/Later. */
   events: [
     { start:"2026-06-22T08:00", end:"2026-06-22T08:15", title:"Pull HQ → work Send Queue", where:"Onboarding Tracker · 2 min" },
     { start:"2026-06-22T08:45", end:"2026-06-22T09:15", title:"PNL review", where:"Office" },
@@ -299,266 +303,217 @@ const DATA = {
     { start:"2026-06-22T15:00", end:"2026-06-22T15:30", title:"Yolanda Lemus × Infinite Banking", where:"Zoom", link:"https://us02web.zoom.us/j/3613062923" },
     { start:"2026-06-23T07:00", end:"2026-06-23T07:30", title:"Adelita payment (Alisha & daughter)", where:"As-earned" },
     { start:"2026-06-23T09:30", end:"2026-06-23T10:00", title:"Mentor Check-ins", where:"Symmetry Virtual Office" },
-    { start:"2026-06-23T10:00", end:"2026-06-23T10:45", title:"Advance Markets weekly training", where:"Zoom" },
+    { start:"2026-06-23T10:00", end:"2026-06-23T10:45", title:"Advance Markets training", where:"Zoom" },
     { start:"2026-06-23T18:00", end:"2026-06-23T18:30", title:"Kingdom Club Meeting", where:"Zoom" },
     { start:"2026-06-24T10:30", end:"2026-06-24T11:30", title:"AO call", where:"" },
     { start:"2026-06-24T11:30", end:"2026-06-24T13:00", title:"National Call", where:"Symmetry · Zoom" },
   ],
-
-  /* INBOX — needs a reply/decision. priority: high | med | low */
   inbox: [
-    { priority:"high", from:"Trevino (client)", subject:"Policy options + submission sent",
-      action:"Waiting on Anthony & Isabel's pick — follow up to lock it in." },
-    { priority:"high", from:"Zapier", subject:"71 held tasks · limit reached",
-      action:"Upgrade/reset, then replay held tasks." },
-    { priority:"high", from:"Mutual of Omaha", subject:"Conversion not processing",
-      action:"You emailed Life Requirements; call 800-775-7896 if silent by noon." },
-    { priority:"med",  from:"National Life", subject:"3 outstanding requirements",
-      action:"Clear the open items blocking policy finalization." },
-    { priority:"med",  from:"Teamtailor", subject:"Invoice #135708 · payment method",
-      action:"Camille back today (6/22) — push for Stripe, not Revolut." },
-    { priority:"low",  from:"ExamFX", subject:"Licensing study package",
-      action:"Pick Option 1 or Option 2 to move pre-licensing." },
+    { priority:"high", from:"Trevino (client)", subject:"Policy options + submission sent", action:"Follow up on their pick to lock it in." },
+    { priority:"high", from:"Zapier", subject:"71 held tasks · limit reached", action:"Upgrade/reset, then replay held tasks." },
+    { priority:"high", from:"Mutual of Omaha", subject:"Conversion not processing", action:"Call 800-775-7896 if silent by noon." },
+    { priority:"med",  from:"National Life", subject:"3 outstanding requirements", action:"Clear items blocking finalization." },
+    { priority:"med",  from:"Teamtailor", subject:"Invoice #135708 · payment method", action:"Camille back today — push for Stripe." },
+    { priority:"low",  from:"ExamFX", subject:"Licensing study package", action:"Pick Option 1 or 2." },
   ],
-
-  /* PIPELINE — your 7 Teamtailor stages. */
   pipeline: [
-    { stage:"Applied / Connected", count:12 },
-    { stage:"Interview Scheduled", count:5 },
-    { stage:"Hired / Onboarding",  count:4 },
-    { stage:"Pre-Licensing",       count:6 },
-    { stage:"Exam Scheduled",      count:3 },
-    { stage:"Licensed",            count:2 },
-    { stage:"Active Producer",     count:8 },
+    { stage:"Applied / Connected", count:12 },{ stage:"Interview Scheduled", count:5 },
+    { stage:"Hired / Onboarding", count:4 },{ stage:"Pre-Licensing", count:6 },
+    { stage:"Exam Scheduled", count:3 },{ stage:"Licensed", count:2 },{ stage:"Active Producer", count:8 },
   ],
-
-  /* AGENTS in motion. */
   agents: [
-    { name:"Lyric Crudup",     status:"Onboarding", next:"First 2 appts today (Life + IBC). Finish SureLC carrier requests." },
-    { name:"Yolanda Lemus",    status:"Active",     next:"Infinite Banking presentation today 3:00 PM." },
-    { name:"Kem Gaskin",       status:"Onboarding", next:"Work the essential onboarding links." },
-    { name:"Nicole Wells",     status:"Contracted", next:"Foresters done — schedule first writing." },
-    { name:"Richard Aguilera", status:"Approved",   next:"Symmetry approved — kick off onboarding." },
+    { name:"Lyric Crudup", status:"Onboarding", next:"First 2 appts today. Finish SureLC carrier requests." },
+    { name:"Yolanda Lemus", status:"Active", next:"Infinite Banking presentation today 3:00 PM." },
+    { name:"Kem Gaskin", status:"Onboarding", next:"Work the essential onboarding links." },
+    { name:"Nicole Wells", status:"Contracted", next:"Foresters done — schedule first writing." },
+    { name:"Richard Aguilera", status:"Approved", next:"Symmetry approved — kick off onboarding." },
   ],
-
-  /* PRODUCTION this week. commission = $ shown; apv drives the tier color:
-     GREEN = apps>=2 & apv>=3000 · YELLOW = apps>=1 or apv>=1500 · RED = below. */
   production: [
-    { name:"Lyric Crudup",     dials:64, contacts:21, apps:3, closes:2, commission:1850, apv:4200 },
-    { name:"Yolanda Lemus",    dials:51, contacts:18, apps:2, closes:1, commission:1200, apv:3100 },
-    { name:"Nicole Wells",     dials:38, contacts:12, apps:1, closes:1, commission:640,  apv:1750 },
-    { name:"Richard Aguilera", dials:22, contacts:6,  apps:0, closes:0, commission:0,    apv:0 },
-    { name:"Kem Gaskin",       dials:17, contacts:4,  apps:0, closes:0, commission:0,    apv:400 },
+    { name:"Lyric Crudup", dials:64, contacts:21, apps:3, closes:2, commission:1850, apv:4200 },
+    { name:"Yolanda Lemus", dials:51, contacts:18, apps:2, closes:1, commission:1200, apv:3100 },
+    { name:"Nicole Wells", dials:38, contacts:12, apps:1, closes:1, commission:640, apv:1750 },
+    { name:"Richard Aguilera", dials:22, contacts:6, apps:0, closes:0, commission:0, apv:0 },
+    { name:"Kem Gaskin", dials:17, contacts:4, apps:0, closes:0, commission:0, apv:400 },
   ],
 };
-/* ▲▲▲  END EDITABLE DATA — rendering engine below.  ▲▲▲ */
+/* ▲▲▲  END EDITABLE DATA  ▲▲▲ */
 
-
-/* If the Mac sync wrote dashboard-data.js, let it override the hand data. */
 const D = Object.assign({}, DATA, (window.DASHBOARD_DATA || {}));
 
 /* ---------- helpers ---------- */
-const $ = (s,e=document)=>e.querySelector(s);
-const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const money = n => "$"+Number(n||0).toLocaleString("en-US");
-const initials = n => n.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
-const parseLocal = s => { const [d,t]=String(s).split("T"); const[Y,M,Dd]=d.split("-").map(Number);
-  const[h,mi]=(t||"0:0").split(":").map(Number); return new Date(Y,M-1,Dd,h||0,mi||0); };
-const fmtTime = dt => dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
-const sameDay = (a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
-function humanGap(ms){
-  const m=Math.round(ms/60000); if(m<1)return "now";
-  if(m<60)return `in ${m}m`;
-  const h=Math.floor(m/60), r=m%60;
-  if(h<24)return r?`in ${h}h ${r}m`:`in ${h}h`;
-  const d=Math.round(h/24); return `in ${d}d`;
-}
-function prodTier(r){ if(r.apps>=2&&r.apv>=3000)return"green"; if(r.apps>=1||r.apv>=1500)return"yellow"; return"red"; }
+const $=(s,e=document)=>e.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>"$"+Number(n||0).toLocaleString("en-US");
+const initials=n=>n.trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+const parseLocal=s=>{const[d,t]=String(s).split("T");const[Y,M,Dd]=d.split("-").map(Number);const[h,mi]=(t||"0:0").split(":").map(Number);return new Date(Y,M-1,Dd,h||0,mi||0);};
+const fmtTime=dt=>dt.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+const sameDay=(a,b)=>a.toDateString()===b.toDateString();
+function hms(ms){ms=Math.max(0,ms);const s=Math.floor(ms/1000);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+  const p=n=>String(n).padStart(2,"0");return (h>0?p(h)+":":"")+p(m)+":"+p(ss);}
+function human(ms){const m=Math.round(ms/60000);if(m<60)return m+"M";const h=Math.floor(m/60),r=m%60;if(h<24)return h+"H"+(r?" "+r+"M":"");return Math.round(h/24)+"D";}
+function tier(r){if(r.apps>=2&&r.apv>=3000)return"green";if(r.apps>=1||r.apv>=1500)return"yellow";return"red";}
 
-/* wins persistence (per day) */
-const todayKey = ()=> new Date().toISOString().slice(0,10);
-function loadDone(){ try{ const o=JSON.parse(localStorage.getItem("gia-done")||"{}"); return o.day===todayKey()?(o.ids||[]):[]; }catch{ return []; } }
-function saveDone(ids){ localStorage.setItem("gia-done",JSON.stringify({day:todayKey(),ids})); }
-let doneIds = loadDone();
+const todayKey=()=>new Date().toISOString().slice(0,10);
+function loadDone(){try{const o=JSON.parse(localStorage.getItem("gia-done")||"{}");return o.day===todayKey()?(o.ids||[]):[];}catch{return[];}}
+function saveDone(x){localStorage.setItem("gia-done",JSON.stringify({day:todayKey(),ids:x}));}
+let doneIds=loadDone();
+
+/* ---------- engine: current state of the core ---------- */
+function coreState(now){
+  const ev=(D.events||[]).map(e=>({...e,s:parseLocal(e.start),e_:parseLocal(e.end)})).sort((a,b)=>a.s-b.s);
+  const cur=ev.find(e=>e.s<=now&&now<e.e_);
+  const up=ev.filter(e=>e.s>now);
+  const next=up[0];
+  if(cur){
+    const frac=(now-cur.s)/(cur.e_-cur.s);
+    return {mode:"live",label:"IN SESSION",count:hms(cur.e_-now),title:cur.title,sub:cur.where||"",link:cur.link,frac,next};
+  }
+  if(next){
+    const prevEnd=ev.filter(e=>e.e_<=now).map(e=>e.e_).pop();
+    const total=prevEnd?(next.s-prevEnd):Math.min(next.s-now,3*3600e3);
+    const frac=prevEnd?(now-prevEnd)/total:1-(next.s-now)/total;
+    return {mode:"standby",label:"NEXT CONTACT",count:hms(next.s-now),title:next.title,sub:next.where||"",link:null,frac:Math.max(0,Math.min(1,frac)),next};
+  }
+  const top=(D.top3||[]).find(t=>!doneIds.includes(t.id))||(D.top3||[])[0];
+  return {mode:"clear",label:"PRIMARY FOCUS",count:"--:--",title:top?top.title:"All clear",sub:top?top.sub:"",link:null,frac:1,next:null};
+}
 
 /* ---------- builders ---------- */
-function panel(label,count,body,full){
-  const c=(count!=null)?`<span class="cc">${esc(count)}</span>`:"";
-  return `<section class="panel${full?" span-2":""}"><div class="panel-h"><span class="tick"></span><h2>${esc(label)}</h2>${c}</div><div class="panel-b">${body}</div></section>`;
+function panel(label,hx,count,body,full){
+  const c=count!=null?`<span class="cc">${esc(count)}</span>`:"";
+  return `<section class="hud${full?" span-2":""}"><div class="p-head"><h2>${esc(label)}</h2>${hx?`<span class="hx">${esc(hx)}</span>`:""}${c}</div><div class="p-body">${body}</div></section>`;
 }
 
-function buildSpine(){
+function buildTelemetry(){
+  const pipe=(D.pipeline||[]).reduce((a,s)=>a+s.count,0);
+  const apv=(D.production||[]).reduce((a,r)=>a+(r.apv||0),0);
+  const open=(D.top3||[]).filter(t=>!doneIds.includes(t.id)).length;
+  const inbox=(D.inbox||[]).length;
+  const cell=(k,v,sub,p)=>`<div class="hud tcell"><div class="k">${k}</div><div class="v">${v}${sub?` <small>${sub}</small>`:""}</div><div class="meter"><i style="width:${p}%"></i></div></div>`;
+  return `<div class="telem">
+    ${cell("Pipeline",pipe,"recruits",Math.min(100,pipe/40*100))}
+    ${cell("APV // wk","$"+(apv/1000).toFixed(1),"K",Math.min(100,apv/15000*100))}
+    ${cell("Open Tasks",open,"of "+(D.top3||[]).length,(D.top3||[]).length?open/(D.top3.length)*100:0)}
+    ${cell("Inbox",inbox,"to action",Math.min(100,inbox/8*100))}
+  </div>`;
+}
+
+function buildCore(){
+  return `<section class="hud span-2"><div class="core-wrap">
+    <div class="lane-tag">Operations Core<span class="ln"></span><span id="coreMode" class="mono" style="color:var(--cy)">NOW</span></div>
+    <div class="reactor">
+      <svg viewBox="0 0 240 240">
+        <circle cx="120" cy="120" r="116" fill="none" stroke="rgba(53,226,255,.10)" stroke-width="1"/>
+        <g class="spin-slow"><circle cx="120" cy="120" r="116" fill="none" stroke="var(--cy)" stroke-width="2" stroke-dasharray="1.5 9" opacity=".45"/></g>
+        <circle cx="120" cy="120" r="104" fill="none" stroke="rgba(255,201,77,.12)" stroke-width="3"/>
+        <circle id="coreArc" cx="120" cy="120" r="104" fill="none" stroke="var(--gold)" stroke-width="3"
+          stroke-linecap="round" transform="rotate(-90 120 120)"
+          stroke-dasharray="653" stroke-dashoffset="653" style="filter:drop-shadow(0 0 6px rgba(255,201,77,.7));transition:stroke-dashoffset .6s"/>
+        <g class="spin-cw"><circle cx="120" cy="120" r="88" fill="none" stroke="var(--cy)" stroke-width="1.5" stroke-dasharray="3 11" opacity=".7"/></g>
+        <g class="spin-ccw"><circle cx="120" cy="120" r="72" fill="none" stroke="rgba(255,201,77,.5)" stroke-width="1" stroke-dasharray="2 16"/></g>
+        <circle cx="120" cy="120" r="60" fill="rgba(53,226,255,.04)" stroke="var(--line)" stroke-width="1"/>
+      </svg>
+      <div class="radar"><i></i></div>
+      <div class="core-center">
+        <div class="core-label" id="coreLabel">STANDBY</div>
+        <div class="core-count mono" id="coreCount">--:--</div>
+        <div class="core-title" id="coreTitle">—</div>
+        <div class="core-sub" id="coreSub"></div>
+      </div>
+    </div>
+    <a class="core-join hide" id="coreJoin" target="_blank" rel="noopener">⟶ Join Link</a>
+  </div></section>`;
+}
+
+function buildNextLater(){
   const now=new Date();
   const ev=(D.events||[]).map(e=>({...e,s:parseLocal(e.start),e_:parseLocal(e.end)})).sort((a,b)=>a.s-b.s);
-  const current=ev.find(e=>e.s<=now&&now<e.e_);
-  const upcoming=ev.filter(e=>e.s>now);
-  const next=upcoming[0];
-
-  /* NOW */
-  let nowHTML;
-  if(current){
-    nowHTML=`<div class="now-kicker"><span class="pulse"></span>Happening now · <span class="now-window">until ${fmtTime(current.e_)}</span></div>
-      <div class="now-title">${esc(current.title)}</div>
-      ${current.where?`<div class="now-sub">${esc(current.where)}</div>`:""}
-      ${current.link?`<a class="now-cta" href="${esc(current.link)}" target="_blank" rel="noopener">Join now →</a>`:""}`;
-  } else {
-    const top=(D.top3||[]).find(t=>!doneIds.includes(t.id))||(D.top3||[])[0];
-    nowHTML=`<div class="now-kicker"><span class="pulse"></span>Focus right now</div>
-      <div class="now-title">${top?esc(top.title):"You're clear — breathe."}</div>
-      ${top&&top.sub?`<div class="now-sub">${esc(top.sub)}</div>`:""}
-      ${next?`<div class="now-sub" style="margin-top:12px">⏭ Then: <b style="color:var(--gold-bright)">${esc(next.title)}</b> · ${humanGap(next.s-now)}</div>`:""}`;
-  }
-
-  /* NEXT */
+  const up=ev.filter(e=>e.s>now);
+  const next=up[0];
   let nextHTML="";
   if(next){
-    const dayTag=sameDay(next.s,now)?fmtTime(next.s):next.s.toLocaleDateString("en-US",{weekday:"short"})+" "+fmtTime(next.s);
-    nextHTML=`<div class="lane-label">Next up<span class="ln"></span></div>
-      <div class="next-card">
-        <div class="count-badge"><div class="big" data-countdown="${next.s.getTime()}">${humanGap(next.s-now).replace("in ","")}</div><div class="sm">${sameDay(next.s,now)?"away":next.s.toLocaleDateString("en-US",{weekday:"short"})}</div></div>
-        <div class="next-main">
-          <div class="next-when">${esc(dayTag)}</div>
-          <div class="next-title">${esc(next.title)}</div>
-          ${next.where?`<div class="next-meta">${esc(next.where)}</div>`:""}
-        </div>
-      </div>`;
+    const when=sameDay(next.s,now)?fmtTime(next.s):next.s.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()+" "+fmtTime(next.s);
+    nextHTML=`<div class="hud"><div class="next-row">
+      <div class="next-clock"><div class="big" data-cd="${next.s.getTime()}">${hms(next.s-now)}</div><div class="sm">${sameDay(next.s,now)?"TO CONTACT":next.s.toLocaleDateString("en-US",{weekday:"short"}).toUpperCase()}</div></div>
+      <div class="next-main"><div class="next-when">${esc(when)}</div><div class="next-title">${esc(next.title)}</div>${next.where?`<div class="next-meta">${esc(next.where)}</div>`:""}</div>
+    </div></div>`;
   }
-
-  /* LATER (rest of today after 'next') */
-  const laterToday=upcoming.slice(1).filter(e=>sameDay(e.s,now));
-  let laterHTML;
-  if(laterToday.length){
-    laterHTML=`<div class="tl">`+laterToday.map(e=>`
-      <div class="tl-item">
-        <div class="tl-time">${esc(fmtTime(e.s))}</div>
-        <div class="tl-rail"><span class="tl-dot"></span><span class="tl-line"></span></div>
-        <div class="tl-body"><div class="tl-title">${esc(e.title)}</div>${e.where?`<div class="tl-meta">${esc(e.where)}</div>`:""}</div>
-      </div>`).join("")+`</div>`;
-  } else {
-    laterHTML=`<div class="tl-empty">Nothing else on the calendar today. 🎯</div>`;
-  }
-  const laterPanel=panel("Later // Today",laterToday.length||null,laterHTML);
-
-  return `<div class="spine">
-      <div class="now-card">${nowHTML}</div>
-      ${nextHTML}
-    </div>
-    ${laterPanel}`;
-}
-
-function buildMission(){
-  if(!D.mission)return"";
-  return `<div class="mission"><span class="ic">🎯</span><div><div class="lbl">Today's mission</div><div class="txt">${esc(D.mission)}</div></div></div>`;
+  const later=up.slice(1).filter(e=>sameDay(e.s,now));
+  const body=later.length?later.map(e=>`<div class="tl-item"><div class="tl-time">${esc(fmtTime(e.s))}</div><div class="tl-rail"><span class="tl-dot"></span><span class="tl-line"></span></div><div><div class="tl-title">${esc(e.title)}</div>${e.where?`<div class="tl-meta">${esc(e.where)}</div>`:""}</div></div>`).join(""):`<div class="empty">// No further contacts logged today</div>`;
+  return nextHTML+panel("Later // Today","",later.length||null,body);
 }
 
 function buildTop3(){
-  const total=(D.top3||[]).length;
-  const rows=(D.top3||[]).map(t=>{
-    const done=doneIds.includes(t.id);
-    return `<div class="foc${done?" done":""}" data-toggle="${esc(t.id)}">
-      <div class="box">✓</div>
-      <div class="foc-b"><div class="foc-rank">${esc(t.rank||"")}</div>
-        <div class="foc-title">${esc(t.title)}</div>
-        ${t.sub?`<div class="foc-sub">${esc(t.sub)}</div>`:""}</div>
-    </div>`;
-  }).join("");
-  const done=(D.top3||[]).filter(t=>doneIds.includes(t.id)).length;
+  const total=(D.top3||[]).length,done=(D.top3||[]).filter(t=>doneIds.includes(t.id)).length;
   const pct=total?Math.round(done/total*100):0;
-  const wins=`<div class="wins" style="margin-bottom:13px">
-      <div class="wins-ring" style="--p:${pct}"><b>${done}/${total}</b></div>
-      <div class="wins-txt"><div class="l1">${done===total&&total?"All wins logged 🔥":"Momentum"}</div>
-        <div class="l2">${done} of ${total} priorities done today · tap to check off</div></div>
-    </div>`;
-  return panel("Today's Top 3", null, wins+rows, false);
+  const wins=`<div class="wins"><div class="wins-ring" style="--p:${pct}"><b>${done}/${total}</b></div>
+    <div><div class="l1">${done===total&&total?"ALL OBJECTIVES CLEARED":"MISSION PROGRESS"}</div><div class="l2">${done} of ${total} priorities · tap to confirm</div></div></div>`;
+  const rows=(D.top3||[]).map(t=>{const dn=doneIds.includes(t.id);
+    return `<div class="foc${dn?" done":""}" data-toggle="${esc(t.id)}"><div class="fbox"><b>✓</b></div>
+      <div><div class="frank">${esc(t.rank||"")}</div><div class="ftitle">${esc(t.title)}</div>${t.sub?`<div class="fsub">${esc(t.sub)}</div>`:""}</div></div>`;}).join("");
+  return panel("Top 3 // Objectives","",null,wins+rows);
 }
 
 function buildInbox(){
-  const rows=(D.inbox||[]).map(it=>`
-    <div class="inbox-item"><div class="pri ${esc(it.priority)}"></div>
-      <div class="inbox-main"><div class="inbox-from">${esc(it.from)}</div>
-        <div class="inbox-subj">${esc(it.subject)}</div>
-        ${it.action?`<div class="inbox-act">→ ${esc(it.action)}</div>`:""}</div>
-    </div>`).join("") || `<div class="inbox-act">Inbox clear. 📭</div>`;
-  return panel("Inbox // Action Required",(D.inbox||[]).length,rows);
+  const rows=(D.inbox||[]).map(it=>`<div class="inbox-item"><div class="pri ${esc(it.priority)}"></div>
+    <div style="flex:1;min-width:0"><div class="inbox-from">${esc(it.from)}</div><div class="inbox-subj">${esc(it.subject)}</div>${it.action?`<div class="inbox-act">▸ ${esc(it.action)}</div>`:""}</div></div>`).join("")||`<div class="empty">// Channel clear</div>`;
+  return panel("Inbox // Action Req","",(D.inbox||[]).length,rows);
 }
 
 function buildPipeline(){
   const max=Math.max(1,...(D.pipeline||[]).map(s=>s.count));
   const total=(D.pipeline||[]).reduce((a,s)=>a+s.count,0);
-  const cards=(D.pipeline||[]).map((s,i)=>`
-    <div class="pipe-card"><div class="pipe-i">${i+1}</div>
-      <div class="pipe-num">${esc(s.count)}</div>
-      <div class="pipe-label">${esc(s.stage)}</div>
-      <div class="pipe-bar" style="width:${Math.round(s.count/max*100)}%"></div></div>`).join("");
-  return panel("Pipeline // Snapshot",total+" in pipe",`<div class="pipe">${cards}</div>`,true);
+  const rows=(D.pipeline||[]).map((s,i)=>`<div class="pg"><div class="pg-idx">${String(i+1).padStart(2,"0")}</div>
+    <div class="pg-mid"><div class="pg-lbl">${esc(s.stage)}</div><div class="pg-bar"><i style="--w:${Math.round(s.count/max*100)}%"></i></div></div>
+    <div class="pg-n">${esc(s.count)}</div></div>`).join("");
+  return panel("Pipeline // Stages","TEAMTAILOR",total,`<div class="pipe">${rows}</div>`,true);
 }
 
 function buildAgents(){
-  const rows=(D.agents||[]).map(a=>`
-    <div class="agent"><div class="avatar">${esc(initials(a.name))}</div>
-      <div class="agent-main"><div class="agent-name">${esc(a.name)}</div>
-        <div class="agent-next"><b>Next:</b> ${esc(a.next)}</div></div>
-      <div class="status-pill">${esc(a.status)}</div></div>`).join("");
-  return panel("Agents // In Motion",(D.agents||[]).length,rows);
+  const rows=(D.agents||[]).map(a=>`<div class="agent"><div class="av"><b>${esc(initials(a.name))}</b></div>
+    <div class="agent-main"><div class="agent-name">${esc(a.name)}</div><div class="agent-next"><b>NEXT:</b> ${esc(a.next)}</div></div>
+    <div class="pill">${esc(a.status)}</div></div>`).join("");
+  return panel("Agents // In Motion","",(D.agents||[]).length,rows);
 }
 
 function buildProduction(){
   let T={dials:0,contacts:0,apps:0,closes:0,commission:0};
-  const rows=(D.production||[]).map(r=>{
-    T.dials+=r.dials;T.contacts+=r.contacts;T.apps+=r.apps;T.closes+=r.closes;T.commission+=r.commission;
-    return `<tr class="tier-${prodTier(r)}"><td><span class="tier-dot"></span>${esc(r.name)}</td>
-      <td>${esc(r.dials)}</td><td>${esc(r.contacts)}</td><td>${esc(r.apps)}</td><td>${esc(r.closes)}</td>
-      <td class="comm">${money(r.commission)}</td></tr>`;
-  }).join("");
-  const totals=`<tr class="totals-row"><td>TEAM TOTAL</td><td>${T.dials}</td><td>${T.contacts}</td><td>${T.apps}</td><td>${T.closes}</td><td class="comm">${money(T.commission)}</td></tr>`;
-  const body=`<div class="table-wrap"><table class="prod">
-      <thead><tr><th>Agent</th><th>Dials</th><th>Contacts</th><th>Apps</th><th>Closes</th><th>Commission</th></tr></thead>
-      <tbody>${rows}${totals}</tbody></table></div>
-    <div class="prod-foot">
-      <span class="legend"><i style="background:var(--green)"></i>On pace · ≥2 apps & ≥$3K APV</span>
-      <span class="legend"><i style="background:var(--yellow)"></i>Warning</span>
-      <span class="legend"><i style="background:var(--red)"></i>Needs help</span></div>`;
-  return panel("Production // This Week",(D.production||[]).length+" agents",body,true);
+  const rows=(D.production||[]).map(r=>{T.dials+=r.dials;T.contacts+=r.contacts;T.apps+=r.apps;T.closes+=r.closes;T.commission+=r.commission;
+    return `<tr class="t-${tier(r)}"><td><span class="td-dot"></span>${esc(r.name)}</td><td>${r.dials}</td><td>${r.contacts}</td><td>${r.apps}</td><td>${r.closes}</td><td class="comm">${money(r.commission)}</td></tr>`;}).join("");
+  const totals=`<tr class="totals"><td>TEAM</td><td>${T.dials}</td><td>${T.contacts}</td><td>${T.apps}</td><td>${T.closes}</td><td class="comm">${money(T.commission)}</td></tr>`;
+  const body=`<div class="tw"><table class="prod"><thead><tr><th>Agent</th><th>Dials</th><th>Cont</th><th>Apps</th><th>Close</th><th>Comm</th></tr></thead><tbody>${rows}${totals}</tbody></table></div>
+    <div class="legend"><span><i style="background:var(--green)"></i>ON PACE ≥2 APP / ≥$3K</span><span><i style="background:var(--amber)"></i>WARNING</span><span><i style="background:var(--red)"></i>NEEDS SUPPORT</span></div>`;
+  return panel("Production // This Week","",(D.production||[]).length,body,true);
 }
 
-/* ---------- render + live loop ---------- */
+/* ---------- render ---------- */
 function render(){
-  $("#root").innerHTML =
-    buildMission()+
-    buildSpine()+
-    buildTop3()+
-    buildInbox()+
-    buildPipeline()+
-    buildAgents()+
-    buildProduction();
-  if(D.meta&&D.meta.updated) $("#src").textContent = "updated "+D.meta.updated;
+  $("#root").innerHTML=
+    buildTelemetry()+buildCore()+buildNextLater()+buildTop3()+buildInbox()+buildPipeline()+buildAgents()+buildProduction();
+  if(D.meta&&D.meta.updated)$("#hsrc").textContent=(window.DASHBOARD_DATA?"LIVE SYNC · ":"SAMPLE · ")+String(D.meta.updated).toUpperCase();
+  updateLive();
 }
 
-function tickClock(){
+function updateLive(){
   const now=new Date();
-  $("#clk").textContent=fmtTime(now);
+  $("#clk").textContent=now.toLocaleTimeString("en-US",{hour12:false});
   $("#dte").textContent=now.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase();
-  const h=now.getHours();
-  $("#greet").innerHTML=(h<12?"Good morning, ":h<17?"Good afternoon, ":"Good evening, ")+"<b>"+esc((D.meta&&D.meta.owner)||"Joe")+"</b>";
-  // live countdown chips
-  document.querySelectorAll("[data-countdown]").forEach(el=>{
-    const t=Number(el.dataset.countdown)-Date.now();
-    el.textContent=t<=0?"now":humanGap(t).replace("in ","");
-  });
+  const st=coreState(now);
+  const set=(id,v)=>{const el=$("#"+id);if(el)el.textContent=v;};
+  set("coreLabel",st.label);set("coreCount",st.count);set("coreTitle",st.title);set("coreSub",st.sub);
+  set("coreMode",st.mode==="live"?"LIVE":st.mode==="standby"?"NEXT":"FOCUS");
+  const lbl=$("#coreLabel");if(lbl)lbl.classList.toggle("live",st.mode==="live");
+  const arc=$("#coreArc");if(arc)arc.setAttribute("stroke-dashoffset",653*(1-st.frac));
+  const join=$("#coreJoin");if(join){if(st.link){join.href=st.link;join.classList.remove("hide");}else join.classList.add("hide");}
+  document.querySelectorAll("[data-cd]").forEach(el=>{el.textContent=hms(Number(el.dataset.cd)-Date.now());});
 }
 
-/* tap to check off a priority */
-$("#root").addEventListener("click",e=>{
-  const el=e.target.closest("[data-toggle]"); if(!el)return;
-  const id=el.dataset.toggle;
-  doneIds = doneIds.includes(id) ? doneIds.filter(x=>x!==id) : [...doneIds,id];
-  saveDone(doneIds); render();
-});
+$("#root").addEventListener("click",e=>{const el=e.target.closest("[data-toggle]");if(!el)return;
+  const id=el.dataset.toggle;doneIds=doneIds.includes(id)?doneIds.filter(x=>x!==id):[...doneIds,id];saveDone(doneIds);render();});
 
 render();
-tickClock();
-setInterval(tickClock,15000);     // refresh clock + countdowns
-setInterval(render,60000);        // re-bucket Now/Next/Later every minute
+setInterval(updateLive,1000);   // live clock, countdown, arc
+setInterval(render,60000);      // re-bucket Now/Next/Later each minute
 </script>
 </body>
 </html>
