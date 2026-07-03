@@ -68,7 +68,11 @@ def _events(snapshot: dict) -> list:
                 start = datetime.strptime(d, "%Y-%m-%d")
             except ValueError:
                 continue
-        end = start + timedelta(minutes=int(e.get("duration") or 30))
+        try:
+            minutes = int(str(e.get("duration") or 30).split()[0])
+        except (ValueError, IndexError):
+            minutes = 30
+        end = start + timedelta(minutes=minutes)
         out.append({
             "start": start.strftime("%Y-%m-%dT%H:%M"),
             "end":   end.strftime("%Y-%m-%dT%H:%M"),
