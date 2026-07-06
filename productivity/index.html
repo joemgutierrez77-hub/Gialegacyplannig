@@ -73,7 +73,8 @@
   .empty{color:var(--faint);text-align:center;padding:34px 10px;font-size:13.5px}
 
   /* ---------- Bottom Dock ---------- */
-  #bottom-dock{position:fixed;bottom:0;left:218px;right:0;height:52px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:8px;z-index:50}
+  #bottom-dock{position:fixed;bottom:0;left:218px;right:0;height:52px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:8px;z-index:50;overflow-x:auto}
+  #dock-portals{display:flex;gap:8px;align-items:center}
   .dock-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:700;border:1px solid var(--border);background:var(--surface);color:var(--muted);text-decoration:none;white-space:nowrap;transition:all .12s;cursor:pointer}
   .dock-btn:hover{border-color:var(--accent);color:var(--text);background:var(--surface2)}
   .dock-btn.dock-primary{background:linear-gradient(135deg,var(--accent2),#b16cff);border-color:transparent;color:#fff}
@@ -518,7 +519,6 @@
       <div class="view-head">
         <div class="view-title">Recruit Tracker</div>
         <div class="spacer"></div>
-        ${(() => { const p = (typeof state !== 'undefined' && state.portals && state.portals.teamtailor) ? state.portals.teamtailor : ''; return p ? `<a class="btn" href="${p}" target="_blank" rel="noopener">🎯 Open Teamtailor ↗</a>` : ''; })()}
         <button class="btn primary" data-action="recruit-new">＋ Add Recruit</button>
       </div>
       <div class="view-pad" id="recruits-content"></div>
@@ -1304,8 +1304,8 @@ function bizQuickLinksHTML(){
     { label: 'Teamtailor', icon: '👥', url: 'https://app.teamtailor.com/', desc: 'Recruiting' },
     { label: 'Calendly', icon: '🗓️', url: 'https://calendly.com/event_types/user/me', desc: 'Meetings' },
     { label: 'Quility HQ', icon: '📊', url: 'https://hq.quility.com/', desc: 'Production' },
-    { label: 'Gmail', icon: '📧', url: 'https://mail.google.com/', desc: 'joe.m.gutierrez77' },
-    { label: 'Outlook', icon: '📬', url: 'https://outlook.live.com/', desc: 'josephandjoegutierrez' },
+    { label: 'Gmail', icon: '📧', url: 'https://mail.google.com/', desc: 'Personal inbox' },
+    { label: 'Outlook', icon: '📬', url: 'https://outlook.live.com/', desc: 'Business inbox' },
   ];
   const btns = links.map(l =>
     `<a href="${l.url}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:12px;cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background='var(--surface2)'">
@@ -1426,12 +1426,16 @@ function saveRecruitModal(){
    NOTIFICATIONS & DAILY BRIEFING
    ===================================================================== */
 function requestNotifPerms(){
-  try { if (Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
+  try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {}
 }
 function sendBriefingNotif(){
   try {
-    if (!Notification || Notification.permission !== 'granted') return;
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
     const t = todayISO();
+    // one notification per day, no matter how many times the page is opened
+    // (lastBriefingDate is separate — it tracks the dashboard's visual banner)
+    if (state.meta.lastBriefingNotifDate === t) return;
+    state.meta.lastBriefingNotifDate = t; save();
     const critAlerts = (state.alerts || []).filter(a => !a.resolved && a.level === 'critical').length;
     const overdueTasks = state.tasks.filter(x => x.status !== 'done' && x.due && x.due < t).length;
     const dueFollowups = (state.followups || []).filter(f => !f.done && f.due && f.due <= t).length;
@@ -1446,7 +1450,7 @@ function scheduleFollowupReminder(){
   // fire a notification if any follow-ups due today haven't been done — checks every 30 min
   setInterval(() => {
     try {
-      if (!Notification || Notification.permission !== 'granted') return;
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
       const t = todayISO();
       const due = (state.followups || []).filter(f => !f.done && f.due === t);
       if (due.length) new Notification(`GIA Command — ${due.length} follow-up${due.length > 1 ? 's' : ''} due today`, {
@@ -1645,7 +1649,10 @@ function importJSON(){
       try {
         const data = JSON.parse(e.target.result);
         if (!data.tasks || !data.notes) { toast('⚠️ Invalid backup file'); return; }
-        Object.assign(state, data);
+        // true replace: start from defaults so keys absent from an older
+        // backup don't silently keep their current values
+        state = Object.assign(defaultState(), data);
+        if (!state.business.importedEvents) state.business.importedEvents = {};
         save();
         renderView(ui.view);
         toast('Backup restored ✓');
@@ -1658,16 +1665,19 @@ function importJSON(){
 }
 function savePortals(){
   const keys = ['teamtailor','quilityHQ','slack','backOffice','agentPortal','suranceBay','calendly','carrierPortal'];
+  // validate everything first so a bad URL can't leave earlier fields half-applied
+  const pending = {};
   for (const k of keys) {
     const el = document.getElementById('po-' + k);
     if (!el) continue;
     const url = el.value.trim();
     if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
-      toast(`⚠️ "${k}" URL must start with https:// — not saved`);
+      toast(`⚠️ "${k}" URL must start with https:// — nothing saved`);
       return;
     }
-    state.portals[k] = url;
+    pending[k] = url;
   }
+  Object.assign(state.portals, pending);
   save(); renderBackOffice(); renderDock(); toast('Portal links saved — dock updated');
 }
 
@@ -2543,9 +2553,10 @@ if (!CanvasRenderingContext2D.prototype.roundRect){
 
 /* init */
 requestNotifPerms();
-if (state.meta.lastBriefingDate !== todayISO()) {
-  setTimeout(() => { sendBriefingNotif(); scheduleFollowupReminder(); }, 1500);
-}
+// briefing notif self-limits to once per day; the 30-min follow-up reminder
+// must run every session regardless of whether today's briefing already fired
+setTimeout(sendBriefingNotif, 1500);
+scheduleFollowupReminder();
 // dock clock tick
 setInterval(() => {
   const d = $('#dock-clock');

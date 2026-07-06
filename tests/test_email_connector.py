@@ -110,7 +110,7 @@ def test_account_env_round_trip(isolated):
 def test_imap_from_mx_mapping():
     from src.modules.email_connector import _imap_from_mx
     assert _imap_from_mx("aspmx.l.google.com") == "imap.gmail.com"
-    assert _imap_from_mx("gutierrezagency-org.mail.protection.outlook.com") == "outlook.office365.com"
+    assert _imap_from_mx("example-org.mail.protection.outlook.com") == "outlook.office365.com"
     assert _imap_from_mx("smtp.secureserver.net") == "imap.secureserver.net"
     assert _imap_from_mx("mx.zoho.com") == "imap.zoho.com"
     assert _imap_from_mx("unknown-host.example.com") == ""
@@ -118,16 +118,16 @@ def test_imap_from_mx_mapping():
 
 def test_detect_imap_host_consumer():
     from src.modules.email_connector import detect_imap_host
-    assert detect_imap_host("josephandjoegutierrez@hotmail.com") == "outlook.office365.com"
+    assert detect_imap_host("example.user@hotmail.com") == "outlook.office365.com"
     assert detect_imap_host("someone@gmail.com") == "imap.gmail.com"
 
 
 def test_explicit_host_round_trip(isolated):
     from src.modules.email_connector import save_email_account, load_email_accounts
-    save_email_account("custom", "joeg@gutierrezagency.org", "secretpass",
+    save_email_account("custom", "joe@example-agency.org", "secretpass",
                        host="outlook.office365.com")
     acct = load_email_accounts()[0]
-    assert acct["address"] == "joeg@gutierrezagency.org"
+    assert acct["address"] == "joe@example-agency.org"
     assert acct["host"] == "outlook.office365.com"
     assert acct["password"] == "secretpass"
 

@@ -284,37 +284,39 @@ footer b{color:var(--cy)}
 /* ===================================================================== *
  *   ▼▼▼  DATA — edit by hand, OR let `flowhub sync` fill it.  ▼▼▼        *
  * ===================================================================== */
+// NOTE: this is FICTIONAL demo data — the repo (and its GitHub Pages site) is
+// public, so never put real client names, meeting links, or numbers here.
+// Real data arrives privately via the gitignored dashboard-data.js.
 const DATA = {
-  meta: { owner:"Joe", agency:"G.I.A. Legacy Planning", updated:"Sun Jun 21" },
-  mission: "Close the Trevinos, unblock Zapier, protect Monday's 3 appointments.",
+  meta: { owner:"Joe", agency:"G.I.A. Legacy Planning", updated:"Sample data" },
+  mission: "Close the Rivera policy, clear held automations, protect today's 3 appointments.",
   top3: [
-    { id:"t1", rank:"Priority 01", title:"Close the Trevino policy",
+    { id:"t1", rank:"Priority 01", title:"Close the Rivera policy",
       sub:"Two options + submission already sent. Confirm the pick and write it." },
-    { id:"t2", rank:"Priority 02", title:"Fix Zapier — 71 tasks held",
+    { id:"t2", rank:"Priority 02", title:"Fix automations — tasks held",
       sub:"Automations paused at the task limit. Upgrade/reset, then replay." },
-    { id:"t3", rank:"Priority 03", title:"Mutual of Omaha conversion",
+    { id:"t3", rank:"Priority 03", title:"Carrier conversion follow-up",
       sub:"Flagged conversion that didn't process. Chase a human if silent by midday." },
   ],
   events: [
     { start:"2026-06-22T08:00", end:"2026-06-22T08:15", title:"Pull HQ → work Send Queue", where:"Onboarding Tracker · 2 min" },
     { start:"2026-06-22T08:45", end:"2026-06-22T09:15", title:"PNL review", where:"Office" },
-    { start:"2026-06-22T11:00", end:"2026-06-22T11:30", title:"Lyric Crudup × Life Insurance", where:"Zoom · first appointment", link:"https://us02web.zoom.us/j/3613062923" },
-    { start:"2026-06-22T12:00", end:"2026-06-22T12:30", title:"Lyric Crudup × Infinite Banking", where:"Zoom", link:"https://us02web.zoom.us/j/3613062923" },
-    { start:"2026-06-22T15:00", end:"2026-06-22T15:30", title:"Yolanda Lemus × Infinite Banking", where:"Zoom", link:"https://us02web.zoom.us/j/3613062923" },
-    { start:"2026-06-23T07:00", end:"2026-06-23T07:30", title:"Adelita payment (Alisha & daughter)", where:"As-earned" },
-    { start:"2026-06-23T09:30", end:"2026-06-23T10:00", title:"Mentor Check-ins", where:"Symmetry Virtual Office" },
+    { start:"2026-06-22T11:00", end:"2026-06-22T11:30", title:"Alex Demo × Life Insurance", where:"Zoom · first appointment", link:"https://example.com/meet" },
+    { start:"2026-06-22T12:00", end:"2026-06-22T12:30", title:"Alex Demo × Infinite Banking", where:"Zoom", link:"https://example.com/meet" },
+    { start:"2026-06-22T15:00", end:"2026-06-22T15:30", title:"Jordan Sample × Infinite Banking", where:"Zoom", link:"https://example.com/meet" },
+    { start:"2026-06-23T09:30", end:"2026-06-23T10:00", title:"Mentor Check-ins", where:"Virtual Office" },
     { start:"2026-06-23T10:00", end:"2026-06-23T10:45", title:"Advance Markets training", where:"Zoom" },
-    { start:"2026-06-23T18:00", end:"2026-06-23T18:30", title:"Kingdom Club Meeting", where:"Zoom" },
-    { start:"2026-06-24T10:30", end:"2026-06-24T11:30", title:"AO call", where:"" },
-    { start:"2026-06-24T11:30", end:"2026-06-24T13:00", title:"National Call", where:"Symmetry · Zoom" },
+    { start:"2026-06-23T18:00", end:"2026-06-23T18:30", title:"Team Meeting", where:"Zoom" },
+    { start:"2026-06-24T10:30", end:"2026-06-24T11:30", title:"Agency call", where:"" },
+    { start:"2026-06-24T11:30", end:"2026-06-24T13:00", title:"National Call", where:"Zoom" },
   ],
   inbox: [
-    { priority:"high", from:"Trevino (client)", subject:"Policy options + submission sent", action:"Follow up on their pick to lock it in." },
-    { priority:"high", from:"Zapier", subject:"71 held tasks · limit reached", action:"Upgrade/reset, then replay held tasks." },
-    { priority:"high", from:"Mutual of Omaha", subject:"Conversion not processing", action:"Call 800-775-7896 if silent by noon." },
-    { priority:"med",  from:"National Life", subject:"3 outstanding requirements", action:"Clear items blocking finalization." },
-    { priority:"med",  from:"Teamtailor", subject:"Invoice #135708 · payment method", action:"Camille back today — push for Stripe." },
-    { priority:"low",  from:"ExamFX", subject:"Licensing study package", action:"Pick Option 1 or 2." },
+    { priority:"high", from:"Rivera (client)", subject:"Policy options + submission sent", action:"Follow up on their pick to lock it in." },
+    { priority:"high", from:"Automation platform", subject:"Held tasks · limit reached", action:"Upgrade/reset, then replay held tasks." },
+    { priority:"high", from:"Carrier", subject:"Conversion not processing", action:"Call the carrier line if silent by noon." },
+    { priority:"med",  from:"Carrier", subject:"3 outstanding requirements", action:"Clear items blocking finalization." },
+    { priority:"med",  from:"Recruiting platform", subject:"Invoice · payment method", action:"Confirm billing update." },
+    { priority:"low",  from:"Exam prep", subject:"Licensing study package", action:"Pick Option 1 or 2." },
   ],
   pipeline: [
     { stage:"Applied / Connected", count:12 },{ stage:"Interview Scheduled", count:5 },
@@ -322,18 +324,18 @@ const DATA = {
     { stage:"Exam Scheduled", count:3 },{ stage:"Licensed", count:2 },{ stage:"Active Producer", count:8 },
   ],
   agents: [
-    { name:"Lyric Crudup", status:"Onboarding", next:"First 2 appts today. Finish SureLC carrier requests." },
-    { name:"Yolanda Lemus", status:"Active", next:"Infinite Banking presentation today 3:00 PM." },
-    { name:"Kem Gaskin", status:"Onboarding", next:"Work the essential onboarding links." },
-    { name:"Nicole Wells", status:"Contracted", next:"Foresters done — schedule first writing." },
-    { name:"Richard Aguilera", status:"Approved", next:"Symmetry approved — kick off onboarding." },
+    { name:"Alex Demo", status:"Onboarding", next:"First 2 appts today. Finish carrier requests." },
+    { name:"Jordan Sample", status:"Active", next:"Infinite Banking presentation today 3:00 PM." },
+    { name:"Casey Example", status:"Onboarding", next:"Work the essential onboarding links." },
+    { name:"Riley Placeholder", status:"Contracted", next:"Contracting done — schedule first writing." },
+    { name:"Morgan Test", status:"Approved", next:"Approved — kick off onboarding." },
   ],
   production: [
-    { name:"Lyric Crudup", dials:64, contacts:21, apps:3, closes:2, commission:1850, apv:4200 },
-    { name:"Yolanda Lemus", dials:51, contacts:18, apps:2, closes:1, commission:1200, apv:3100 },
-    { name:"Nicole Wells", dials:38, contacts:12, apps:1, closes:1, commission:640, apv:1750 },
-    { name:"Richard Aguilera", dials:22, contacts:6, apps:0, closes:0, commission:0, apv:0 },
-    { name:"Kem Gaskin", dials:17, contacts:4, apps:0, closes:0, commission:0, apv:400 },
+    { name:"Alex Demo", dials:64, contacts:21, apps:3, closes:2, commission:1850, apv:4200 },
+    { name:"Jordan Sample", dials:51, contacts:18, apps:2, closes:1, commission:1200, apv:3100 },
+    { name:"Riley Placeholder", dials:38, contacts:12, apps:1, closes:1, commission:640, apv:1750 },
+    { name:"Morgan Test", dials:22, contacts:6, apps:0, closes:0, commission:0, apv:0 },
+    { name:"Casey Example", dials:17, contacts:4, apps:0, closes:0, commission:0, apv:400 },
   ],
 };
 /* ▲▲▲  END EDITABLE DATA  ▲▲▲ */
