@@ -77,17 +77,19 @@ If you do only section 3, output goes up materially with **zero new software.**
 These are the changes actually worth making. Ranked so you can stop at any line and still have
 captured the biggest wins.
 
-| # | Upgrade | Why it helps | Effort | Payoff |
-|---|---------|--------------|--------|--------|
-| 1 | **Upgrade the Claude model IDs** | Config still points at older models (`sonnet-4-6`, `opus-4-7`). The current generation (Opus 4.8, Sonnet 5, Haiku 4.5) is smarter *and* cheaper per unit of quality. One-file change in `config/settings.py`. | Tiny | High |
-| 2 | **Move the daily sync to the cloud** | Today the 7am sync needs your Mac awake. A scheduled GitHub Action can refresh the dashboard on its own, so the portal is always current even from your phone. | Small | High |
-| 3 | **One "morning brief" command** | A single Claude call that reads the day's state and writes a 5-bullet "here's what matters today" summary at the top of the Command Center. Turns data into a decision. | Small | High |
-| 4 | **Weekly digest email to yourself** | Reuse the email connector in reverse: every Monday, email yourself the leaderboard + exposure so the review happens even on a busy week. | Small | Medium |
-| 5 | **Backup/export button in FlowHub** | Data lives in one browser. A one-click export (and the existing restore) protects against a lost laptop or cleared browser. Partly done — finish and surface it. | Small | Medium |
-| 6 | **Persistency + chargeback early-warning** | Flag any agent trending below the 85% persistency floor *before* the chargebacks land, as a red tile on the dashboard. Protects the margin directly. | Medium | High |
+| # | Upgrade | Why it helps | Effort | Payoff | Status |
+|---|---------|--------------|--------|--------|--------|
+| 1 | **Upgrade the Claude model IDs** | Config pointed at older models (`sonnet-4-6`, `opus-4-7`). The current generation (Opus 4.8, Sonnet 5, Haiku 4.5) is smarter *and* cheaper per unit of quality. One-file change in `config/settings.py`. | Tiny | High | ✅ **Done** |
+| 2 | ~~**Move the daily sync to the cloud**~~ | **Not advisable — see the box below.** The website is *public*, and a cloud sync would have to publish your real agency data to it. Keep the sync local. | — | — | ❌ **Won't do** |
+| 5 | **Backup that protects you** | Data lives in one browser. Export/Restore existed, but only helped if you *remembered* to click. Now the app tracks your last backup and nudges you when it's stale. | Small | Medium | ✅ **Done** |
+| 3 | **One "morning brief" command** | A single Claude call that reads the day's state and writes a 5-bullet "here's what matters today" summary at the top of the Command Center. Turns data into a decision. | Small | High | Open |
+| 4 | **Weekly digest email to yourself** | Reuse the email connector in reverse: every Monday, email yourself the leaderboard + exposure so the review happens even on a busy week. | Small | Medium | Open |
+| 6 | **Persistency + chargeback early-warning** | Flag any agent trending below the 85% persistency floor *before* the chargebacks land, as a red tile on the dashboard. Protects the margin directly. | Medium | High | Open |
 
-**Recommended stopping point: do #1 and #2 now.** They are the "set it and forget it" wins — after
-those two, the system keeps itself current and runs on the best models with no ongoing effort.
+> ⚠️ **Why cloud sync was dropped (important).** The repo and its web link (`joemgutierrez77-hub.github.io/...`) are **public**. The dashboard reads a `business-data.js` file that holds real agency numbers — pipeline, agent production, chargeback exposure, and tasks derived from client/carrier emails. That file is deliberately kept **off** the public site (it's gitignored; it lives only on your Mac and browser). A cloud sync would have to publish it to reach your phone — exposing your book of business to anyone online, cached and indexed. The correct design is the one you already have: **sync stays local, business data never touches the public web.** If you ever want it current on your phone, the safe path is making the site private first (needs a paid GitHub plan for private hosting), not publishing the data.
+
+**Done now: #1 and #5** — the two "set it and forget it" wins. The system runs on the best models,
+and your data is protected with an active backup reminder. Nothing else is required.
 
 ---
 
@@ -112,8 +114,9 @@ DAILY  (7:00am, 5 min)   Open bookmark → clear Top-3 → work carrier/recruit/
 WEEKLY (Mon, 20 min)     Import production report → check leaderboard → 1 coaching scorecard
 MONTHLY (1st, 30 min)    Run P&L → run chargeback exposure → run one 6-month projection
 ALWAYS                   Every report that lands gets imported the same day
-NEVER                    Paste a password or real client data into any chat
-UPGRADE ONCE             Do items #1 and #2 in section 4, then let it run
+NEVER                    Paste a password or real client data into any chat —
+                         or publish business data to the PUBLIC website
+DONE / SET               #1 (best models) and #5 (backup + reminder) are complete
 ```
 
 ---
