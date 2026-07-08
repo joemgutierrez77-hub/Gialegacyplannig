@@ -1628,7 +1628,27 @@ function renderBackOffice(){
         <button class="btn ghost" data-action="import-json">⬆️ Restore from Backup</button>
       </div>
       <input type="file" id="import-file" accept=".json" style="display:none">
+      <div style="margin-top:12px">${backupStatusLine()}</div>
     </div>`;
+}
+/* Days since an ISO date (YYYY-MM-DD), or null if never/invalid. */
+function daysSinceISO(iso){
+  if (!iso) return null;
+  const then = new Date(iso + 'T00:00:00');
+  if (isNaN(then)) return null;
+  return Math.floor((new Date(todayISO() + 'T00:00:00') - then) / 86400000);
+}
+/* Status line for the Data Backup card: last backup + a staleness warning. */
+function backupStatusLine(){
+  const days = daysSinceISO(state.meta.lastBackupDate);
+  if (days === null){
+    return `<span style="font-size:13px;color:var(--danger,#d9534f)">⚠️ No backup yet — export one now so a lost laptop or cleared browser can't wipe your data.</span>`;
+  }
+  const when = days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`;
+  if (days >= 7){
+    return `<span style="font-size:13px;color:var(--danger,#d9534f)">⚠️ Last backup ${when}. Time for a fresh one.</span>`;
+  }
+  return `<span style="font-size:13px;color:var(--muted)">Last backup ${when}. ✓</span>`;
 }
 function exportJSON(){
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -1638,6 +1658,9 @@ function exportJSON(){
   a.download = `gia-command-backup-${todayISO()}.json`;
   a.click();
   URL.revokeObjectURL(url);
+  state.meta.lastBackupDate = todayISO();
+  save();
+  renderView(ui.view);
   toast('Backup downloaded ✓');
 }
 function importJSON(){
@@ -2575,6 +2598,15 @@ if (BIZ() && state.business.autoImport){
 renderDock();
 switchView('huddle');
 updatePomoUI();
+// Gentle once-per-load reminder if the backup is stale or was never made.
+(() => {
+  const days = daysSinceISO(state.meta.lastBackupDate);
+  if (days === null){
+    setTimeout(() => toast('⚠️ No backup yet — open Back Office → Data Backup to export one.'), 1600);
+  } else if (days >= 7){
+    setTimeout(() => toast(`⚠️ Last backup was ${days} days ago — export a fresh one in Back Office.`), 1600);
+  }
+})();
 // wire huddle quick-input Enter
 document.addEventListener('keydown', e => {
   if (ui.view === 'huddle' && e.key === 'Enter' && document.activeElement && document.activeElement.id === 'huddle-quick-input'){
