@@ -9,8 +9,8 @@ import os
 # ---------------------------------------------------------------------------
 MODELS = {
     "fast":     "claude-haiku-4-5-20251001",   # data entry, simple Q&A, routing
-    "standard": "claude-sonnet-4-6",            # reports, coaching feedback, analysis
-    "advanced": "claude-opus-4-7",              # strategic planning, complex scenarios
+    "standard": "claude-sonnet-5",              # reports, coaching feedback, analysis
+    "advanced": "claude-opus-4-8",              # strategic planning, complex scenarios
 }
 
 # Default model per business module
@@ -25,10 +25,12 @@ MODULE_MODELS = {
 # ---------------------------------------------------------------------------
 # API cost tracking (per million tokens, USD) — update if Anthropic pricing changes
 # ---------------------------------------------------------------------------
+# Cache-write is ~1.25x the input rate, cache-read is ~0.1x. List prices below;
+# Sonnet 5 has promotional input/output pricing ($2/$10) through 2026-08-31.
 COST_PER_MILLION = {
-    MODELS["fast"]:     {"input": 0.80,  "output": 4.00,  "cache_write": 1.00,  "cache_read": 0.08},
-    MODELS["standard"]: {"input": 3.00,  "output": 15.00, "cache_write": 3.75,  "cache_read": 0.30},
-    MODELS["advanced"]: {"input": 15.00, "output": 75.00, "cache_write": 18.75, "cache_read": 1.50},
+    MODELS["fast"]:     {"input": 1.00, "output": 5.00,  "cache_write": 1.25, "cache_read": 0.10},
+    MODELS["standard"]: {"input": 3.00, "output": 15.00, "cache_write": 3.75, "cache_read": 0.30},
+    MODELS["advanced"]: {"input": 5.00, "output": 25.00, "cache_write": 6.25, "cache_read": 0.50},
 }
 
 # ---------------------------------------------------------------------------
