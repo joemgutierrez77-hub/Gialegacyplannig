@@ -318,6 +318,11 @@ def export_flowhub() -> str:
         f.write("window.BUSINESS_DATA = ")
         json.dump(snapshot, f, indent=2)
         f.write(";\n")
+    # Portable copy for the hosted portal: import via
+    # Back Office → Import Agency Data (JSON). Gitignored — never committed.
+    portable = os.path.join(os.path.dirname(path), "..", "GIA-agency-data.json")
+    with open(os.path.abspath(portable), "w") as f:
+        json.dump(snapshot, f, indent=2)
     # Also feed the standalone Jarvis command center (dashboard.html).
     try:
         from src.modules.dashboard_export import write_dashboard

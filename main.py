@@ -152,14 +152,16 @@ def cmd_flowhub(args):
         env = load_env()
         accts = load_email_accounts()
         print("\n--- Connect external tools to FlowHub ---")
-        print(f"  Teamtailor: {'✅ connected' if env.get('TEAMTAILOR_API_KEY') else '— not connected'}")
-        print(f"  Calendly:   {'✅ connected' if env.get('CALENDLY_API_TOKEN') else '— not connected'}")
-        print(f"  Email:      {'✅ ' + str(len(accts)) + ' account(s)' if accts else '— not connected'}")
+        print(f"  Teamtailor:  {'✅ connected' if env.get('TEAMTAILOR_API_KEY') else '— not connected'}")
+        print(f"  Calendly:    {'✅ connected' if env.get('CALENDLY_API_TOKEN') else '— not connected'}")
+        print(f"  GoHighLevel: {'✅ connected' if env.get('GHL_API_KEY') else '— not connected'}")
+        print(f"  Email:       {'✅ ' + str(len(accts)) + ' account(s)' if accts else '— not connected'}")
         print("\nWhich do you want to set up?")
-        print("  1) Teamtailor  (recruits sync into your pipeline)")
-        print("  2) Calendly    (meetings appear on your FlowHub calendar)")
-        print("  3) Email       (carrier/recruit/client emails become tasks + a daily digest)")
-        choice = input("Enter 1, 2 or 3: ").strip()
+        print("  1) Teamtailor   (recruits sync into your pipeline)")
+        print("  2) Calendly     (meetings appear on your FlowHub calendar)")
+        print("  3) Email        (carrier/recruit/client emails become tasks + a daily digest)")
+        print("  4) GoHighLevel  (appointment-funnel bookings appear on your calendar)")
+        choice = input("Enter 1, 2, 3 or 4: ").strip()
         if choice == "1":
             print("\nGet your key: Teamtailor → Settings → API keys → New API key (read scope).")
             key = input("Paste your Teamtailor API key: ").strip()
@@ -175,6 +177,19 @@ def cmd_flowhub(args):
                 print("Saved. Run `python main.py flowhub sync` to pull meetings now.")
         elif choice == "3":
             _connect_email()
+        elif choice == "4":
+            print("\nGet your key: GoHighLevel → Settings → Business Profile → API Key,")
+            print("or (newer accounts) Settings → Private Integrations → create token (pit-…)")
+            print("with calendar read scopes.")
+            key = input("Paste your GoHighLevel API key: ").strip()
+            if key:
+                save_env_key("GHL_API_KEY", key)
+                if key.startswith("pit-"):
+                    loc = input("Private tokens also need your Location ID "
+                                "(Settings → Business Profile): ").strip()
+                    if loc:
+                        save_env_key("GHL_LOCATION_ID", loc)
+                print("Saved. Run `python main.py flowhub sync` to pull appointments now.")
         else:
             print("Nothing changed.")
 

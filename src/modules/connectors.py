@@ -19,7 +19,7 @@ never blocking the rest of the sync.
 import csv
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from config.settings import AGENCY, DATA_DIR
 
@@ -44,7 +44,8 @@ def load_env() -> dict:
                 if line and not line.startswith("#") and "=" in line:
                     k, v = line.split("=", 1)
                     vals[k.strip()] = v.strip().strip('"').strip("'")
-    for key in ("TEAMTAILOR_API_KEY", "CALENDLY_API_TOKEN"):
+    for key in ("TEAMTAILOR_API_KEY", "CALENDLY_API_TOKEN",
+                "GHL_API_KEY", "GHL_LOCATION_ID"):
         if os.environ.get(key):
             vals[key] = os.environ[key]
     return vals
@@ -178,6 +179,92 @@ def fetch_calendly_events(token: str) -> list:
     )
     resp.raise_for_status()
     return parse_calendly_events(resp.json())
+
+
+# ---------------------------------------------------------------------------
+# GoHighLevel → appointment-funnel bookings onto the FlowHub calendar
+# ---------------------------------------------------------------------------
+
+def parse_ghl_appointments(items: list) -> list:
+    """Convert GoHighLevel appointment records into FlowHub events (pure).
+
+    Handles both v1 (`appointments`) and v2 (`events`) payload field names.
+    """
+    out = []
+    for ev in items:
+        start = ev.get("startTime") or ev.get("appointmentStartTime") or ""
+        end = ev.get("endTime") or ev.get("appointmentEndTime") or ""
+        status = (ev.get("appointmentStatus") or ev.get("status") or "").lower()
+        if status in ("cancelled", "noshow", "invalid"):
+            continue
+        try:
+            s = datetime.fromisoformat(str(start).replace("Z", "+00:00")).astimezone()
+        except (ValueError, TypeError):
+            continue
+        try:
+            e = datetime.fromisoformat(str(end).replace("Z", "+00:00")).astimezone()
+            duration = max(int((e - s).total_seconds() // 60), 15)
+        except (ValueError, TypeError):
+            duration = 30
+        who = (ev.get("contact") or {}).get("name") or ev.get("contactName") or ""
+        title = ev.get("title") or ev.get("calendarName") or "Appointment"
+        if who and who.lower() not in title.lower():
+            title = f"{title} — {who}"
+        out.append({
+            "key": "ghl-" + str(ev.get("id") or ev.get("appointmentId") or start),
+            "title": title,
+            "date": s.strftime("%Y-%m-%d"),
+            "time": s.strftime("%H:%M"),
+            "duration": duration,
+        })
+    return out
+
+
+def fetch_ghl_events(api_key: str, location_id: str = "") -> list:
+    """Fetch upcoming appointments from GoHighLevel (next 30 days).
+
+    Supports both auth styles:
+      - Private Integration token (starts with "pit-") → v2 API, needs GHL_LOCATION_ID
+      - Location API key (JWT from Settings → API Keys)  → v1 API
+    """
+    import requests
+    now = datetime.now(timezone.utc)
+    end = now + timedelta(days=30)
+    items = []
+    if api_key.startswith("pit-") or location_id:
+        # v2 (LeadConnector) API
+        headers = {"Authorization": f"Bearer {api_key}", "Version": "2021-04-15"}
+        base = "https://services.leadconnectorhq.com"
+        cals = requests.get(f"{base}/calendars/", headers=headers,
+                            params={"locationId": location_id}, timeout=20)
+        cals.raise_for_status()
+        for cal in cals.json().get("calendars", []):
+            resp = requests.get(f"{base}/calendars/events", headers=headers, params={
+                "locationId": location_id,
+                "calendarId": cal.get("id"),
+                "startTime": int(now.timestamp() * 1000),
+                "endTime": int(end.timestamp() * 1000),
+            }, timeout=20)
+            if resp.ok:
+                items.extend(resp.json().get("events", []))
+    else:
+        # v1 API
+        headers = {"Authorization": f"Bearer {api_key}"}
+        base = "https://rest.gohighlevel.com/v1"
+        cals = requests.get(f"{base}/calendars/", headers=headers, timeout=20)
+        cals.raise_for_status()
+        payload = cals.json()
+        calendars = payload.get("calendars") or payload.get("teams") or []
+        for cal in calendars:
+            resp = requests.get(f"{base}/appointments/", headers=headers, params={
+                "calendarId": cal.get("id"),
+                "startDate": int(now.timestamp() * 1000),
+                "endDate": int(end.timestamp() * 1000),
+                "includeAll": "true",
+            }, timeout=20)
+            if resp.ok:
+                items.extend(resp.json().get("appointments", []))
+    return parse_ghl_appointments(items)
 
 
 # ---------------------------------------------------------------------------
@@ -609,6 +696,13 @@ def run_connectors() -> dict:
             result["calendly_events"] = fetch_calendly_events(env["CALENDLY_API_TOKEN"])
         except Exception as e:
             result["errors"].append(f"Calendly: {e}")
+
+    if env.get("GHL_API_KEY"):
+        try:
+            result["calendly_events"] = result["calendly_events"] + fetch_ghl_events(
+                env["GHL_API_KEY"], env.get("GHL_LOCATION_ID", ""))
+        except Exception as e:
+            result["errors"].append(f"GoHighLevel: {e}")
 
     try:
         from src.modules.email_connector import run_email_connector
