@@ -74,10 +74,14 @@ python main.py flowhub import-policies    --file issued.csv  # issued policies
 python main.py flowhub import-chargebacks --file cb.csv    # chargebacks (marks policies lapsed)
 ```
 
-`import-all` reads each row's Status (Pending/Submitted → pending apps, Issued/Active → ledger,
-Lapsed/Chargeback/Cancelled → chargebacks) and routes it automatically. Re-importing an updated
-report is always safe: existing rows are skipped, changed statuses are updated, and an app that
-goes pending → issued is closed out so it stops generating underwriting follow-up tasks.
+`import-all` auto-detects the report shape. A **per-policy** report (one row per policy, with a
+Status column) is routed by each row's Status: Pending/Submitted → pending apps, Issued/Active →
+ledger, Lapsed/Chargeback/Cancelled → chargebacks. A **per-agent production summary** (agent name +
+APV + app counts per agent, e.g. Quility HQ "Submitted Details") instead updates each agent's
+monthly production on the roster — so agent names are kept and submitted business is never
+mis-booked as issued, paid policies. Re-importing an updated report is always safe: per-policy rows
+are skipped or status-updated, and a re-pulled production summary replaces that agent's month rather
+than double-counting.
 
 On macOS, **`ImportReports.command`** (project root) does it all without typing: double-click,
 pick the report type, drag the CSV into the window. Pending apps stuck in underwriting 14+ days

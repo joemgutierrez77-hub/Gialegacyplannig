@@ -10,6 +10,7 @@ def isolated_data(tmp_path, monkeypatch):
     monkeypatch.setattr(con, "PIPELINE_FILE", str(tmp_path / "recruits" / "pipeline.json"))
     monkeypatch.setattr(con, "LEDGER_FILE", str(tmp_path / "policies" / "ledger.json"))
     monkeypatch.setattr(con, "PENDING_FILE", str(tmp_path / "policies" / "pending.json"))
+    monkeypatch.setattr(con, "ROSTER_FILE", str(tmp_path / "agents" / "roster.json"))
     monkeypatch.setattr(con, "ENV_FILE", str(tmp_path / ".env"))
     yield tmp_path
 
@@ -244,6 +245,44 @@ def test_real_tracker_format(isolated_data):
     res2 = import_combined_csv(str(f))
     assert res2["issued"]["added"] == 0 and res2["chargebacks"]["added"] == 0
     assert res2["pending"]["added"] == 0
+
+
+def test_submitted_details_routes_to_roster(isolated_data):
+    """Quility HQ 'Submitted Details' is a per-agent production summary, not a
+    policy ledger: agent names must survive and rows must NOT become issued,
+    paid policies. It feeds the roster's monthly_stats instead."""
+    from src.modules.connectors import import_all_auto
+    f = isolated_data / "submitted.csv"
+    f.write_text(
+        '"AgentID","AgentCode","AgentName","OptID","Apv","Apps","Status","Division"\n'
+        '444677,"SFG0015519","Joe Gutierrez Jr","JOEG",415.08,1,"Active","Field"\n'
+        '458017,"SFG0017122","Sarah Gonzales-Gutierrez","SARAHG4",499.2,1,"Active","Field"\n'
+        '828791,"SFG0086919","Erik Mendoza","ERIKM9",1963.44,3,"Active","Field"\n'
+        '835463,"SFG0093580","LiQuiche Young","LIQUICHEY1",389.88,2,"Active","Field"\n'
+        '458017,"SFG0017122","Sarah Gonzales-Gutierrez","SARAHG4",499.2,1,"Active","Field"\n'
+    )
+    res = import_all_auto(str(f), month="2026-07")
+    assert res["type"] == "production"
+    assert res["added"] == 4                      # Sarah's duplicate row is not a 5th agent
+    assert not (isolated_data / "policies" / "ledger.json").exists()  # nothing booked as issued
+
+    roster = json.loads((isolated_data / "agents" / "roster.json").read_text())
+    names = {a["name"] for a in roster}
+    assert names == {"Joe Gutierrez Jr", "Sarah Gonzales-Gutierrez",
+                     "Erik Mendoza", "LiQuiche Young"}
+    erik = next(a for a in roster if a["name"] == "Erik Mendoza")
+    assert erik["monthly_stats"][-1]["apv"] == 1963.44
+    assert erik["monthly_stats"][-1]["apps_submitted"] == 3
+    sarah = next(a for a in roster if a["name"] == "Sarah Gonzales-Gutierrez")
+    assert len(sarah["monthly_stats"]) == 1       # duplicate collapsed, not summed
+    assert sarah["monthly_stats"][-1]["apv"] == 499.2
+
+    # Re-import the same month replaces rather than double-counts
+    res2 = import_all_auto(str(f), month="2026-07")
+    assert res2["updated"] == 4 and res2["added"] == 0
+    roster2 = json.loads((isolated_data / "agents" / "roster.json").read_text())
+    erik2 = next(a for a in roster2 if a["name"] == "Erik Mendoza")
+    assert len(erik2["monthly_stats"]) == 1
 
 
 def test_pending_reimport_updates_changed_status(isolated_data):

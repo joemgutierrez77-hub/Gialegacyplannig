@@ -27,6 +27,7 @@ ENV_FILE = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
 PIPELINE_FILE = os.path.join(DATA_DIR, "recruits", "pipeline.json")
 LEDGER_FILE = os.path.join(DATA_DIR, "policies", "ledger.json")
 PENDING_FILE = os.path.join(DATA_DIR, "policies", "pending.json")
+ROSTER_FILE = os.path.join(DATA_DIR, "agents", "roster.json")
 
 
 # ---------------------------------------------------------------------------
@@ -187,8 +188,11 @@ def fetch_calendly_events(token: str) -> list:
 # Flexible header matching: internal field → accepted column names (lowercased)
 CSV_ALIASES = {
     "policy_number":  ["policy number", "policy #", "policy", "policy_no", "policy num"],
-    "agent_name":     ["agent", "agent name", "writing agent", "producer"],
+    "agent_name":     ["agent", "agent name", "agentname", "writing agent",
+                       "producer", "producer name"],
     "applicant_name": ["client", "client name", "insured", "applicant", "applicant name"],
+    "apps_submitted": ["apps", "apps submitted", "submitted apps", "applications",
+                       "app count", "# apps"],
     "carrier":        ["carrier", "company", "insurer"],
     "issue_date":     ["issue date", "issued", "effective date", "date issued"],
     "annual_premium": ["annual premium", "apv", "premium", "annualized premium", "ap"],
@@ -585,6 +589,113 @@ def import_combined_csv(path: str, commission_pct: float = 0.70) -> dict:
     resolved += _resolve_pending(buckets["chargeback"], mapping, "approved")
     result["pending"]["resolved"] = resolved
     return result
+
+
+# ---------------------------------------------------------------------------
+# Agent production summary (per-agent APV + app counts, e.g. Quility HQ
+# "Submitted Details"). These reports carry no per-policy identity, so they
+# feed the agent roster's monthly stats — NOT the policy ledger. Routing them
+# through the policy importer would lose agent names and mis-book submitted
+# business as issued, paid policies.
+# ---------------------------------------------------------------------------
+
+def _is_production_summary(mapping: dict) -> bool:
+    """
+    True when a report is a per-agent production summary: it names an agent and
+    counts apps, but has no per-policy identity (no applicant/client, no policy
+    number). Pure and testable off the column mapping alone.
+    """
+    return (
+        "agent_name" in mapping
+        and "apps_submitted" in mapping
+        and "applicant_name" not in mapping
+        and "policy_number" not in mapping
+    )
+
+
+def _import_production_rows(rows: list, mapping: dict, month: str) -> dict:
+    """
+    Upsert per-agent submitted production into the roster's monthly_stats.
+    One row = one agent's total for the month; re-importing the same agent+month
+    replaces that record (so duplicate rows and weekly re-pulls never double-count).
+    """
+    roster = []
+    if os.path.exists(ROSTER_FILE):
+        with open(ROSTER_FILE) as f:
+            roster = json.load(f)
+    by_name = {a["name"].lower(): a for a in roster}
+    pre_existing = set(by_name)          # agents on the roster before this import
+
+    seen = {}                            # name -> final row values (last row wins)
+    for row in rows:
+        get = _row_getter(row, mapping)
+        name = _clean_text(get("agent_name"))
+        if not name:
+            continue
+        apv = _parse_money(get("annual_premium"))
+        apps = int(round(_parse_money(get("apps_submitted"))))
+        agent = by_name.get(name.lower())
+        if not agent:
+            agent = {
+                "id": max((a["id"] for a in roster), default=0) + 1,
+                "name": name,
+                "start_date": datetime.today().strftime("%Y-%m-%d"),
+                "license_state": "",
+                "status": "active",
+                "monthly_stats": [],
+            }
+            roster.append(agent)
+            by_name[name.lower()] = agent
+        record = {
+            "month":          month,
+            "contacts":       0,
+            "appointments":   0,
+            "apps_submitted": apps,
+            "apps_issued":    0,
+            "apv":            round(apv, 2),
+            "chargebacks":    0.0,
+            "persistency":    None,
+            "logged_at":      datetime.today().strftime("%Y-%m-%d"),
+            "source":         "submitted_details",
+        }
+        agent["monthly_stats"] = [s for s in agent.get("monthly_stats", [])
+                                  if s.get("month") != month] + [record]
+        seen[name.lower()] = {"name": name, "apps": apps, "apv": round(apv, 2)}
+
+    added = sum(1 for k in seen if k not in pre_existing)
+    updated = sum(1 for k in seen if k in pre_existing)
+
+    os.makedirs(os.path.dirname(ROSTER_FILE), exist_ok=True)
+    with open(ROSTER_FILE, "w") as f:
+        json.dump(roster, f, indent=2)
+    return {"added": added, "updated": updated, "month": month,
+            "agents": list(seen.values())}
+
+
+def import_production_summary_csv(path: str, month: str = None) -> dict:
+    """
+    Import a per-agent production summary (APV + app counts) into the roster.
+    `month` defaults to the current calendar month (YYYY-MM).
+    Returns {'added','updated','month','agents':[...],'unmapped':[...]}.
+    """
+    month = month or datetime.today().strftime("%Y-%m")
+    rows, mapping, headers = _read_csv(path, required=["agent_name", "apps_submitted"])
+    res = _import_production_rows(rows, mapping, month)
+    res["unmapped"] = [h for h in headers if h not in mapping.values()]
+    return res
+
+
+def import_all_auto(path: str, commission_pct: float = 0.70, month: str = None) -> dict:
+    """
+    Route a report to the right importer by its shape. Per-agent production
+    summaries go to the roster; per-policy reports go through the combined
+    pending/issued/chargeback importer. Returns the chosen importer's result
+    with a 'type' key ('production' or 'policy').
+    """
+    _rows, mapping, _headers = _read_csv(path, required=[])
+    if _is_production_summary(mapping):
+        return {"type": "production", **import_production_summary_csv(path, month=month)}
+    return {"type": "policy", **import_combined_csv(path, commission_pct=commission_pct)}
 
 
 # ---------------------------------------------------------------------------
