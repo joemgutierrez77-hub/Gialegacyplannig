@@ -1155,7 +1155,7 @@ function dashQuickAdd(){
    BUSINESS — live agency data from `python main.py flowhub sync`
    (loads productivity/business-data.js when present)
    ===================================================================== */
-const BIZ = () => window.BUSINESS_DATA || null;
+const BIZ = () => window.BUSINESS_DATA || state.bizData || null;
 const STAGE_ORDER = ['new_lead','watched_info','committed','licensing_started','passed_exam','contracting','contracted','active','nurture','cold','inactive'];
 const stageLabel = s => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 function bizProject(){
@@ -1628,6 +1628,15 @@ function renderBackOffice(){
         <button class="btn ghost" data-action="import-json">⬆️ Restore from Backup</button>
       </div>
       <input type="file" id="import-file" accept=".json" style="display:none">
+    </div>
+    <div class="card" style="max-width:600px;margin-top:18px">
+      <div class="dash-section-title">Agency Data</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Load your leaderboard, roster, and pipeline from an agency data file (JSON). The data is stored only in this browser — it is never uploaded anywhere.${state.bizData ? `<br><b style="color:var(--green)">Loaded:</b> ${esc(state.bizData.agency || 'agency data')} · synced ${esc(state.bizData.generatedAt || '')}` : ''}</p>
+      <div style="display:flex;gap:10px">
+        <button class="btn primary" data-action="import-bizdata">📊 Import Agency Data (JSON)</button>
+        ${state.bizData ? '<button class="btn ghost" data-action="clear-bizdata">Remove Agency Data</button>' : ''}
+      </div>
+      <input type="file" id="import-bizdata-file" accept=".json" style="display:none">
     </div>`;
 }
 function exportJSON(){
@@ -1656,6 +1665,29 @@ function importJSON(){
         save();
         renderView(ui.view);
         toast('Backup restored ✓');
+      } catch { toast('⚠️ Could not read file'); }
+    };
+    reader.readAsText(file.files[0]);
+    file.value = '';
+  };
+  file.click();
+}
+function importBizData(){
+  const file = document.getElementById('import-bizdata-file');
+  file.onchange = () => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.recruiting || !data.production) { toast('⚠️ Not an agency data file'); return; }
+        state.bizData = data;
+        save();
+        if (state.business.autoImport){
+          const n = importBusinessTasks();
+          if (n) toast(`💼 ${n} business task${n > 1 ? 's' : ''} added for today`);
+        }
+        renderView(ui.view);
+        toast('Agency data loaded ✓');
       } catch { toast('⚠️ Could not read file'); }
     };
     reader.readAsText(file.files[0]);
@@ -2509,6 +2541,8 @@ document.addEventListener('click', e => {
     case 'portals-save': savePortals(); break;
     case 'export-json': exportJSON(); break;
     case 'import-json': importJSON(); break;
+    case 'import-bizdata': importBizData(); break;
+    case 'clear-bizdata': if (confirm('Remove the loaded agency data from this browser?')){ delete state.bizData; save(); renderView(ui.view); toast('Agency data removed'); } break;
     /* arcade */
     case 'snake-start': snakeStart(); break;
   }
