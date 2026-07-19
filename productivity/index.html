@@ -309,7 +309,7 @@
   /* ---------- Arcade ---------- */
   .arcade-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:8px}
   .arcade-hud{display:flex;gap:14px}
-  #snake-canvas{background:#0a0d12;border:1px solid var(--border2);border-radius:12px;box-shadow:var(--shadow)}
+  #tetris-canvas,#tetris-next{background:#0a0d12;border:1px solid var(--border2);border-radius:12px;box-shadow:var(--shadow)}
   .arcade-help{font-size:12.5px;color:var(--faint)}
 
   /* ---------- Modal / toast ---------- */
@@ -503,15 +503,23 @@
     </section>
 
     <section class="view" id="view-arcade">
-      <div class="view-head"><div class="view-title">Arcade · Snake</div></div>
+      <div class="view-head"><div class="view-title">Arcade · Tetris</div></div>
       <div class="view-pad arcade-wrap">
         <div class="arcade-hud">
-          <span class="chip" style="font-size:13px;padding:6px 14px">Score: <b id="snake-score" style="margin-left:5px">0</b></span>
-          <span class="chip" style="font-size:13px;padding:6px 14px">🏆 Best: <b id="snake-best" style="margin-left:5px">0</b></span>
+          <span class="chip" style="font-size:13px;padding:6px 14px">Score: <b id="tetris-score" style="margin-left:5px">0</b></span>
+          <span class="chip" style="font-size:13px;padding:6px 14px">Lines: <b id="tetris-lines" style="margin-left:5px">0</b></span>
+          <span class="chip" style="font-size:13px;padding:6px 14px">Level: <b id="tetris-level" style="margin-left:5px">1</b></span>
+          <span class="chip" style="font-size:13px;padding:6px 14px">🏆 Best: <b id="tetris-best" style="margin-left:5px">0</b></span>
         </div>
-        <canvas id="snake-canvas" width="440" height="440"></canvas>
-        <button class="btn primary" id="snake-btn" data-action="snake-start">▶ Start Game</button>
-        <div class="arcade-help">Arrow keys / WASD to steer · Space to pause · Eat squares, don't hit walls or yourself.</div>
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <canvas id="tetris-canvas" width="280" height="560"></canvas>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
+            <span class="arcade-help">Next</span>
+            <canvas id="tetris-next" width="112" height="112"></canvas>
+          </div>
+        </div>
+        <button class="btn primary" id="tetris-btn" data-action="tetris-start">▶ Start Game</button>
+        <div class="arcade-help">← → / A D move · ↓ / S soft drop · ↑ / W rotate · Space hard drop · P pause</div>
       </div>
     </section>
 
@@ -566,7 +574,7 @@
 'use strict';
 /* =====================================================================
    FlowHub — single-file personal productivity app
-   Modules: dashboard, tasks, kanban, calendar, notes, pomodoro, snake
+   Modules: dashboard, tasks, kanban, calendar, notes, pomodoro, tetris
    All state persisted to localStorage. No network, no dependencies.
    ===================================================================== */
 
@@ -1252,6 +1260,7 @@ function renderBusiness(){
     return `<div class="dash-event">
       <span style="flex:1;font-size:13.5px">${esc(a.name)}</span>
       <span class="chip">${a.last_month ? esc(a.last_month) : 'no data'}</span>
+      <span class="chip">${a.apps_submitted ?? a.apps_issued ?? 0} apps</span>
       <span class="chip" style="color:${pct >= 100 ? 'var(--green)' : pct >= 60 ? 'var(--amber)' : 'var(--red)'}">$${(a.apv || 0).toLocaleString()} · ${pct}%</span>
       ${a.persistency !== null && a.persistency !== undefined ? `<span class="chip" style="color:${persistBad ? 'var(--red)' : 'var(--green)'}">${Math.round(a.persistency * 100)}% persist</span>` : ''}
     </div>`;
@@ -2249,105 +2258,183 @@ function renderPomodoroStats(){
 }
 
 /* =====================================================================
-   SNAKE
+   TETRIS
    ===================================================================== */
-const SN = { cell: 22, cols: 20, rows: 20, snake: [], dir: null, nextDir: null, food: null, score: 0, timer: null, playing: false, paused: false, speed: 130 };
-function snakeDraw(){
-  const cv = $('#snake-canvas'), ctx = cv.getContext('2d');
+const TT = { cell: 28, cols: 10, rows: 20, grid: [], piece: null, next: null, bag: [],
+             score: 0, lines: 0, level: 1, timer: null, playing: false, paused: false };
+const TT_PIECES = [
+  { c: '#22d3ee', m: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]] }, // I
+  { c: '#fbbf24', m: [[1,1],[1,1]] },                             // O
+  { c: '#7c8cff', m: [[0,1,0],[1,1,1],[0,0,0]] },                 // T
+  { c: '#4ade80', m: [[0,1,1],[1,1,0],[0,0,0]] },                 // S
+  { c: '#f87171', m: [[1,1,0],[0,1,1],[0,0,0]] },                 // Z
+  { c: '#60a5fa', m: [[1,0,0],[1,1,1],[0,0,0]] },                 // J
+  { c: '#f472b6', m: [[0,0,1],[1,1,1],[0,0,0]] },                 // L
+];
+const ttBest = () => state.game.tetrisBest || 0;
+function ttDraw(){
+  const cv = $('#tetris-canvas'), ctx = cv.getContext('2d'), c = TT.cell;
   ctx.fillStyle = '#0a0d12'; ctx.fillRect(0, 0, cv.width, cv.height);
-  // subtle grid
   ctx.strokeStyle = 'rgba(255,255,255,.03)';
-  for (let i = 1; i < SN.cols; i++){ ctx.beginPath(); ctx.moveTo(i * SN.cell, 0); ctx.lineTo(i * SN.cell, cv.height); ctx.stroke(); }
-  for (let i = 1; i < SN.rows; i++){ ctx.beginPath(); ctx.moveTo(0, i * SN.cell); ctx.lineTo(cv.width, i * SN.cell); ctx.stroke(); }
-  if (SN.food){
-    ctx.fillStyle = '#f87171';
-    const fx = SN.food.x * SN.cell, fy = SN.food.y * SN.cell;
-    ctx.beginPath(); ctx.roundRect(fx + 4, fy + 4, SN.cell - 8, SN.cell - 8, 6); ctx.fill();
+  for (let i = 1; i < TT.cols; i++){ ctx.beginPath(); ctx.moveTo(i * c, 0); ctx.lineTo(i * c, cv.height); ctx.stroke(); }
+  for (let i = 1; i < TT.rows; i++){ ctx.beginPath(); ctx.moveTo(0, i * c); ctx.lineTo(cv.width, i * c); ctx.stroke(); }
+  const cell = (x, y, color, r = 5) => { ctx.fillStyle = color;
+    ctx.beginPath(); ctx.roundRect(x * c + 1.5, y * c + 1.5, c - 3, c - 3, r); ctx.fill(); };
+  TT.grid.forEach((row, y) => row.forEach((col, x) => { if (col) cell(x, y, col); }));
+  if (TT.piece && TT.playing){
+    const gy = ttGhostY();                       // ghost landing preview
+    ctx.globalAlpha = 0.18;
+    ttEachCell(TT.piece.m, (x, y) => cell(TT.piece.x + x, gy + y, TT.piece.c));
+    ctx.globalAlpha = 1;
+    ttEachCell(TT.piece.m, (x, y) => cell(TT.piece.x + x, TT.piece.y + y, TT.piece.c, 6));
   }
-  SN.snake.forEach((seg, i) => {
-    const alpha = 1 - (i / Math.max(SN.snake.length, 1)) * 0.55;
-    ctx.fillStyle = i === 0 ? '#a5b4ff' : `rgba(124,140,255,${alpha})`;
-    ctx.beginPath(); ctx.roundRect(seg.x * SN.cell + 1.5, seg.y * SN.cell + 1.5, SN.cell - 3, SN.cell - 3, i === 0 ? 7 : 5); ctx.fill();
-  });
-  if (!SN.playing && SN.snake.length){
+  if (!TT.playing && (TT.score || TT.lines)){
     ctx.fillStyle = 'rgba(5,8,12,.72)'; ctx.fillRect(0, 0, cv.width, cv.height);
     ctx.fillStyle = '#e7ebf2'; ctx.font = '700 26px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('Game Over', cv.width / 2, cv.height / 2 - 12);
     ctx.font = '14px sans-serif'; ctx.fillStyle = '#8b95a8';
-    ctx.fillText(`Score ${SN.score} · Best ${state.game.highScore}`, cv.width / 2, cv.height / 2 + 16);
-  } else if (SN.paused){
+    ctx.fillText(`Score ${TT.score} · Best ${ttBest()}`, cv.width / 2, cv.height / 2 + 16);
+  } else if (TT.paused){
     ctx.fillStyle = 'rgba(5,8,12,.6)'; ctx.fillRect(0, 0, cv.width, cv.height);
     ctx.fillStyle = '#e7ebf2'; ctx.font = '700 22px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('Paused — press Space', cv.width / 2, cv.height / 2);
+    ctx.fillText('Paused — press P', cv.width / 2, cv.height / 2);
   }
+  ttDrawNext();
 }
-function snakeSpawnFood(){
-  let p;
-  do { p = { x: Math.floor(Math.random() * SN.cols), y: Math.floor(Math.random() * SN.rows) }; }
-  while (SN.snake.some(s => s.x === p.x && s.y === p.y));
-  SN.food = p;
+function ttDrawNext(){
+  const cv = $('#tetris-next'), ctx = cv.getContext('2d');
+  ctx.fillStyle = '#0a0d12'; ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!TT.next) return;
+  const m = TT.next.m, n = m.length, s = 24;
+  const ox = (cv.width - n * s) / 2, oy = (cv.height - n * s) / 2;
+  ttEachCell(m, (x, y) => { ctx.fillStyle = TT.next.c;
+    ctx.beginPath(); ctx.roundRect(ox + x * s + 1.5, oy + y * s + 1.5, s - 3, s - 3, 5); ctx.fill(); });
 }
-function snakeStart(){
-  clearInterval(SN.timer);
-  SN.snake = [{x: 9, y: 10}, {x: 8, y: 10}, {x: 7, y: 10}];
-  SN.dir = {x: 1, y: 0}; SN.nextDir = {x: 1, y: 0};
-  SN.score = 0; SN.playing = true; SN.paused = false; SN.speed = 130;
-  snakeSpawnFood();
-  $('#snake-score').textContent = '0';
-  $('#snake-btn').textContent = '↻ Restart';
-  SN.timer = setInterval(snakeStep, SN.speed);
-  snakeDraw();
+function ttEachCell(m, fn){ m.forEach((row, y) => row.forEach((v, x) => { if (v) fn(x, y); })); }
+function ttCollides(m, px, py){
+  let hit = false;
+  ttEachCell(m, (x, y) => {
+    const gx = px + x, gy = py + y;
+    if (gx < 0 || gx >= TT.cols || gy >= TT.rows || (gy >= 0 && TT.grid[gy][gx])) hit = true;
+  });
+  return hit;
 }
-function snakeStep(){
-  if (SN.paused || !SN.playing) return;
-  SN.dir = SN.nextDir;
-  const head = { x: SN.snake[0].x + SN.dir.x, y: SN.snake[0].y + SN.dir.y };
-  if (head.x < 0 || head.y < 0 || head.x >= SN.cols || head.y >= SN.rows || SN.snake.some(s => s.x === head.x && s.y === head.y)){
-    return snakeGameOver();
-  }
-  SN.snake.unshift(head);
-  if (SN.food && head.x === SN.food.x && head.y === SN.food.y){
-    SN.score++;
-    $('#snake-score').textContent = SN.score;
-    snakeSpawnFood();
-    if (SN.score % 5 === 0 && SN.speed > 70){ // speed up gently every 5 points
-      SN.speed -= 8; clearInterval(SN.timer); SN.timer = setInterval(snakeStep, SN.speed);
+function ttRotated(m){ return m[0].map((_, i) => m.map(row => row[i]).reverse()); }
+function ttGhostY(){
+  let y = TT.piece.y;
+  while (!ttCollides(TT.piece.m, TT.piece.x, y + 1)) y++;
+  return y;
+}
+function ttFromBag(){
+  if (!TT.bag.length){
+    TT.bag = TT_PIECES.map((_, i) => i);                 // 7-bag: fair piece order
+    for (let i = TT.bag.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [TT.bag[i], TT.bag[j]] = [TT.bag[j], TT.bag[i]];
     }
-  } else {
-    SN.snake.pop();
   }
-  snakeDraw();
+  const p = TT_PIECES[TT.bag.pop()];
+  return { m: p.m.map(r => [...r]), c: p.c, x: 0, y: 0 };
 }
-function snakeGameOver(){
-  SN.playing = false;
-  clearInterval(SN.timer);
-  if (SN.score > state.game.highScore){
-    state.game.highScore = SN.score; save();
-    toast(`🏆 New high score: ${SN.score}!`);
+function ttSpawn(){
+  TT.piece = TT.next || ttFromBag();
+  TT.next = ttFromBag();
+  TT.piece.x = Math.floor((TT.cols - TT.piece.m[0].length) / 2);
+  TT.piece.y = 0;
+  if (ttCollides(TT.piece.m, TT.piece.x, TT.piece.y)) return ttGameOver();
+}
+function ttSpeed(){ return Math.max(90, 700 - (TT.level - 1) * 60); }
+function ttHud(){
+  $('#tetris-score').textContent = TT.score;
+  $('#tetris-lines').textContent = TT.lines;
+  $('#tetris-level').textContent = TT.level;
+  $('#tetris-best').textContent = ttBest();
+}
+function tetrisStart(){
+  clearInterval(TT.timer);
+  TT.grid = Array.from({ length: TT.rows }, () => Array(TT.cols).fill(null));
+  TT.score = 0; TT.lines = 0; TT.level = 1; TT.bag = []; TT.next = null;
+  TT.playing = true; TT.paused = false;
+  ttSpawn();
+  $('#tetris-btn').textContent = '↻ Restart';
+  TT.timer = setInterval(ttTick, ttSpeed());
+  ttHud(); ttDraw();
+}
+function ttTick(){
+  if (TT.paused || !TT.playing) return;
+  if (ttCollides(TT.piece.m, TT.piece.x, TT.piece.y + 1)) ttLock();
+  else TT.piece.y++;
+  ttDraw();
+}
+function ttLock(){
+  ttEachCell(TT.piece.m, (x, y) => {
+    const gy = TT.piece.y + y;
+    if (gy >= 0) TT.grid[gy][TT.piece.x + x] = TT.piece.c;
+  });
+  const kept = TT.grid.filter(row => row.some(c => !c));
+  const cleared = TT.rows - kept.length;
+  if (cleared){
+    while (kept.length < TT.rows) kept.unshift(Array(TT.cols).fill(null));
+    TT.grid = kept;
+    TT.lines += cleared;
+    TT.score += [0, 100, 300, 500, 800][cleared] * TT.level;
+    const lvl = Math.floor(TT.lines / 10) + 1;
+    if (lvl !== TT.level){ TT.level = lvl; clearInterval(TT.timer); TT.timer = setInterval(ttTick, ttSpeed()); }
   }
-  $('#snake-best').textContent = state.game.highScore;
-  $('#snake-btn').textContent = '▶ Play Again';
-  snakeDraw();
+  ttSpawn();
+  ttHud();
+}
+function ttMove(dx){
+  if (!TT.playing || TT.paused) return;
+  if (!ttCollides(TT.piece.m, TT.piece.x + dx, TT.piece.y)) { TT.piece.x += dx; ttDraw(); }
+}
+function ttRotate(){
+  if (!TT.playing || TT.paused) return;
+  const m = ttRotated(TT.piece.m);
+  for (const kick of [0, -1, 1, -2, 2]){                 // simple wall kicks
+    if (!ttCollides(m, TT.piece.x + kick, TT.piece.y)){
+      TT.piece.m = m; TT.piece.x += kick; ttDraw(); return;
+    }
+  }
+}
+function ttSoftDrop(){
+  if (!TT.playing || TT.paused) return;
+  if (!ttCollides(TT.piece.m, TT.piece.x, TT.piece.y + 1)){ TT.piece.y++; TT.score++; ttHud(); }
+  else ttLock();
+  ttDraw();
+}
+function ttHardDrop(){
+  if (!TT.playing || TT.paused) return;
+  const gy = ttGhostY();
+  TT.score += (gy - TT.piece.y) * 2;
+  TT.piece.y = gy;
+  ttLock(); ttHud(); ttDraw();
+}
+function ttGameOver(){
+  TT.playing = false;
+  clearInterval(TT.timer);
+  if (TT.score > ttBest()){
+    state.game.tetrisBest = TT.score; save();
+    toast(`🏆 New high score: ${TT.score}!`);
+  }
+  $('#tetris-btn').textContent = '▶ Play Again';
+  ttHud(); ttDraw();
 }
 function renderArcade(){
-  $('#snake-best').textContent = state.game.highScore;
-  $('#snake-score').textContent = SN.score;
-  snakeDraw();
+  if (!TT.grid.length) TT.grid = Array.from({ length: TT.rows }, () => Array(TT.cols).fill(null));
+  ttHud(); ttDraw();
 }
 document.addEventListener('keydown', e => {
   if (ui.view !== 'arcade') return;
   if ($('#modal-root').classList.contains('open')) return;
   const k = e.key.toLowerCase();
-  const dirs = { arrowup: {x:0,y:-1}, w: {x:0,y:-1}, arrowdown: {x:0,y:1}, s: {x:0,y:1}, arrowleft: {x:-1,y:0}, a: {x:-1,y:0}, arrowright: {x:1,y:0}, d: {x:1,y:0} };
-  if (dirs[k]){
-    e.preventDefault();
-    const d = dirs[k];
-    if (SN.playing && (d.x !== -SN.dir.x || d.y !== -SN.dir.y)) SN.nextDir = d;
-  } else if (k === ' '){
-    e.preventDefault();
-    if (SN.playing){ SN.paused = !SN.paused; snakeDraw(); }
-    else snakeStart();
-  }
+  if (['arrowleft','arrowright','arrowup','arrowdown',' ','a','d','w','s','p'].includes(k)) e.preventDefault();
+  if (k === 'arrowleft' || k === 'a') ttMove(-1);
+  else if (k === 'arrowright' || k === 'd') ttMove(1);
+  else if (k === 'arrowup' || k === 'w') ttRotate();
+  else if (k === 'arrowdown' || k === 's') ttSoftDrop();
+  else if (k === ' '){ TT.playing ? ttHardDrop() : tetrisStart(); }
+  else if (k === 'p' && TT.playing){ TT.paused = !TT.paused; ttDraw(); }
 });
 
 /* =====================================================================
@@ -2510,7 +2597,7 @@ document.addEventListener('click', e => {
     case 'export-json': exportJSON(); break;
     case 'import-json': importJSON(); break;
     /* arcade */
-    case 'snake-start': snakeStart(); break;
+    case 'tetris-start': tetrisStart(); break;
   }
 });
 
