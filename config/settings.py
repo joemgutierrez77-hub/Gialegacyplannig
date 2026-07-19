@@ -40,7 +40,7 @@ AGENCY = {
     # Production targets (monthly, per agent)
     "target_apps_per_month":       8,       # submitted applications
     "target_issued_per_month":     6,       # issued policies
-    "target_apv_per_month":        10000,   # Annual Premium Value ($)
+    "target_apv_per_month":        15000,   # Annual Premium Value ($)
     "min_persistency_rate":        0.85,    # 13-month persistency floor
 
     # Recruiting targets (monthly)

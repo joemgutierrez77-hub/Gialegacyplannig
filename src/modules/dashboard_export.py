@@ -117,7 +117,8 @@ def _agents(snapshot: dict) -> list:
             "name":   a.get("name", ""),
             "status": "Active" if not a.get("derived") else "Producing",
             "next":   f"Last logged {a.get('last_month') or '—'} · "
-                      f"APV ${a.get('apv', 0):,.0f}, {a.get('apps_issued', 0)} apps",
+                      f"APV ${a.get('apv', 0):,.0f}, "
+                      f"{a.get('apps_submitted') or a.get('apps_issued', 0)} apps",
         })
     return out
 
@@ -129,7 +130,7 @@ def _production(snapshot: dict) -> list:
             "name":       a.get("name", ""),
             "dials":      a.get("dials", 0),
             "contacts":   a.get("contacts", 0),
-            "apps":       a.get("apps_issued", 0),
+            "apps":       a.get("apps_submitted") or a.get("apps_issued", 0),
             "closes":     a.get("apps_issued", 0),
             "commission": int(a.get("net_to_agent", 0) or 0),
             "apv":        int(a.get("apv", 0) or 0),

@@ -198,13 +198,23 @@ def cmd_flowhub(args):
 
     elif sub in ("import-all", "import-policies", "import-pending", "import-chargebacks"):
         from src.modules.connectors import (import_policies_csv, import_pending_csv,
-                                            import_chargebacks_csv, import_combined_csv)
+                                            import_chargebacks_csv, import_all_auto)
         if not args.file:
             print(f"Usage: python main.py flowhub {sub} --file <report.csv>")
             return
         try:
             if sub == "import-all":
-                res = import_combined_csv(args.file, commission_pct=args.commission)
+                res = import_all_auto(args.file, commission_pct=args.commission)
+                if res.get("type") == "production":
+                    print("\n--- Agent Production Import ---")
+                    print(f"  Month {res['month']} · agents added {res['added']}, "
+                          f"updated {res['updated']}")
+                    for a in res["agents"]:
+                        print(f"    - {a['name']:<26} {a['apps']} app(s)  ${a['apv']:,.2f}")
+                    if res.get("unmapped"):
+                        print(f"  Ignored columns: {', '.join(res['unmapped'][:8])}")
+                    print("Run `python main.py flowhub sync` to refresh FlowHub.")
+                    return
                 print("\n--- Combined Report Import ---")
                 for bucket in ("pending", "issued", "chargebacks"):
                     counts = ", ".join(f"{k} {v}" for k, v in res[bucket].items())
