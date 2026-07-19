@@ -62,6 +62,7 @@ def save_env_key(key: str, value: str) -> None:
     lines.append(f"{key}={value}")
     with open(path, "w") as f:
         f.write("\n".join(lines) + "\n")
+    os.chmod(path, 0o600)  # credentials: owner read/write only
 
 
 # ---------------------------------------------------------------------------

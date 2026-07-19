@@ -506,7 +506,8 @@ function updateLive(){
   set("coreMode",st.mode==="live"?"LIVE":st.mode==="standby"?"NEXT":"FOCUS");
   const lbl=$("#coreLabel");if(lbl)lbl.classList.toggle("live",st.mode==="live");
   const arc=$("#coreArc");if(arc)arc.setAttribute("stroke-dashoffset",653*(1-st.frac));
-  const join=$("#coreJoin");if(join){if(st.link){join.href=st.link;join.classList.remove("hide");}else join.classList.add("hide");}
+  const join=$("#coreJoin");const safeLink=st.link&&/^https?:\/\//i.test(st.link)?st.link:null;
+  if(join){if(safeLink){join.href=safeLink;join.classList.remove("hide");}else join.classList.add("hide");}
   document.querySelectorAll("[data-cd]").forEach(el=>{el.textContent=hms(Number(el.dataset.cd)-Date.now());});
 }
 
