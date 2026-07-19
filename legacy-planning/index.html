@@ -1,0 +1,3381 @@
+<title>GIA Legacy Planning · Infinite Banking Platform</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  /* ============ tokens — committed dark "private bank" identity ============ */
+  :root {
+    color-scheme: dark;
+    --page:        #0A0F1E;
+    --surface:     #0D1530;   /* chart surface — palette validated against this */
+    --raised:      #131E43;
+    --hairline:    rgba(240, 220, 170, 0.10);
+    --grid:        #1B2650;
+    --baseline:    #2A3663;
+    --ink:         #F2EEE3;
+    --ink-2:       #B9BDD1;
+    --ink-3:       #7E86A6;
+    --accent:      #F0B429;   /* UI gold — buttons, markers, focus */
+    --accent-deep: #B8860B;
+    /* series — validated: all pass lightness band, chroma, CVD ΔE 14.1, ≥3:1 */
+    --s-gold:  #C08812;
+    --s-blue:  #3D82E8;
+    --s-teal:  #1AA37A;
+    --s-coral: #DA6A50;
+    --critical: #E05252;
+    --good:     #2FBF7A;
+    --serif: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, 'Times New Roman', serif;
+    --sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--page); scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ============ type ============ */
+  h1, h2, h3, .display { font-family: var(--serif); font-weight: 600; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.12; letter-spacing: 0.005em; }
+  h2 { font-size: clamp(24px, 3.2vw, 32px); line-height: 1.2; }
+  h3 { font-size: 19px; line-height: 1.3; }
+  p  { margin: 0; }
+  .eyebrow {
+    font-family: var(--sans); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+  }
+  .lede { color: var(--ink-2); font-size: 17px; max-width: 62ch; }
+  .muted { color: var(--ink-3); }
+  .small { font-size: 13px; }
+
+  /* ============ layout & surfaces ============ */
+  section { margin-top: 88px; scroll-margin-top: 84px; }
+  .sec-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: 12px; padding: 24px;
+  }
+  .gold-rule { width: 56px; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); border: 0; margin: 0; }
+
+  /* ============ top bar ============ */
+  .topbar {
+    position: sticky; top: 0; z-index: 60;
+    background: rgba(10, 15, 30, 0.82);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .topbar-inner {
+    max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 58px;
+    display: flex; align-items: center; justify-content: space-between; gap: 18px;
+  }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--serif); font-size: 16.5px; font-weight: 600; color: var(--ink); white-space: nowrap; }
+  .brand-mark {
+    width: 28px; height: 28px; flex-shrink: 0; border-radius: 7px;
+    background: linear-gradient(135deg, #F7C24A, var(--accent-deep));
+    color: var(--page); display: grid; place-items: center;
+    font-family: var(--serif); font-size: 17px; font-weight: 700; line-height: 1;
+  }
+  .topbar-links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .topbar-links::-webkit-scrollbar { display: none; }
+  .topbar-links a {
+    font-size: 13px; font-weight: 600; color: var(--ink-3); text-decoration: none;
+    padding: 7px 11px; border-radius: 7px; white-space: nowrap;
+    transition: color .12s, background .12s;
+  }
+  .topbar-links a:hover { color: var(--accent); background: rgba(240, 180, 41, 0.07); }
+  .topbar-links a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  /* ============ header / hero ============ */
+  header.hero { padding-top: 72px; display: flex; flex-direction: column; gap: 18px; position: relative; }
+  header.hero::before {
+    content: ""; position: absolute; inset: -80px -200px auto auto;
+    width: 520px; height: 420px; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(240, 180, 41, 0.09), transparent 70%);
+  }
+  .hero-sub { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .hero-kicker { color: var(--ink-2); max-width: 60ch; font-size: 17px; }
+
+  /* ============ intake ============ */
+  .intake { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .intake { grid-template-columns: 1fr; } }
+  .dropzone {
+    border: 1.5px dashed rgba(240, 180, 41, 0.35); border-radius: 10px;
+    background: var(--surface); padding: 28px 24px; text-align: center;
+    cursor: pointer; transition: border-color .15s, background .15s;
+    display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center;
+  }
+  .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: var(--raised); }
+  .dropzone:focus-visible, .dropzone:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dz-icon { width: 34px; height: 34px; color: var(--accent); }
+  .dropzone .btn { pointer-events: none; margin: 4px 0 2px; } /* label handles the click */
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .intake-side { display: flex; flex-direction: column; gap: 12px; }
+  .btn {
+    font: 600 14px var(--sans); color: var(--page);
+    background: linear-gradient(180deg, #F7C24A, #E8A81F);
+    border: 0; border-radius: 8px; padding: 10px 18px; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: filter .12s, transform .12s;
+  }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(1px); }
+  .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .btn-ghost {
+    font: 600 14px var(--sans); color: var(--accent); background: transparent;
+    border: 1px solid rgba(240, 180, 41, 0.4); border-radius: 8px; padding: 9px 16px; cursor: pointer;
+  }
+  .btn-ghost:hover { background: rgba(240, 180, 41, 0.08); }
+  .btn-ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details.paste { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px; }
+  details.paste summary {
+    cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 14px; color: var(--ink-2);
+    list-style: none; display: flex; align-items: center; gap: 8px;
+  }
+  details.paste summary::before { content: "›"; color: var(--accent); font-size: 17px; transition: transform .15s; }
+  details.paste[open] summary::before { transform: rotate(90deg); }
+  details.paste .paste-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+  textarea {
+    width: 100%; min-height: 130px; resize: vertical; border-radius: 8px;
+    background: var(--page); color: var(--ink); border: 1px solid var(--baseline);
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 10px;
+  }
+  textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .status-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; min-height: 28px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 7px; border-radius: 999px;
+    padding: 4px 12px; font-size: 13px; font-weight: 600;
+    background: rgba(47, 191, 122, 0.12); color: var(--good); border: 1px solid rgba(47, 191, 122, 0.3);
+  }
+  .pill.err { background: rgba(224, 82, 82, 0.12); color: var(--critical); border-color: rgba(224, 82, 82, 0.35); }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  /* ============ stat tiles ============ */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+  .tile {
+    background: linear-gradient(180deg, var(--raised) 0%, var(--surface) 22%);
+    border: 1px solid var(--hairline); border-radius: 12px; padding: 18px 20px;
+    box-shadow: 0 8px 20px -14px rgba(0, 0, 0, 0.6);
+  }
+  .tile .t-label { font-size: 11.5px; color: var(--ink-3); font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; }
+  .tile .t-value { font-size: 28px; font-weight: 650; color: var(--ink); margin-top: 5px; letter-spacing: -0.01em; }
+  .tile .t-sub { font-size: 12.5px; color: var(--ink-3); margin-top: 3px; }
+  .tile .t-sub.up { color: var(--good); }
+
+  /* ============ chart cards ============ */
+  .chart-card {
+    background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px;
+    padding: 20px 22px 14px; box-shadow: 0 8px 20px -14px rgba(0, 0, 0, 0.6);
+  }
+  .chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .chart-title { font: 600 15.5px var(--sans); color: var(--ink); }
+  .chart-sub { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
+  .view-toggle { display: inline-flex; border: 1px solid var(--baseline); border-radius: 7px; overflow: hidden; flex-shrink: 0; }
+  .view-toggle button {
+    font: 600 12px var(--sans); padding: 5px 12px; background: transparent;
+    color: var(--ink-3); border: 0; cursor: pointer;
+  }
+  .view-toggle button[aria-pressed="true"] { background: var(--raised); color: var(--ink); }
+  .view-toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; padding: 8px 0 4px; }
+  .legend .key { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); }
+  .legend .swatch { width: 16px; height: 3px; border-radius: 2px; }
+  .plot-wrap { position: relative; }
+  .plot-wrap svg { display: block; width: 100%; height: auto; }
+  .plot-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  .tooltip {
+    position: absolute; pointer-events: none; z-index: 5; min-width: 190px;
+    background: #0B1126; border: 1px solid var(--baseline); border-radius: 8px;
+    padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+    font-size: 12.5px; display: none;
+  }
+  .tooltip .tt-title { font-weight: 600; color: var(--ink-2); margin-bottom: 6px; font-size: 12px; }
+  .tooltip .tt-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+  .tooltip .tt-key { width: 14px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+  .tooltip .tt-val { font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tooltip .tt-name { color: var(--ink-3); }
+  .axis-text { font: 11.5px var(--sans); fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline-line { stroke: var(--baseline); stroke-width: 1; }
+  .anno-text { font: 600 12px var(--sans); fill: var(--ink-2); }
+  .anno-text.gold { fill: var(--accent); }
+  .proj-label { font: 600 10.5px var(--sans); fill: var(--ink-3); letter-spacing: 0.08em; text-transform: uppercase; }
+  .table-view { display: none; max-height: 320px; overflow: auto; margin: 8px 0 6px; border: 1px solid var(--grid); border-radius: 8px; }
+  .table-view table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .table-view th, .table-view td { padding: 6px 12px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .table-view th:first-child, .table-view td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); }
+  .table-view thead th { position: sticky; top: 0; background: var(--raised); color: var(--ink-2); font-weight: 600; z-index: 2; }
+  .table-view tbody tr { border-top: 1px solid var(--grid); }
+  .table-view td { color: var(--ink-2); }
+  .table-view .proj td { color: var(--ink-3); font-style: italic; }
+  .charts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  /* grid/flex children must be allowed to shrink below their content width */
+  .charts-2col > *, .intake > *, .legacy-panel > *, .tiles > *, .chart-card { min-width: 0; }
+  @media (max-width: 860px) { .charts-2col { grid-template-columns: 1fr; } }
+
+  /* ============ modeler controls ============ */
+  .controls {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px 22px; background: var(--surface); border: 1px solid var(--hairline);
+    border-radius: 10px; padding: 20px 22px; margin-bottom: 16px;
+  }
+  .ctl { display: flex; flex-direction: column; gap: 6px; }
+  .ctl label { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+  .ctl output { font-size: 17px; font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); height: 22px; cursor: pointer; }
+  input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .ill-income-note {
+    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px;
+    background: rgba(240, 180, 41, 0.07); border: 1px solid rgba(240, 180, 41, 0.3);
+    border-radius: 10px; padding: 12px 16px; font-size: 14px; color: var(--ink-2);
+  }
+  .ill-income-note svg { color: var(--accent); margin-top: 1px; }
+  .ill-income-note strong { color: var(--accent); }
+  .ill-income-note.hypo { background: rgba(61, 130, 232, 0.07); border-color: rgba(61, 130, 232, 0.3); }
+  .ill-income-note.hypo svg, .ill-income-note.hypo strong { color: var(--s-blue); }
+  .lapse-banner {
+    display: none; align-items: center; gap: 10px; margin-bottom: 16px;
+    background: rgba(224, 82, 82, 0.1); border: 1px solid rgba(224, 82, 82, 0.35);
+    border-radius: 10px; padding: 12px 16px; font-size: 14px; color: #F2A6A6;
+  }
+  .lapse-banner strong { color: var(--critical); }
+
+  /* ============ legacy hero ============ */
+  .legacy-panel {
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; align-items: center;
+    background: linear-gradient(135deg, #101A3E 0%, var(--surface) 60%);
+    border: 1px solid rgba(240, 180, 41, 0.22); border-radius: 12px; padding: 30px 32px; margin-top: 18px;
+  }
+  @media (max-width: 760px) { .legacy-panel { grid-template-columns: 1fr; } }
+  .hero-num { font-family: var(--sans); font-size: clamp(42px, 6vw, 58px); font-weight: 700; letter-spacing: -0.015em; line-height: 1.05; color: var(--ink); }
+  .hero-label { font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .hero-delta { margin-top: 10px; font-size: 14.5px; color: var(--ink-2); }
+  .hero-delta strong { color: var(--good); font-variant-numeric: tabular-nums; }
+  .legacy-breakdown { display: flex; flex-direction: column; gap: 0; }
+  .lb-row { display: flex; justify-content: space-between; gap: 14px; padding: 10px 2px; border-top: 1px solid var(--hairline); font-size: 14px; }
+  .lb-row:first-child { border-top: 0; }
+  .lb-row .lb-name { color: var(--ink-3); display: inline-flex; align-items: center; gap: 8px; }
+  .lb-row .lb-val { font-weight: 650; font-variant-numeric: tabular-nums; }
+  .lb-row.total { border-top: 1.5px solid rgba(240, 180, 41, 0.35); }
+  .lb-row.total .lb-name, .lb-row.total .lb-val { color: var(--accent); font-weight: 700; }
+  .lb-key { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  /* ============ presentation dashboard ============ */
+  .dash {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 22px; align-items: end;
+    background: linear-gradient(135deg, #101A3E 0%, var(--surface) 60%);
+    border: 1px solid rgba(240, 180, 41, 0.22); border-radius: 12px; padding: 22px 24px;
+  }
+  @media (max-width: 860px) { .dash { grid-template-columns: 1fr; align-items: stretch; } }
+  .dash .ctl input[type="text"] {
+    width: 100%; background: var(--page); color: var(--ink); border: 1px solid var(--baseline);
+    border-radius: 8px; padding: 9px 12px; font: 15px var(--sans);
+  }
+  .dash .ctl input[type="text"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .dash-toggles { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .dash-toggles .tog-label { font-size: 12.5px; font-weight: 600; color: var(--ink-3); margin-right: 4px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none;
+    border: 1px solid var(--baseline); border-radius: 999px; padding: 6px 14px;
+    font-size: 13px; font-weight: 600; color: var(--ink-3); background: transparent;
+    transition: border-color .12s, color .12s, background .12s;
+  }
+  .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .chip .chip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--baseline); }
+  .chip:has(input:checked) { color: var(--accent); border-color: rgba(240, 180, 41, 0.5); background: rgba(240, 180, 41, 0.07); }
+  .chip:has(input:checked) .chip-dot { background: var(--accent); }
+  .chip:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .dash-actions { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .prepared-line { color: var(--accent); font-size: 15px; font-family: var(--serif); }
+
+  /* saved client plans (dashboard) */
+  .plans-head { font-family: var(--sans); font-size: 13px; font-weight: 650; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin: 28px 0 14px; }
+  .plans-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .plan-card {
+    background: linear-gradient(180deg, var(--raised) 0%, var(--surface) 26%);
+    border: 1px solid var(--hairline); border-radius: 12px; padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 4px;
+    box-shadow: 0 8px 20px -14px rgba(0, 0, 0, 0.6);
+  }
+  .plan-card.active { border-color: rgba(240, 180, 41, 0.55); }
+  .plan-card .pc-name { font-family: var(--serif); font-size: 17px; font-weight: 600; color: var(--ink); }
+  .plan-card .pc-meta { font-size: 12.5px; color: var(--ink-2); }
+  .plan-card .pc-updated { font-size: 11.5px; color: var(--ink-3); }
+  .plan-card .pc-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .plan-card .pc-actions .btn-ghost { padding: 6px 13px; font-size: 12.5px; }
+  .plan-card .pc-del {
+    margin-left: auto; background: transparent; border: 1px solid transparent; border-radius: 7px;
+    color: var(--ink-3); font-size: 14px; cursor: pointer; padding: 5px 9px;
+  }
+  .plan-card .pc-del:hover { color: var(--critical); border-color: rgba(224, 82, 82, 0.35); }
+  .plan-card .pc-del:focus-visible { outline: 2px solid var(--accent); }
+  .plan-card .pc-del.armed {
+    color: var(--critical); border-color: rgba(224, 82, 82, 0.55);
+    background: rgba(224, 82, 82, 0.1); font: 600 12.5px var(--sans);
+  }
+  .plans-empty {
+    grid-column: 1 / -1; border: 1.5px dashed var(--baseline); border-radius: 12px;
+    padding: 26px 24px; text-align: center; color: var(--ink-3); font-size: 14px;
+  }
+  .plans-empty strong { display: block; color: var(--ink-2); font-size: 15px; margin-bottom: 4px; }
+  .pdf-fallback {
+    grid-column: 1 / -1; background: rgba(47, 191, 122, 0.06);
+    border: 1px solid rgba(47, 191, 122, 0.25); border-radius: 10px; padding: 12px 14px;
+  }
+  .pdf-fallback-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13.5px; color: var(--ink-2); }
+  .pdf-fallback-row strong { color: var(--ink); }
+  .pdf-mini { padding: 6px 12px; font-size: 12.5px; text-decoration: none; display: inline-block; }
+  #pdfPreviewWrap { margin-top: 12px; }
+  .preview-pages {
+    display: flex; flex-direction: column; gap: 14px;
+    max-height: 560px; overflow: auto; padding: 4px;
+    border: 1px solid var(--baseline); border-radius: 8px; background: #05070F;
+  }
+  .preview-pages canvas { width: 100%; height: auto; border-radius: 4px; display: block; }
+
+  /* ============ fullscreen presentation ============ */
+  .present-overlay {
+    position: fixed; inset: 0; z-index: 100; overflow: auto;
+    background: rgba(5, 7, 15, 0.97);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .present-top {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 5;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 12px 22px; background: rgba(5, 7, 15, 0.9);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .present-top .pt-title { font-family: var(--serif); font-size: 17px; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pt-controls { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .pt-counter { font-size: 13px; color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 44px; text-align: center; }
+  .pt-nav {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--baseline);
+    background: transparent; color: var(--ink-2); font-size: 22px; line-height: 1; cursor: pointer;
+    transition: color .12s, border-color .12s, background .12s;
+  }
+  .pt-nav:hover:not(:disabled) { color: var(--accent); border-color: rgba(240, 180, 41, 0.5); background: rgba(240, 180, 41, 0.07); }
+  .pt-nav:disabled { opacity: 0.3; cursor: default; }
+  .pt-nav:focus-visible { outline: 2px solid var(--accent); }
+  .present-stage { position: absolute; inset: 61px 0 46px; overflow: hidden; }
+  .present-stage .slide {
+    position: absolute; inset: 0; display: grid; place-items: center; padding: 18px;
+    opacity: 0; transform: translateX(36px) scale(0.985); pointer-events: none;
+    transition: opacity 0.38s ease, transform 0.38s ease;
+  }
+  .present-stage .slide.active { opacity: 1; transform: none; pointer-events: auto; }
+  .present-stage .slide.before { transform: translateX(-36px) scale(0.985); }
+  .present-stage canvas {
+    max-width: min(94vw, 960px); max-height: calc(100vh - 145px); width: auto; height: auto; display: block;
+    border-radius: 6px; box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.9);
+    cursor: pointer;
+  }
+  .present-dots {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
+    display: flex; justify-content: center; align-items: center; gap: 10px; padding: 14px 0;
+  }
+  .present-dots button {
+    width: 9px; height: 9px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+    background: var(--baseline); transition: background .15s, transform .15s;
+  }
+  .present-dots button.active { background: var(--accent); transform: scale(1.25); }
+  .present-dots button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ============ debt editor ============ */
+  .debt-editor { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px; padding: 20px 22px; margin-bottom: 16px; }
+  .debt-grid { display: grid; grid-template-columns: 1.3fr 1fr 0.7fr 1fr 34px; gap: 8px 10px; align-items: center; }
+  .debt-grid .dg-head { font-size: 12px; font-weight: 600; color: var(--ink-3); letter-spacing: 0.04em; text-transform: uppercase; }
+  .debt-grid input {
+    width: 100%; background: var(--page); color: var(--ink); border: 1px solid var(--baseline);
+    border-radius: 7px; padding: 7px 10px; font: 14px var(--sans); font-variant-numeric: tabular-nums;
+  }
+  .debt-grid input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .debt-grid .dg-x {
+    background: transparent; border: 1px solid transparent; border-radius: 7px; color: var(--ink-3);
+    font-size: 16px; cursor: pointer; height: 34px; line-height: 1;
+  }
+  .debt-grid .dg-x:hover { color: var(--critical); border-color: rgba(224,82,82,0.35); }
+  .debt-grid .dg-x:focus-visible { outline: 2px solid var(--accent); }
+  .debt-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+  .debt-total { font-size: 14px; color: var(--ink-2); }
+  .debt-total strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) {
+    .debt-grid { grid-template-columns: 1fr 1fr; }
+    .debt-grid .dg-head { display: none; }
+    .debt-grid input { font-size: 13px; }
+  }
+
+  /* ============ education ============ */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 14px; counter-reset: step; }
+  .step { background: var(--surface); border: 1px solid var(--hairline); border-radius: 10px; padding: 20px; counter-increment: step; }
+  .step::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: var(--serif); font-size: 26px; color: var(--accent-deep); display: block; margin-bottom: 8px;
+  }
+  .step h3 { font-family: var(--sans); font-size: 15.5px; font-weight: 650; margin-bottom: 6px; }
+  .step p { font-size: 13.5px; color: var(--ink-2); }
+  .gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 32px; }
+  .gloss .card h3 { font-family: var(--sans); font-size: 15px; font-weight: 650; color: var(--accent); margin-bottom: 6px; }
+  .gloss .card p { font-size: 13.5px; color: var(--ink-2); }
+  .carriers { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+  .carrier {
+    font-family: var(--serif); font-size: 16px; color: var(--ink-2);
+    border: 1px solid var(--hairline); border-radius: 8px; padding: 12px 20px; background: var(--surface);
+  }
+  .carrier small { display: block; font-family: var(--sans); font-size: 11.5px; color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+
+  footer { margin-top: 84px; border-top: 1px solid var(--hairline); padding-top: 26px; }
+  footer p { font-size: 12.5px; color: var(--ink-3); max-width: 90ch; }
+  footer p + p { margin-top: 8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  /* ============ print — the branded report, not the dark page ============ */
+  #printReport { display: none; }
+  @media print {
+    body.print-report-mode > :not(#printReport) { display: none !important; }
+    body.print-report-mode #printReport { display: block !important; }
+    body.print-report-mode #printReport img {
+      display: block; width: 100%; break-after: page; page-break-after: always;
+    }
+    body.print-report-mode #printReport img:last-child { break-after: auto; page-break-after: auto; }
+  }
+  @media print {
+    :root {
+      --page: #fff; --surface: #fff; --raised: #f3f1ea; --hairline: #d8d4c6;
+      --grid: #e8e5da; --baseline: #c9c4b2; --ink: #17181c; --ink-2: #43465a;
+      --ink-3: #6b6f85; --accent: #8a6508; --accent-deep: #8a6508;
+      --s-gold: #96690a; --s-blue: #2059b8; --s-teal: #0d7d5c; --s-coral: #bb4a32;
+    }
+    body { background: #fff; }
+    .dropzone, details.paste, .view-toggle, .controls, .dash, .debt-editor, #present, .topbar, .pdf-fallback, .present-overlay { display: none !important; }
+    .legacy-panel { background: #faf8f0; }
+  }
+</style>
+
+<nav class="topbar" aria-label="Page sections">
+  <div class="topbar-inner">
+    <span class="brand"><span class="brand-mark" aria-hidden="true">&#8734;</span>GIA Legacy Planning</span>
+    <div class="topbar-links">
+      <a href="#intake">Import</a>
+      <a href="#present">Present</a>
+      <a href="#glance">Policy</a>
+      <a href="#modeler">Income</a>
+      <a href="#debt">Debt</a>
+      <a href="#learn">Method</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">GIA Legacy Planning</span>
+    <h1>The Family Banking Platform</h1>
+    <hr class="gold-rule" />
+    <p class="prepared-line" id="preparedLine" hidden></p>
+    <p class="hero-kicker">
+      Load a whole life illustration and see the full arc of the strategy — cash value growth,
+      retirement income through policy loans, and the wealth that transfers to the next generation.
+    </p>
+  </header>
+
+  <!-- ============ intake ============ -->
+  <section id="intake" aria-label="Load an illustration">
+    <div class="intake">
+      <label class="dropzone" id="dropzone" for="fileInput" tabindex="0"
+           aria-label="Upload a carrier illustration PDF. Parsing happens in your browser; nothing is uploaded to a server.">
+        <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M12 16V5m0 0l-4 4m4-4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 16.5V18a2 2 0 002 2h12a2 2 0 002-2v-1.5" stroke-linecap="round"/>
+        </svg>
+        <strong>Upload a carrier illustration PDF</strong>
+        <span class="btn" aria-hidden="true">Choose PDF file</span>
+        <span class="muted small">or drag &amp; drop it here · parsed entirely in your browser — nothing leaves this page</span>
+        <input type="file" id="fileInput" class="sr-only" accept="application/pdf,.pdf" />
+      </label>
+      <div class="intake-side">
+        <details class="paste">
+          <summary>Paste illustration text instead</summary>
+          <div class="paste-body">
+            <textarea id="pasteBox" aria-label="Paste illustration table text"
+              placeholder="Paste rows like:&#10;1  40  10,000  16,980  605,094&#10;2  41  10,000  26,498  607,949&#10;(policy year · age · premium · cash value · death benefit)"></textarea>
+            <button class="btn" id="parsePaste" type="button">Parse &amp; load</button>
+          </div>
+        </details>
+        <button class="btn-ghost" id="loadSample" type="button">Load the sample illustration</button>
+        <p class="muted small">Works with any carrier's ledger — the parser looks for rows of
+          policy year, age, premium, cash value, and death benefit. If the file picker won't open
+          in this view (some embeds block it), or the PDF is scanned, copy the table from the PDF
+          and use the paste option — it loads the exact same way.</p>
+      </div>
+    </div>
+    <div class="status-line" id="statusLine" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- ============ presentation dashboard ============ -->
+  <section id="present" aria-label="Presentation dashboard">
+    <div class="sec-head">
+      <span class="eyebrow">The Dashboard</span>
+      <h2>Present &amp; share</h2>
+      <p class="lede">Name the client, choose which sections tell their story, and hand them a
+        branded PDF report — or present straight from this page.</p>
+    </div>
+    <div class="dash">
+      <div class="ctl">
+        <label for="pClient">Prepared for</label>
+        <input type="text" id="pClient" placeholder="Client name" autocomplete="off" />
+      </div>
+      <div class="ctl">
+        <label for="pAdvisor">Presented by</label>
+        <input type="text" id="pAdvisor" placeholder="Your name" autocomplete="off" />
+      </div>
+      <div class="ctl">
+        <label for="pAgency">Agency</label>
+        <input type="text" id="pAgency" placeholder="Agency name" autocomplete="off" />
+      </div>
+      <div class="dash-actions">
+        <button class="btn" id="presentBtn" type="button">&#9654;&#xFE0E; Present</button>
+        <button class="btn" id="downloadPdf" type="button">Download PDF report</button>
+        <button class="btn-ghost" id="savePlan" type="button">Save plan</button>
+        <button class="btn-ghost" id="printPage" type="button">Print</button>
+      </div>
+      <div class="pdf-fallback" id="pdfFallback" hidden>
+        <div class="pdf-fallback-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--good);flex-shrink:0">
+            <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Report ready: <strong id="pdfName"></strong>. To print, use <em>Open in new tab</em> — the
+            PDF viewer that opens has its own print and save buttons. If the download didn't start:</span>
+          <a class="btn-ghost pdf-mini" id="pdfSaveLink" download>Save PDF</a>
+          <a class="btn-ghost pdf-mini" id="pdfOpenTab" target="_blank" rel="noopener">Open in new tab</a>
+          <button class="btn-ghost pdf-mini" id="pdfPreviewBtn" type="button">Preview here</button>
+        </div>
+        <div id="pdfPreviewWrap" hidden>
+          <div id="pdfPreviewPages" class="preview-pages"></div>
+          <p class="muted small" style="margin-top:8px">This is the exact report. Right-click (or long-press) any page to
+            save it as an image. If Save PDF, Open in new tab, or Print do nothing, this embedded panel is blocking them —
+            open the artifact in its own browser tab and every button works normally.</p>
+        </div>
+      </div>
+      <div class="dash-toggles" role="group" aria-label="Sections to include">
+        <span class="tog-label">Include:</span>
+        <label class="chip"><input type="checkbox" id="incPolicy" checked /><span class="chip-dot"></span>Policy overview</label>
+        <label class="chip"><input type="checkbox" id="incIncome" checked /><span class="chip-dot"></span>Income &amp; legacy</label>
+        <label class="chip"><input type="checkbox" id="incDebt" checked /><span class="chip-dot"></span>Debt freedom</label>
+        <label class="chip"><input type="checkbox" id="incLearn" checked /><span class="chip-dot"></span>How it works</label>
+      </div>
+    </div>
+
+    <h3 class="plans-head">Saved client plans</h3>
+    <div class="plans-grid" id="plansGrid"></div>
+  </section>
+
+  <!-- ============ policy at a glance ============ -->
+  <section id="glance">
+    <div class="sec-head">
+      <span class="eyebrow">The Policy</span>
+      <h2>Your policy at a glance</h2>
+    </div>
+    <div class="tiles" id="glanceTiles"></div>
+
+    <div class="charts-2col">
+      <div class="chart-card" id="chartGrowth"></div>
+      <div class="chart-card" id="chartDB"></div>
+    </div>
+  </section>
+
+  <!-- ============ income & legacy modeler ============ -->
+  <section id="modeler">
+    <div class="sec-head">
+      <span class="eyebrow">The Strategy</span>
+      <h2>Income &amp; what still passes on</h2>
+      <p class="lede">By default this shows only what the illustration projects. Optionally model a
+        hypothetical policy-loan income strategy on top: the cash value keeps compounding while the
+        loan balance nets against the death benefit — set the income, start age, and horizon.</p>
+    </div>
+
+    <div class="ill-income-note" id="illIncomeNote" hidden>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0">
+        <circle cx="12" cy="12" r="9.5"/><path d="M12 8h.01M12 11.5V16" stroke-linecap="round"/>
+      </svg>
+      <span id="illIncomeMsg"></span>
+    </div>
+
+    <div class="controls" role="group" aria-label="Income scenario assumptions">
+      <div class="ctl">
+        <label for="cIncome" id="lIncome">Annual income drawn</label>
+        <output id="oIncome">$40,000</output>
+        <input type="range" id="cIncome" min="0" max="100000" step="2500" value="40000" />
+      </div>
+      <div class="ctl">
+        <label for="cStart">Income begins at age</label>
+        <output id="oStart">65</output>
+        <input type="range" id="cStart" min="55" max="80" step="1" value="65" />
+      </div>
+      <div class="ctl">
+        <label for="cDeath">Plan runs to age</label>
+        <output id="oDeath">85</output>
+        <input type="range" id="cDeath" min="70" max="100" step="1" value="85" />
+      </div>
+      <div class="ctl">
+        <label for="cLoan">Policy loan rate</label>
+        <output id="oLoan">5.0%</output>
+        <input type="range" id="cLoan" min="3" max="8" step="0.25" value="5" />
+      </div>
+      <div class="ctl">
+        <label for="cGrowth">Cash value growth beyond illustration</label>
+        <output id="oGrowth">5.7%</output>
+        <input type="range" id="cGrowth" min="2" max="7" step="0.1" value="5.7" />
+      </div>
+    </div>
+
+    <div class="lapse-banner" id="lapseBanner" role="alert">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex-shrink:0">
+        <path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18.1A2 2 0 003.5 21h17a2 2 0 001.7-2.9L13.7 3.9a2 2 0 00-3.4 0z" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="lapseMsg"></span>
+    </div>
+
+    <div class="chart-card" id="chartLegacy" style="margin-bottom:16px"></div>
+
+    <div class="tiles" id="modelTiles"></div>
+
+    <div class="legacy-panel">
+      <div>
+        <div class="hero-label">Total family value</div>
+        <div class="hero-num" id="heroLegacy">—</div>
+        <div class="hero-delta" id="heroDelta"></div>
+      </div>
+      <div class="legacy-breakdown" id="legacyBreakdown"></div>
+    </div>
+  </section>
+
+  <!-- ============ debt freedom ============ -->
+  <section id="debt">
+    <div class="sec-head">
+      <span class="eyebrow">The Escape</span>
+      <h2>Debt freedom — two clocks racing</h2>
+      <p class="lede">List your debts and watch two timelines: paying them down the traditional way,
+        versus the year your policy's loan capacity grows large enough to wipe them all out at once —
+        then you repay yourself instead of the bank.</p>
+    </div>
+
+    <div class="debt-editor">
+      <div class="debt-grid" id="debtGrid" role="group" aria-label="Your debts">
+        <span class="dg-head">Debt</span>
+        <span class="dg-head">Balance</span>
+        <span class="dg-head">APR %</span>
+        <span class="dg-head">Payment / mo</span>
+        <span class="dg-head" aria-hidden="true"></span>
+      </div>
+      <div class="debt-actions">
+        <button class="btn-ghost" id="addDebt" type="button">+ Add a debt</button>
+        <span class="debt-total" id="debtTotal"></span>
+      </div>
+    </div>
+
+    <div class="chart-card" id="chartDebt" style="margin-bottom:16px"></div>
+    <div class="tiles" id="debtTiles"></div>
+  </section>
+
+  <!-- ============ education ============ -->
+  <section id="learn">
+    <div class="sec-head">
+      <span class="eyebrow">The Method</span>
+      <h2>How infinite banking works</h2>
+      <p class="lede">Five moves, in order. The policy is the vehicle; the discipline of borrowing
+        against it — instead of from a bank — is the strategy.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><h3>Fund the policy</h3><p>A dividend-paying whole life policy from a mutual carrier, designed with a paid-up additions rider so early cash value builds fast.</p></div>
+      <div class="step"><h3>Let it compound</h3><p>Cash value grows on a guaranteed schedule plus dividends — uninterrupted, tax-deferred, and shielded in many states from creditors.</p></div>
+      <div class="step"><h3>Borrow against it</h3><p>Need capital? Take a policy loan from the carrier with your cash value as collateral. Your full balance keeps compounding while you use their money.</p></div>
+      <div class="step"><h3>Repay on your terms</h3><p>No bank schedule, no credit check. Repay to restore capacity — or let the balance simply net against the death benefit.</p></div>
+      <div class="step"><h3>Transfer the legacy</h3><p>The death benefit passes to your beneficiaries — generally free of income tax — turning one policy into generational wealth.</p></div>
+    </div>
+
+    <div class="gloss">
+      <div class="card"><h3>Paid-Up Additions</h3><p>Small, fully paid-up slices of extra insurance bought with rider dollars. They juice early cash value and compound dividends on dividends — the engine of an IBC design.</p></div>
+      <div class="card"><h3>Policy loan</h3><p>A loan from the carrier's general account secured by your cash value. It isn't a withdrawal — your cash value never leaves the policy, so compounding never stops.</p></div>
+      <div class="card"><h3>Break-even point</h3><p>The policy year when cash value first exceeds every premium dollar paid in. After it, the policy is worth more than it ever cost — permanently.</p></div>
+      <div class="card"><h3>Loan capacity</h3><p>How much you can borrow — typically 90–95% of cash value. It grows every year, whether or not you use it, and resets as loans are repaid.</p></div>
+    </div>
+
+    <div class="carriers">
+      <div class="carrier">Lafayette Life<small>Whole life</small></div>
+      <div class="carrier">Foresters Financial<small>Whole life</small></div>
+      <div class="carrier">National Life Group<small>Term + IUL</small></div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>Important.</strong> This page is a hypothetical planning tool, not an offer, a policy
+      illustration, or tax advice. Illustrated values come from the carrier document you load; values
+      beyond the illustrated period, income scenarios, and loan projections are estimates at the assumed
+      rates shown and are not guarantees. Policy loans reduce cash value and death benefit and can cause
+      a policy to lapse; loans from a Modified Endowment Contract are taxable. Dividends are not
+      guaranteed. Consult a licensed insurance professional and your tax advisor before acting.</p>
+    <p>Illustration files are parsed entirely in your browser — nothing is uploaded or stored.</p>
+    <p>GIA Legacy Planning · Infinite Banking Strategy Platform</p>
+  </footer>
+</div>
+
+<div id="printReport" aria-hidden="true"></div>
+
+<div class="present-overlay" id="presentOverlay" hidden role="dialog" aria-modal="true" aria-label="Presentation view">
+  <div class="present-top">
+    <span class="pt-title" id="presentTitle"></span>
+    <div class="pt-controls">
+      <button class="pt-nav" id="presentPrev" type="button" aria-label="Previous page">&#8249;</button>
+      <span class="pt-counter" id="presentCounter" aria-live="polite"></span>
+      <button class="pt-nav" id="presentNext" type="button" aria-label="Next page">&#8250;</button>
+      <button class="btn-ghost" id="presentClose" type="button">&#10005; Close</button>
+    </div>
+  </div>
+  <div class="present-stage" id="presentPages"></div>
+  <div class="present-dots" id="presentDots" role="tablist" aria-label="Pages"></div>
+</div>
+
+<script type="module">
+/* ================================================================
+   Engine — PDF text extraction, illustration parsing, projection
+   ================================================================ */
+
+/* IBC platform engine v2 — real-world carrier PDF text extraction.
+   Handles: column-major table layout (y-grouping), ToUnicode CMap fonts,
+   and standard-security encrypted PDFs (RC4 / AES-CBC, empty user password).
+   Browser-native APIs only: DecompressionStream, WebCrypto, TextDecoder. */
+
+// ---------------- small crypto: MD5 + RC4 (needed for PDF standard security) ----------------
+
+function md5(bytes) {
+  const s = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+             4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  const K = new Int32Array(64);
+  for (let i = 0; i < 64; i++) K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296);
+  const n = bytes.length;
+  const withPad = new Uint8Array((((n + 8) >> 6) + 1) << 6);
+  withPad.set(bytes); withPad[n] = 0x80;
+  const bitLen = n * 8;
+  const dv = new DataView(withPad.buffer);
+  dv.setUint32(withPad.length - 8, bitLen >>> 0, true);
+  dv.setUint32(withPad.length - 4, Math.floor(bitLen / 4294967296), true);
+  let a0 = 0x67452301 | 0, b0 = 0xefcdab89 | 0, c0 = 0x98badcfe | 0, d0 = 0x10325476 | 0;
+  const M = new Int32Array(16);
+  const rotl = (x, c) => (x << c) | (x >>> (32 - c));
+  for (let off = 0; off < withPad.length; off += 64) {
+    for (let j = 0; j < 16; j++) M[j] = dv.getUint32(off + j * 4, true);
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let i = 0; i < 64; i++) {
+      let F, g;
+      if (i < 16)      { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+      else if (i < 48) { F = B ^ C ^ D;          g = (3 * i + 5) % 16; }
+      else             { F = C ^ (B | ~D);       g = (7 * i) % 16; }
+      F = (F + A + K[i] + M[g]) | 0;
+      A = D; D = C; C = B;
+      B = (B + rotl(F, s[i])) | 0;
+    }
+    a0 = (a0 + A) | 0; b0 = (b0 + B) | 0; c0 = (c0 + C) | 0; d0 = (d0 + D) | 0;
+  }
+  const out = new Uint8Array(16);
+  const ov = new DataView(out.buffer);
+  ov.setInt32(0, a0, true); ov.setInt32(4, b0, true); ov.setInt32(8, c0, true); ov.setInt32(12, d0, true);
+  return out;
+}
+
+function rc4(key, data) {
+  const S = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) S[i] = i;
+  let j = 0;
+  for (let i = 0; i < 256; i++) {
+    j = (j + S[i] + key[i % key.length]) & 255;
+    const t = S[i]; S[i] = S[j]; S[j] = t;
+  }
+  const out = new Uint8Array(data.length);
+  let i = 0; j = 0;
+  for (let k = 0; k < data.length; k++) {
+    i = (i + 1) & 255;
+    j = (j + S[i]) & 255;
+    const t = S[i]; S[i] = S[j]; S[j] = t;
+    out[k] = data[k] ^ S[(S[i] + S[j]) & 255];
+  }
+  return out;
+}
+
+// ---------------- helpers ----------------
+
+function bytesToLatin1(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return s;
+}
+
+async function inflateBytes(bytes) {
+  for (const fmt of ['deflate', 'deflate-raw']) {
+    try {
+      const ds = new DecompressionStream(fmt);
+      const stream = new Blob([bytes]).stream().pipeThrough(ds);
+      const buf = await new Response(stream).arrayBuffer();
+      return new Uint8Array(buf);
+    } catch (e) { /* try next */ }
+  }
+  return null;
+}
+
+// decode a PDF literal string body (escape sequences) into raw byte values
+function decodeLiteralBytes(body) {
+  const out = [];
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+    if (c !== '\\') { out.push(body.charCodeAt(i)); continue; }
+    const n = body[++i];
+    if (n === 'n') out.push(10);
+    else if (n === 'r') out.push(13);
+    else if (n === 't') out.push(9);
+    else if (n === 'b') out.push(8);
+    else if (n === 'f') out.push(12);
+    else if (n >= '0' && n <= '7') {
+      let oct = n;
+      while (oct.length < 3 && body[i + 1] >= '0' && body[i + 1] <= '7') oct += body[++i];
+      out.push(parseInt(oct, 8) & 255);
+    } else if (n === '\n' || n === '\r') { /* continuation */ }
+    else if (n !== undefined) out.push(n.charCodeAt(0));
+  }
+  return new Uint8Array(out);
+}
+
+// find the balanced << ... >> starting at `start` (raw[start]=='<' raw[start+1]=='<')
+function balancedDict(raw, start) {
+  let depth = 0, i = start;
+  while (i < raw.length - 1) {
+    if (raw[i] === '<' && raw[i + 1] === '<') { depth++; i += 2; continue; }
+    if (raw[i] === '>' && raw[i + 1] === '>') { depth--; i += 2; if (depth === 0) return raw.slice(start, i); continue; }
+    i++;
+  }
+  return raw.slice(start, Math.min(start + 4000, raw.length));
+}
+
+// ---------------- PDF document model ----------------
+
+class PdfDoc {
+  constructor(bytes) {
+    this.bytes = bytes;
+    this.raw = bytesToLatin1(bytes);
+    this.objects = new Map(); // num -> {start (after 'obj'), end (at 'endobj'), gen}
+    this.decryptor = null;
+    this._indexObjects();
+  }
+
+  _indexObjects() {
+    const re = /(\d+)\s+(\d+)\s+obj\b/g;
+    let m;
+    while ((m = re.exec(this.raw)) !== null) {
+      // guard: make sure this is a real object header (start of line-ish)
+      const prev = this.raw[m.index - 1];
+      if (prev !== undefined && !/[\s>\]]/.test(prev)) continue;
+      const num = +m[1];
+      const bodyStart = m.index + m[0].length;
+      const end = this.raw.indexOf('endobj', bodyStart);
+      this.objects.set(num, { start: bodyStart, end: end < 0 ? this.raw.length : end, gen: +m[2] });
+    }
+  }
+
+  objText(num) {
+    const o = this.objects.get(num);
+    if (!o) return '';
+    return o.text !== undefined ? o.text : this.raw.slice(o.start, o.end);
+  }
+
+  // register objects stored inside /ObjStm compressed object streams
+  async expandObjectStreams() {
+    for (const [num] of [...this.objects]) {
+      const t = this.objText(num);
+      if (!/\/Type\s*\/ObjStm/.test(t)) continue;
+      const data = await this.streamOf(num);
+      if (!data) continue;
+      const s = bytesToLatin1(data);
+      const N = +(t.match(/\/N\s+(\d+)/) || [0, 0])[1];
+      const first = +(t.match(/\/First\s+(\d+)/) || [0, 0])[1];
+      if (!N || !first) continue;
+      const headerNums = (s.slice(0, first).match(/\d+/g) || []).map(Number);
+      for (let k = 0; k + 1 < headerNums.length && k / 2 < N; k += 2) {
+        const objNum = headerNums[k], off = headerNums[k + 1];
+        const nextOff = k + 3 < headerNums.length ? headerNums[k + 3] : undefined;
+        const body = s.slice(first + off, nextOff !== undefined ? first + nextOff : undefined);
+        if (!this.objects.has(objNum)) this.objects.set(objNum, { text: body, gen: 0 });
+      }
+    }
+  }
+
+  async setupDecryption() {
+    const em = this.raw.match(/\/Encrypt\s+(\d+)\s+\d+\s*R/);
+    if (!em) return;
+    const dict = this.objText(+em[1]);
+    if (!/\/Standard/.test(dict)) throw new Error('This PDF uses an unsupported encryption scheme — use the paste option instead.');
+    const V = +(dict.match(/\/V\s+(\d+)/) || [0, 0])[1];
+    const R = +(dict.match(/\/R\s+(\d+)/) || [0, 2])[1];
+    const length = +(dict.match(/\/Length\s+(\d+)/) || [0, 40])[1];
+    const P = +(dict.match(/\/P\s+(-?\d+)/) || [0, -1])[1];
+    const aes = /\/AESV2/.test(dict);
+    if (V > 4 || /\/AESV3/.test(dict) || R > 4) {
+      throw new Error('This PDF uses AES-256 encryption this tool cannot open — print it to a new PDF, or paste the table text.');
+    }
+    const strVal = key => {
+      const re = new RegExp('\\/' + key + '\\s*(\\(|<)');
+      const sm = re.exec(dict);
+      if (!sm) return null;
+      const at = sm.index + sm[0].length - 1;
+      if (dict[at] === '(') {
+        // literal string with escapes
+        let depth = 1, body = '', i = at + 1;
+        while (i < dict.length && depth > 0) {
+          const c = dict[i];
+          if (c === '\\') { body += c + (dict[i + 1] || ''); i += 2; continue; }
+          if (c === '(') depth++;
+          else if (c === ')') { depth--; if (!depth) break; }
+          body += c; i++;
+        }
+        return decodeLiteralBytes(body);
+      }
+      const close = dict.indexOf('>', at + 1);
+      const hex = dict.slice(at + 1, close).replace(/\s+/g, '');
+      const out = new Uint8Array(hex.length >> 1);
+      for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+      return out;
+    };
+    const O = strVal('O');
+    if (!O || O.length < 32) throw new Error('Unreadable encryption data in this PDF — use the paste option.');
+    // the document ID may be hex or a literal string, and incremental updates can
+    // leave several different IDs — derive a key from each candidate and keep the
+    // one that actually decrypts a stream
+    const idCandidates = [];
+    for (const m of this.raw.matchAll(/\/ID\s*\[\s*<([0-9A-Fa-f]+)>/g)) {
+      const h = m[1];
+      const b = new Uint8Array(h.length >> 1);
+      for (let i = 0; i < b.length; i++) b[i] = parseInt(h.substr(i * 2, 2), 16);
+      idCandidates.push(b);
+    }
+    for (const m of this.raw.matchAll(/\/ID\s*\[\s*\(((?:\\.|[^\\)])*)\)/g)) {
+      idCandidates.push(decodeLiteralBytes(m[1]));
+    }
+    idCandidates.push(new Uint8Array(0));
+    // dedupe
+    const seen = new Set();
+    const ids = idCandidates.filter(b => {
+      const k = bytesToLatin1(b);
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+
+    const PAD = new Uint8Array([0x28,0xBF,0x4E,0x5E,0x4E,0x75,0x8A,0x41,0x64,0x00,0x4E,0x56,0xFF,0xFA,0x01,0x08,
+                                0x2E,0x2E,0x00,0xB6,0xD0,0x68,0x3E,0x80,0x2F,0x0C,0xA9,0xFE,0x64,0x53,0x69,0x7A]);
+    const keyLen = R === 2 ? 5 : Math.max(5, Math.min(16, length >> 3));
+    const pBytes = new Uint8Array(4);
+    new DataView(pBytes.buffer).setInt32(0, P, true);
+    const deriveKey = id0 => {
+      const input = new Uint8Array(PAD.length + 32 + 4 + id0.length);
+      input.set(PAD, 0); input.set(O.subarray(0, 32), PAD.length);
+      input.set(pBytes, PAD.length + 32); input.set(id0, PAD.length + 36);
+      let key = md5(input);
+      if (R >= 3) for (let i = 0; i < 50; i++) key = md5(key.subarray(0, keyLen));
+      return key.subarray(0, keyLen);
+    };
+
+    // pick test streams: encrypted Flate streams (never XRef — those aren't encrypted)
+    const testNums = [];
+    for (const [num] of this.objects) {
+      const t = this.objText(num);
+      if (/\/FlateDecode/.test(t) && /stream(\r\n|\n|\r)/.test(t) && !/\/Type\s*\/XRef/.test(t)) {
+        testNums.push(num);
+        if (testNums.length >= 3) break;
+      }
+    }
+    for (const id0 of ids) {
+      this.decryptor = { key: deriveKey(id0), keyLen, aes };
+      let ok = false;
+      for (const num of testNums) {
+        if (await this.streamOf(num)) { ok = true; break; }
+      }
+      if (ok || !testNums.length) return;
+    }
+    this.decryptor = { key: deriveKey(ids[0]), keyLen, aes }; // last resort
+  }
+
+  async decryptStream(objNum, data) {
+    if (!this.decryptor) return data;
+    const { key, keyLen, aes } = this.decryptor;
+    const gen = this.objects.get(objNum)?.gen || 0;
+    const extra = aes ? 9 : 5;
+    const input = new Uint8Array(keyLen + extra);
+    input.set(key, 0);
+    input[keyLen] = objNum & 255; input[keyLen + 1] = (objNum >> 8) & 255; input[keyLen + 2] = (objNum >> 16) & 255;
+    input[keyLen + 3] = gen & 255; input[keyLen + 4] = (gen >> 8) & 255;
+    if (aes) { input[keyLen + 5] = 0x73; input[keyLen + 6] = 0x41; input[keyLen + 7] = 0x6C; input[keyLen + 8] = 0x54; }
+    const objKey = md5(input).subarray(0, Math.min(keyLen + 5, 16));
+    if (!aes) return rc4(objKey, data);
+    // AES-128-CBC with 16-byte IV prefix
+    if (data.length <= 16) return new Uint8Array(0);
+    try {
+      const ck = await crypto.subtle.importKey('raw', objKey, 'AES-CBC', false, ['decrypt']);
+      const plain = await crypto.subtle.decrypt({ name: 'AES-CBC', iv: data.subarray(0, 16) }, ck, data.subarray(16));
+      return new Uint8Array(plain);
+    } catch (e) { return new Uint8Array(0); }
+  }
+
+  // decoded (decrypted + inflated) stream bytes of object `num`, or null
+  async streamOf(num) {
+    const o = this.objects.get(num);
+    if (!o || o.text !== undefined) return null; // ObjStm members carry no streams
+    const body = this.raw.slice(o.start, o.end);
+    const sAt = body.search(/stream(\r\n|\n|\r)/);
+    if (sAt < 0) return null;
+    const dict = body.slice(0, sAt);
+    const eol = body[sAt + 6] === '\r' && body[sAt + 7] === '\n' ? 8 : 7;
+    let dataEnd = body.lastIndexOf('endstream');
+    if (dataEnd < 0) dataEnd = body.length;
+    while (dataEnd > sAt + eol && (body[dataEnd - 1] === '\n' || body[dataEnd - 1] === '\r')) dataEnd--;
+    let data = this.bytes.subarray(o.start + sAt + eol, o.start + dataEnd);
+    data = await this.decryptStream(num, data);
+    if (/\/FlateDecode/.test(dict)) {
+      const out = await inflateBytes(data);
+      return out; // null if inflation failed
+    }
+    if (/\/Filter/.test(dict)) return null; // unsupported filter
+    return data;
+  }
+
+  // dereference `/Key 12 0 R` or inline value; returns {ref} or {inline:text}
+  refOrInline(dictText, key) {
+    const re = new RegExp('\\/' + key + '\\s+(\\d+)\\s+\\d+\\s*R');
+    const rm = re.exec(dictText);
+    if (rm) return { ref: +rm[1] };
+    const im = new RegExp('\\/' + key + '\\s*<<').exec(dictText);
+    if (im) return { inline: balancedDict(dictText, im.index + im[0].length - 2) };
+    return null;
+  }
+}
+
+// ---------------- ToUnicode CMap parsing ----------------
+
+function parseCMap(text) {
+  const map = new Map();
+  let width = 1;
+  const csm = text.match(/begincodespacerange\s+<([0-9A-Fa-f]+)>/);
+  if (csm) width = Math.max(1, Math.round(csm[1].length / 2));
+  const hexToStr = h => {
+    let s = '';
+    for (let i = 0; i + 3 < h.length + 1; i += 4) {
+      const cu = parseInt(h.substr(i, 4), 16);
+      if (!isNaN(cu)) s += String.fromCharCode(cu);
+    }
+    return s;
+  };
+  // bfchar blocks
+  const charRe = /beginbfchar([^]*?)endbfchar/g;
+  let m;
+  while ((m = charRe.exec(text)) !== null) {
+    const pairRe = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g;
+    let p;
+    while ((p = pairRe.exec(m[1])) !== null) {
+      map.set(parseInt(p[1], 16), hexToStr(p[2]));
+    }
+  }
+  // bfrange blocks
+  const rangeRe = /beginbfrange([^]*?)endbfrange/g;
+  while ((m = rangeRe.exec(text)) !== null) {
+    const body = m[1];
+    const itemRe = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*(<([0-9A-Fa-f]+)>|\[([^\]]*)\])/g;
+    let r;
+    while ((r = itemRe.exec(body)) !== null) {
+      const lo = parseInt(r[1], 16), hi = parseInt(r[2], 16);
+      if (hi - lo > 65535) continue;
+      if (r[4] !== undefined) {
+        const base = parseInt(r[4], 16);
+        const baseHigh = r[4].length > 4 ? r[4].slice(0, -4) : '';
+        for (let c = lo; c <= hi; c++) {
+          if (baseHigh) map.set(c, hexToStr(baseHigh + (base + (c - lo)).toString(16).padStart(4, '0').slice(-4)));
+          else map.set(c, String.fromCharCode(base + (c - lo)));
+        }
+      } else if (r[5] !== undefined) {
+        const dsts = r[5].match(/<([0-9A-Fa-f]+)>/g) || [];
+        dsts.forEach((d, k) => { if (lo + k <= hi) map.set(lo + k, hexToStr(d.slice(1, -1))); });
+      }
+    }
+  }
+  return { width, map };
+}
+
+// ---------------- content stream → positioned text runs ----------------
+
+function runsFromContent(s, fonts) {
+  // fonts: Map fontName -> {width, map} | null
+  const runs = [];
+  let x = 0, y = 0, tl = 0, font = null, baseSize = 10, scale = 1;
+  const operands = [];
+  let i = 0;
+  const len = s.length;
+
+  const decodeBytes = bytes => {
+    if (!font || !font.map || !font.map.size) return bytesToLatin1(bytes);
+    let out = '';
+    const w = font.width;
+    for (let k = 0; k + w - 1 < bytes.length; k += w) {
+      let code = 0;
+      for (let b = 0; b < w; b++) code = (code << 8) | bytes[k + b];
+      const mapped = font.map.get(code);
+      out += mapped !== undefined ? mapped : (w === 1 ? String.fromCharCode(code) : '');
+    }
+    return out;
+  };
+
+  function readString() {
+    let depth = 1, body = '';
+    i++;
+    while (i < len && depth > 0) {
+      const c = s[i];
+      if (c === '\\') { body += c + (s[i + 1] || ''); i += 2; continue; }
+      if (c === '(') depth++;
+      else if (c === ')') { depth--; if (depth === 0) break; }
+      body += c; i++;
+    }
+    i++;
+    return decodeBytes(decodeLiteralBytes(body));
+  }
+  function readHex() {
+    let body = '';
+    i++;
+    while (i < len && s[i] !== '>') { body += s[i]; i++; }
+    i++;
+    const hex = body.replace(/\s+/g, '');
+    const bytes = new Uint8Array(hex.length >> 1);
+    for (let j = 0; j < bytes.length; j++) bytes[j] = parseInt(hex.substr(j * 2, 2), 16);
+    if (font && font.map && font.map.size) return decodeBytes(bytes);
+    // no map: guess 1-byte vs 2-byte
+    let out = bytesToLatin1(bytes);
+    const printable = out.replace(/[^\x20-\x7e]/g, '').length;
+    if (out.length && printable / out.length < 0.6 && bytes.length >= 4) {
+      let out2 = '';
+      for (let j = 0; j + 1 < bytes.length; j += 2) out2 += String.fromCharCode((bytes[j] << 8) | bytes[j + 1]);
+      return out2;
+    }
+    return out;
+  }
+  const emit = str => {
+    if (!str) return;
+    const size = Math.max(1, baseSize * Math.abs(scale || 1));
+    runs.push({ x, y, s: str, size, w: str.length * size * 0.52 });
+  };
+
+  while (i < len) {
+    const c = s[i];
+    if (c === '(') { operands.push({ t: 's', v: readString() }); continue; }
+    if (c === '<' && s[i + 1] !== '<') { operands.push({ t: 's', v: readHex() }); continue; }
+    if (c === '<' && s[i + 1] === '<') { i += 2; continue; }
+    if (c === '[') {
+      i++;
+      const parts = [];
+      while (i < len && s[i] !== ']') {
+        const ch = s[i];
+        if (ch === '(') { parts.push({ t: 's', v: readString() }); continue; }
+        if (ch === '<') { parts.push({ t: 's', v: readHex() }); continue; }
+        const numM = /^-?\d*\.?\d+/.exec(s.slice(i, i + 24));
+        if (numM && numM[0]) { parts.push({ t: 'n', v: parseFloat(numM[0]) }); i += numM[0].length; continue; }
+        i++;
+      }
+      i++;
+      operands.push({ t: 'a', v: parts });
+      continue;
+    }
+    if (c === '/') {
+      let j = i + 1;
+      while (j < len && /[^\s()<>\[\]\/%]/.test(s[j])) j++;
+      operands.push({ t: 'name', v: s.slice(i + 1, j) });
+      i = j; continue;
+    }
+    if (/[-.\d]/.test(c)) {
+      const numM = /^-?\d*\.?\d+/.exec(s.slice(i, i + 24));
+      if (numM && numM[0]) { operands.push({ t: 'n', v: parseFloat(numM[0]) }); i += numM[0].length; continue; }
+      i++; continue;
+    }
+    if (/[A-Za-z'"*]/.test(c)) {
+      let j = i;
+      while (j < len && /[A-Za-z'"*0-9]/.test(s[j])) j++;
+      const op = s.slice(i, j);
+      i = j;
+      const nums = operands.filter(o => o.t === 'n').map(o => o.v);
+      const strs = operands.filter(o => o.t === 's').map(o => o.v);
+      const names = operands.filter(o => o.t === 'name').map(o => o.v);
+      const arrs = operands.filter(o => o.t === 'a');
+      switch (op) {
+        case 'Tf':
+          if (names.length) font = fonts.get(names[names.length - 1]) || null;
+          if (nums.length) baseSize = Math.abs(nums[nums.length - 1]) || 10;
+          break;
+        case 'Tm':
+          if (nums.length >= 6) {
+            x = nums[nums.length - 2]; y = nums[nums.length - 1];
+            scale = nums[nums.length - 6] || 1;
+          }
+          break;
+        case 'Td': if (nums.length >= 2) { x += nums[nums.length - 2]; y += nums[nums.length - 1]; } break;
+        case 'TD': if (nums.length >= 2) { tl = -nums[nums.length - 1]; x += nums[nums.length - 2]; y += nums[nums.length - 1]; } break;
+        case 'TL': if (nums.length) tl = nums[nums.length - 1]; break;
+        case 'T*': y -= tl || 12; break;
+        case 'Tj': if (strs.length) emit(strs[strs.length - 1]); break;
+        case "'": y -= tl || 12; if (strs.length) emit(strs[strs.length - 1]); break;
+        case '"': y -= tl || 12; if (strs.length) emit(strs[strs.length - 1]); break;
+        case 'TJ':
+          if (arrs.length) {
+            let joined = '';
+            for (const it of arrs[arrs.length - 1].v) {
+              if (it.t === 's') joined += it.v;
+              else if (it.t === 'n' && it.v < -150) joined += ' ';
+            }
+            emit(joined);
+          }
+          break;
+        case 'BT': x = 0; y = 0; tl = 0; break;
+      }
+      operands.length = 0;
+      continue;
+    }
+    i++;
+  }
+  return runs;
+}
+
+// group positioned runs into text lines (y clusters, x order)
+function runsToLines(runs) {
+  if (!runs.length) return [];
+  const sorted = [...runs].sort((a, b) => b.y - a.y || a.x - b.x);
+  const lines = [];
+  let cur = [], curY = null;
+  for (const r of sorted) {
+    if (curY === null || Math.abs(r.y - curY) <= 2.2) {
+      cur.push(r);
+      curY = curY === null ? r.y : curY;
+    } else {
+      lines.push(cur);
+      cur = [r]; curY = r.y;
+    }
+  }
+  lines.push(cur);
+  return lines.map(g => {
+    const ordered = g.sort((a, b) => a.x - b.x);
+    let out = '', prev = null;
+    for (const r of ordered) {
+      if (!r.s) continue;
+      if (!prev) { out = r.s; prev = r; continue; }
+      // kerned glyph runs of one word/number sit closer than a space would be
+      const gap = r.x - (prev.x + prev.w);
+      out += (gap > Math.max(0.8, prev.size * 0.28) ? ' ' : '') + r.s;
+      prev = r;
+    }
+    return out.trim();
+  }).filter(l => l);
+}
+
+// ---------------- top level extraction ----------------
+
+async function extractPdfText(arrayBuffer) {
+  const bytes = new Uint8Array(arrayBuffer);
+  const head = bytesToLatin1(bytes.subarray(0, 8));
+  if (!head.startsWith('%PDF')) throw new Error('That file is not a PDF.');
+  const doc = new PdfDoc(bytes);
+  await doc.setupDecryption();
+  await doc.expandObjectStreams();
+
+  // --- page order: walk the page tree (raw file order can be scrambled) ---
+  let pageOrder = [];
+  const rootM = doc.raw.match(/\/Root\s+(\d+)\s+\d+\s*R/);
+  if (rootM) {
+    const rootT = doc.objText(+rootM[1]);
+    const pagesM = rootT.match(/\/Pages\s+(\d+)\s+\d+\s*R/);
+    const seen = new Set();
+    const walk = num => {
+      if (seen.has(num) || pageOrder.length > 2000) return;
+      seen.add(num);
+      const t = doc.objText(num);
+      if (/\/Type\s*\/Page\b(?!s)/.test(t)) { pageOrder.push(num); return; }
+      const kids = t.match(/\/Kids\s*\[([^\]]*)\]/);
+      if (kids) {
+        for (const r of kids[1].match(/(\d+)\s+\d+\s*R/g) || []) walk(+r.match(/^(\d+)/)[1]);
+      }
+    };
+    if (pagesM) walk(+pagesM[1]);
+  }
+  if (!pageOrder.length) {
+    for (const [num] of doc.objects) {
+      if (/\/Type\s*\/Page\b(?!s)/.test(doc.objText(num))) pageOrder.push(num);
+    }
+  }
+
+  // --- gather each page's content streams + font resources ---
+  const pages = [];
+  for (const num of pageOrder) {
+    const t = doc.objText(num);
+    // content refs
+    const contents = [];
+    const cm = /\/Contents\s+(\d+)\s+\d+\s*R/.exec(t);
+    const ca = /\/Contents\s*\[([^\]]*)\]/.exec(t);
+    if (ca) {
+      const rr = ca[1].match(/(\d+)\s+\d+\s*R/g) || [];
+      for (const r of rr) contents.push(+r.match(/^(\d+)/)[1]);
+    } else if (cm) contents.push(+cm[1]);
+    if (!contents.length) continue;
+    // resources (inline or ref), then /Font map
+    let resText = '';
+    const ro = doc.refOrInline(t, 'Resources');
+    if (ro) resText = ro.ref != null ? doc.objText(ro.ref) : ro.inline;
+    let fontMapText = '';
+    if (resText) {
+      const fo = doc.refOrInline(resText, 'Font');
+      if (fo) fontMapText = fo.ref != null ? doc.objText(fo.ref) : fo.inline;
+    }
+    const fontRefs = new Map();
+    if (fontMapText) {
+      const fr = /\/([^\s\/<>\[\]()]+)\s+(\d+)\s+\d+\s*R/g;
+      let fm;
+      while ((fm = fr.exec(fontMapText)) !== null) fontRefs.set(fm[1], +fm[2]);
+    }
+    pages.push({ num, contents, fontRefs });
+  }
+
+  // --- load ToUnicode maps for every referenced font (cached) ---
+  const cmapCache = new Map(); // fontObjNum -> {width,map}|null
+  async function fontFor(fontObjNum) {
+    if (cmapCache.has(fontObjNum)) return cmapCache.get(fontObjNum);
+    let result = null;
+    const ft = doc.objText(fontObjNum);
+    const tm = /\/ToUnicode\s+(\d+)\s+\d+\s*R/.exec(ft);
+    if (tm) {
+      const data = await doc.streamOf(+tm[1]);
+      if (data) result = parseCMap(bytesToLatin1(data));
+    }
+    cmapCache.set(fontObjNum, result);
+    return result;
+  }
+
+  const allLines = [];
+  for (const page of pages) {
+    const fonts = new Map();
+    for (const [name, ref] of page.fontRefs) fonts.set(name, await fontFor(ref));
+    let content = '';
+    for (const cnum of page.contents) {
+      const data = await doc.streamOf(cnum);
+      if (data) content += bytesToLatin1(data) + '\n';
+    }
+    if (!content) continue;
+    const runs = runsFromContent(content, fonts);
+    allLines.push(...runsToLines(runs));
+  }
+
+  let joined = allLines.join('\n').trim();
+
+  // fallback: no page structure resolved — scan every stream anonymously (v1 behavior)
+  if (!joined) {
+    for (const [num] of doc.objects) {
+      const t = doc.objText(num);
+      if (!/stream(\r\n|\n|\r)/.test(t)) continue;
+      const data = await doc.streamOf(num);
+      if (!data) continue;
+      const s = bytesToLatin1(data);
+      if (s.indexOf('BT') !== -1 && (s.indexOf('Tj') !== -1 || s.indexOf('TJ') !== -1)) {
+        allLines.push(...runsToLines(runsFromContent(s, new Map())));
+      }
+    }
+    joined = allLines.join('\n').trim();
+  }
+
+  if (!joined) throw new Error('No readable text found — this PDF may be scanned. Use "Paste illustration text" instead.');
+  return joined;
+}
+
+// ---------------- illustration ledger parsing (v2 — header-aware, multi-column) ----------------
+
+const CARRIERS = ['Lafayette Life', 'Foresters Financial', 'National Life Group',
+  'Penn Mutual', 'MassMutual', 'Guardian', 'New York Life', 'Northwestern Mutual',
+  'Ameritas', 'Security Mutual', 'Mutual Trust', 'OneAmerica', 'Mutual of Omaha',
+  'Midland National', 'North American', 'Allianz', 'Transamerica', 'F&G', 'Nationwide'];
+
+function detectCarrier(text) {
+  const low = text.toLowerCase();
+  for (const c of CARRIERS) if (low.includes(c.toLowerCase())) return c;
+  if (/flexlife|life insurance company of the southwest/i.test(text)) return 'National Life Group';
+  return null;
+}
+
+// A candidate ledger row: a line whose first two numbers are small integers
+// (policy year + age, in either column order) followed by value columns.
+function rowCandidate(line) {
+  // thousands separators and currency vanish entirely; % detaches from its number
+  const cleaned = line.replace(/(\d),(?=\d)/g, '$1').replace(/\$/g, ' ').replace(/(\d)%/g, '$1 ');
+  const nums = (cleaned.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+  if (nums.length < 4) return null;
+  const [n1, n2] = nums;
+  if (!Number.isInteger(n1) || n1 < 0 || n1 > 121) return null;
+  if (!Number.isInteger(n2) || n2 < 0 || n2 > 121) return null;
+  return { n1, n2, rest: nums.slice(2), numCount: nums.length };
+}
+
+// scan lines for consecutive ledger runs under one column order and direction
+// orient 0: [year, age, ...]  orient 1: [age, year, ...]
+// dir +1: years ascending      dir -1: years descending (bottom-up table draw)
+function scanRuns(lines, orient, dir) {
+  const runs = [];
+  let cur = null;
+  const closeRun = () => { if (cur && cur.rows.length >= 3) runs.push(cur); cur = null; };
+  for (let li = 0; li < lines.length; li++) {
+    const c = rowCandidate(lines[li]);
+    if (!c) continue; // footers/disclaimers between ledger rows don't break a run
+    const year = orient ? c.n2 : c.n1;
+    const age = orient ? c.n1 : c.n2;
+    if (year < 1 || year > 100 || age < 0 || age > 121) continue;
+    if (age + 1 < year) continue; // issue age below zero — impossible orientation
+    const cand = { year, age, rest: c.rest, numCount: c.numCount };
+    const prev = cur && cur.rows[cur.rows.length - 1];
+    if (prev && cand.year === prev.year + dir && Math.abs((cand.age - prev.age) - dir) <= 1) {
+      cur.rows.push(cand);
+    } else if (prev && cand.year === prev.year && cand.age === prev.age) {
+      // duplicate of the same ledger year (summary strip) — ignore
+    } else {
+      closeRun();
+      cur = { rows: [cand], startLine: li };
+    }
+  }
+  closeRun();
+  // merge runs that continue each other (ledger split across pages)
+  const merged = [];
+  for (const r of runs) {
+    const last = merged[merged.length - 1];
+    if (last) {
+      const tail = last.rows[last.rows.length - 1];
+      const head = r.rows[0];
+      if (head.year === tail.year + dir && Math.abs((head.age - tail.age) - dir) <= 1 &&
+          Math.abs(head.numCount - tail.numCount) <= 2) {
+        last.rows.push(...r.rows);
+        continue;
+      }
+    }
+    merged.push(r);
+  }
+  if (dir < 0) for (const r of merged) r.rows.reverse();
+  return merged;
+}
+
+// Parse illustration text into rows {year, age, premium, cv, db}.
+function parseIllustrationText(text) {
+  const lines = text.split(/\r?\n/);
+
+  // collect ledger runs under both column orders and both directions
+  // (NLG prints Year|Age ascending; Lafayette/F&G print Age|Year; some
+  //  ledgers draw bottom-up and read back descending)
+  const merged = [
+    ...scanRuns(lines, 0, 1), ...scanRuns(lines, 1, 1),
+    ...scanRuns(lines, 0, -1), ...scanRuns(lines, 1, -1),
+  ];
+  if (!merged.length) {
+    throw new Error('No illustration table found. Expected ledger rows beginning with policy year and age.');
+  }
+
+  // Column mapping for one run: align columns from the RIGHT (trailing columns
+  // are the stable ones across page variants), then pick
+  //   death benefit = rightmost column whose median is a big dollar figure,
+  //   cash value    = next column left of it that is non-negative and dollar-sized.
+  const median = a => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+  function mapRun(run) {
+    const rows = run.rows;
+    const maxK = Math.min(...rows.map(r => r.rest.length));
+    if (maxK < 2) return null;
+    const colFromRight = k => rows.map(r => r.rest[r.rest.length - k]);
+    let dbK = null;
+    for (let k = 1; k <= maxK - 1; k++) {
+      const col = colFromRight(k);
+      if (median(col) > 5000 && col.filter(v => v >= 0).length >= rows.length * 0.9) { dbK = k; break; }
+    }
+    if (dbK === null) return null;
+    const dbCol = colFromRight(dbK);
+    const dbMed = median(dbCol);
+    let cvK = null;
+    for (let k = dbK + 1; k <= maxK - 1; k++) {
+      const col = colFromRight(k);
+      const med = median(col);
+      if (med > 100 && med <= dbMed * 1.05 && col.filter(v => v >= 0).length >= rows.length * 0.9) { cvK = k; break; }
+    }
+    if (cvK === null) return null;
+    const cvCol = colFromRight(cvK);
+    const premiums = rows.map(c => {
+      for (const v of c.rest.slice(0, Math.max(1, c.rest.length - cvK))) {
+        if (v >= 100 || v === 0) return Math.max(0, v);
+      }
+      return 0;
+    });
+    // Illustrated-income column (e.g. NLG's Lifetime Income Benefit Rider):
+    // level dollar payments that appear once premiums stop. Detect: a column
+    // left of cash value whose value repeats (level income) across >= 3
+    // zero-premium rows, and stays ~0 while premiums are still being paid.
+    let incomeK = null, incomeLevel = 0;
+    for (let k = cvK + 1; k <= maxK; k++) {
+      const col = colFromRight(k);
+      const freq = new Map();
+      let active = 0, duringPremium = 0, premiumRows = 0;
+      rows.forEach((c, i) => {
+        const v = col[i];
+        if (premiums[i] > 0) { premiumRows++; if (v > 1000) duringPremium++; return; }
+        if (v >= 1000 && v <= median(dbCol)) {
+          active++;
+          const key = Math.round(v);
+          freq.set(key, (freq.get(key) || 0) + 1);
+        }
+      });
+      const level = Math.max(0, ...freq.values());
+      if (active >= 3 && level >= 3 && (premiumRows === 0 || duringPremium / premiumRows < 0.3) && level > incomeLevel) {
+        incomeK = k; incomeLevel = level;
+      }
+    }
+    const incomeCol = incomeK !== null ? colFromRight(incomeK) : null;
+    const mapped = rows.map((c, i) => ({
+      year: c.year, age: c.age, premium: premiums[i],
+      income: incomeCol ? Math.max(0, incomeCol[i]) : 0,
+      cv: Math.max(0, cvCol[i]), db: Math.max(0, dbCol[i]),
+    }));
+    const ok = mapped.filter(r => r.db > 1000 && r.db >= r.cv * 0.8).length;
+    return { mapped, ok, hasIncome: incomeK !== null };
+  }
+
+  // choose the best table: most rows that map to a plausible ledger;
+  // a ledger carrying the carrier's own income schedule beats a same-quality
+  // side report; remaining ties → the later one (guaranteed prints first)
+  let best = null, bestScore = -1;
+  for (const r of merged) {
+    const m = mapRun(r);
+    if (!m) continue;
+    const score = m.ok + (m.hasIncome ? 0.5 : 0);
+    if (score >= bestScore) { best = m; bestScore = score; }
+  }
+  if (!best || best.mapped.length < 3 || best.ok < Math.max(3, best.mapped.length * 0.6)) {
+    throw new Error('Found a table but could not identify cash value / death benefit columns — paste the ledger text instead.');
+  }
+  return best.mapped;
+}
+
+
+function median(a) {
+  const s = [...a].sort((x, y) => x - y);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function deriveRates(rows) {
+  const cvR = [], dbR = [];
+  const n = rows.length;
+  for (let i = Math.max(1, n - 5); i < n; i++) {
+    const prev = rows[i - 1], curr = rows[i];
+    if (prev.cv > 0) cvR.push((curr.cv - prev.cv - curr.premium) / prev.cv);
+    if (prev.db > 0) dbR.push((curr.db - prev.db) / prev.db);
+  }
+  return {
+    cvGrowth: cvR.length ? Math.max(0, Math.min(0.08, median(cvR))) : 0.045,
+    dbGrowth: dbR.length ? Math.max(0, Math.min(0.05, median(dbR))) : 0.012,
+  };
+}
+
+function buildModel(rows, a) {
+  const g = a.cvGrowth / 100, gd = a.dbGrowth / 100, lr = a.loanRate / 100;
+  const tl = [];
+  let cumPrem = 0;
+  for (const r of rows) {
+    if (r.age > a.deathAge) break;
+    cumPrem += r.premium;
+    tl.push({ age: r.age, year: r.year, premium: r.premium, cumPrem, income: r.income || 0, cv: r.cv, db: r.db, projected: false });
+  }
+  let last = tl[tl.length - 1];
+  let cv = last.cv, db = last.db, year = last.year;
+  for (let age = last.age + 1; age <= a.deathAge; age++) {
+    cv *= (1 + g); db = Math.max(db * (1 + gd), cv); year++;
+    tl.push({ age, year, premium: 0, cumPrem, income: 0, cv, db, projected: true });
+  }
+  // The carrier ledger's cash value / death benefit are ALREADY net of any
+  // income it schedules (e.g. a Lifetime Income Benefit Rider). The loan
+  // overlay below models only ADDITIONAL draws layered on top.
+  let loan = 0, drawn = 0, lapseAge = null;
+  for (const pt of tl) {
+    let draw = 0;
+    if (lapseAge === null && a.income > 0 && pt.age >= a.incomeStart) draw = a.income;
+    loan = (loan + draw) * (1 + lr);
+    let netCV = pt.cv - loan, netDB = pt.db - loan;
+    // lapse only when an actual loan balance outruns cash value — not when a
+    // brand-new policy simply hasn't built cash value yet (early years are $0)
+    if (lapseAge === null && loan > 0 && netCV <= 0) { lapseAge = pt.age; draw = 0; }
+    if (lapseAge !== null && pt.age >= lapseAge) { netCV = Math.max(0, netCV); netDB = Math.max(0, netDB); }
+    drawn += draw + pt.income;
+    pt.draw = draw; pt.loan = loan; pt.cumIncome = drawn;
+    pt.netCV = netCV; pt.netDB = netDB;
+  }
+  const end = tl[tl.length - 1];
+  let breakEven = null;
+  for (const pt of tl) { if (!pt.projected && pt.cv >= pt.cumPrem) { breakEven = pt; break; } }
+  // the illustration's own income schedule (within the modeled horizon)
+  const incRows = tl.filter(p => p.income > 0);
+  const illustratedIncome = incRows.length ? {
+    annual: median(incRows.map(p => p.income)),
+    startAge: incRows[0].age,
+    endAge: incRows[incRows.length - 1].age,
+    total: incRows.reduce((s, p) => s + p.income, 0),
+  } : null;
+  return {
+    timeline: tl, breakEven, lapseAge, illustratedIncome,
+    totals: {
+      premiums: tl.reduce((s, p) => s + p.premium, 0),
+      income: end.cumIncome,
+      extraIncome: end.cumIncome - (illustratedIncome ? illustratedIncome.total : 0),
+      loanAtDeath: end.loan,
+      netDBAtDeath: end.netDB,
+      legacy: end.cumIncome + end.netDB,
+    },
+  };
+}
+
+/* ================================================================
+   Debt freedom — traditional amortization vs policy loan capacity
+   ================================================================ */
+const LOAN_CAPACITY_FACTOR = 0.90; // borrowable share of cash value
+
+// End-of-year balances for the combined debt load, amortized monthly.
+// debts: [{ balance, rate (APR %), payment (monthly) }]
+function buildDebtSchedule(debts, years) {
+  const live = debts.map(d => ({ bal: Math.max(0, d.balance || 0), r: (d.rate || 0) / 100 / 12, pmt: Math.max(0, d.payment || 0) }));
+  const schedule = [];
+  for (let yTot = 0; yTot < years; yTot++) {
+    for (let mo = 0; mo < 12; mo++) {
+      for (const d of live) {
+        if (d.bal <= 0) continue;
+        d.bal = d.bal * (1 + d.r) - d.pmt;
+        if (d.bal < 0) d.bal = 0;
+      }
+    }
+    schedule.push(live.reduce((s, d) => s + d.bal, 0));
+  }
+  return schedule;
+}
+
+function computeDebtFreedom(rows, debts) {
+  const totalDebt    = debts.reduce((s, d) => s + (d.balance || 0), 0);
+  const totalPayment = debts.reduce((s, d) => s + (d.payment || 0), 0);
+  if (totalDebt <= 0 || !rows?.length) return null;
+
+  const first    = rows[0];
+  const baseYear = first.year;
+  const lastYear = rows[rows.length - 1].year;
+  const schedule = buildDebtSchedule(debts, Math.max(lastYear - baseYear + 1, 40));
+
+  const toAge = elapsedYears => first.age + elapsedYears;
+
+  // Debt remaining AT a given elapsed year — same convention as the traditional loop.
+  //   elapsed 0 = today = full balance (nothing amortized yet)
+  //   elapsed e = balance at END of year e = schedule[e-1]
+  const remainingAt = elapsed =>
+    elapsed <= 0 ? totalDebt : (schedule[elapsed - 1] ?? 0);
+
+  // Traditional payoff: first elapsed-year the amortized balance hits zero
+  let traditionalYears = null;
+  for (let e = 1; e <= schedule.length; e++) {
+    if (schedule[e - 1] <= 0) { traditionalYears = e; break; }
+  }
+
+  // Policy payoff: first row whose loan capacity covers the debt remaining AT that row
+  let policyYears = null;
+  let policyRow   = null;
+  for (const row of rows) {
+    const elapsed   = row.year - baseYear;     // 0-based
+    const remaining = remainingAt(elapsed);    // same ruler as traditional
+    if (remaining > 0 && (row.loanCapacity || 0) >= remaining) {
+      policyYears = elapsed;
+      policyRow   = row;
+      break;
+    }
+  }
+
+  const detail = rows
+    .filter(row => row.year - baseYear <= (traditionalYears ?? (lastYear - baseYear)))
+    .map(row => ({
+      year: row.year,
+      age: row.age,
+      debt: remainingAt(row.year - baseYear),
+      capacity: row.loanCapacity || 0,
+    }));
+
+  return {
+    totalDebt,
+    totalPayment,
+    traditionalYear: traditionalYears,
+    traditionalAge:  traditionalYears ? toAge(traditionalYears) : null,
+    policyYear:      policyYears,
+    policyAge:       policyYears != null ? toAge(policyYears) : null,
+    policyRow,
+    yearsSaved: (traditionalYears != null && policyYears != null)
+      ? Math.max(0, traditionalYears - policyYears)
+      : 0,
+    detail,
+  };
+}
+
+/* Client report PDF generator — hand-built PDF 1.4, no libraries.
+   Standard Helvetica fonts, uncompressed content streams, vector charts.
+   Returns the PDF as a latin1 string (byte per char). */
+
+// ---- brand palette (print-on-white steps) ----
+const C = {
+  navy: [13 / 255, 21 / 255, 48 / 255],
+  navyLight: [16 / 255, 26 / 255, 62 / 255],
+  gold: [150 / 255, 105 / 255, 10 / 255],
+  goldBright: [240 / 255, 180 / 255, 41 / 255],
+  ink: [23 / 255, 24 / 255, 28 / 255],
+  ink2: [67 / 255, 70 / 255, 90 / 255],
+  ink3: [107 / 255, 111 / 255, 133 / 255],
+  grid: [0.91, 0.90, 0.86],
+  sGold: [150 / 255, 105 / 255, 10 / 255],
+  sBlue: [32 / 255, 89 / 255, 184 / 255],
+  sTeal: [13 / 255, 125 / 255, 92 / 255],
+  sCoral: [187 / 255, 74 / 255, 50 / 255],
+  critical: [208 / 255, 59 / 255, 59 / 255],
+  paper: [1, 1, 1],
+  cream: [0.98, 0.97, 0.94],
+};
+
+const PAGE_W = 612, PAGE_H = 792, MARGIN = 54;
+
+// approximate Helvetica advance widths (em/1000)
+function chW(ch, bold) {
+  if (/[0-9]/.test(ch)) return 556;
+  if (ch === ' ') return 278;
+  if (/[.,:;!'|il]/.test(ch)) return bold ? 278 : 222;
+  if (/[ftrIj()\[\]\-"]/.test(ch)) return 333;
+  if (/[A-Z]/.test(ch)) return /[MW]/.test(ch) ? 889 : 667;
+  if (/[mw]/.test(ch)) return 833;
+  return bold ? 574 : 520;
+}
+function measure(str, size, bold) {
+  let w = 0;
+  for (const ch of str) w += chW(ch, bold);
+  return (w / 1000) * size;
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/[—–]/g, '-').replace(/×/g, 'x').replace(/[·•]/g, '-')
+    .replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+    .replace(/[^\x20-\x7e]/g, '')
+    .replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+}
+
+class PdfBuilder {
+  constructor() { this.pages = []; this.cur = null; this.newPage(); }
+  newPage() { this.cur = []; this.pages.push(this.cur); }
+  raw(op) { this.cur.push(op); }
+  setFill(c) { this.raw(`${c[0].toFixed(3)} ${c[1].toFixed(3)} ${c[2].toFixed(3)} rg`); }
+  setStroke(c) { this.raw(`${c[0].toFixed(3)} ${c[1].toFixed(3)} ${c[2].toFixed(3)} RG`); }
+  rect(x, y, w, h, c) { this.setFill(c); this.raw(`${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)} re f`); }
+  line(x1, y1, x2, y2, c, width = 1, dash = null) {
+    this.setStroke(c);
+    this.raw(`${width} w`);
+    this.raw(dash ? `[${dash.join(' ')}] 0 d` : '[] 0 d');
+    this.raw(`${x1.toFixed(1)} ${y1.toFixed(1)} m ${x2.toFixed(1)} ${y2.toFixed(1)} l S`);
+  }
+  poly(pts, c, width = 1.5, dash = null) {
+    if (pts.length < 2) return;
+    this.setStroke(c);
+    this.raw(`${width} w 1 J 1 j`);
+    this.raw(dash ? `[${dash.join(' ')}] 0 d` : '[] 0 d');
+    this.raw(pts.map((p, i) => `${p[0].toFixed(1)} ${p[1].toFixed(1)} ${i ? 'l' : 'm'}`).join(' ') + ' S');
+  }
+  circle(cx, cy, r, c) {
+    const k = r * 0.5523;
+    this.setFill(c);
+    this.raw(`${(cx + r).toFixed(1)} ${cy.toFixed(1)} m ` +
+      `${(cx + r).toFixed(1)} ${(cy + k).toFixed(1)} ${(cx + k).toFixed(1)} ${(cy + r).toFixed(1)} ${cx.toFixed(1)} ${(cy + r).toFixed(1)} c ` +
+      `${(cx - k).toFixed(1)} ${(cy + r).toFixed(1)} ${(cx - r).toFixed(1)} ${(cy + k).toFixed(1)} ${(cx - r).toFixed(1)} ${cy.toFixed(1)} c ` +
+      `${(cx - r).toFixed(1)} ${(cy - k).toFixed(1)} ${(cx - k).toFixed(1)} ${(cy - r).toFixed(1)} ${cx.toFixed(1)} ${(cy - r).toFixed(1)} c ` +
+      `${(cx + k).toFixed(1)} ${(cy - r).toFixed(1)} ${(cx + r).toFixed(1)} ${(cy - k).toFixed(1)} ${(cx + r).toFixed(1)} ${cy.toFixed(1)} c f`);
+  }
+  text(x, y, str, { size = 10, bold = false, color = C.ink, align = 'left', maxW = null } = {}) {
+    let s = String(str);
+    if (maxW) while (s.length > 1 && measure(s, size, bold) > maxW) s = s.slice(0, -1);
+    let tx = x;
+    const w = measure(s, size, bold);
+    if (align === 'right') tx = x - w;
+    else if (align === 'center') tx = x - w / 2;
+    this.setFill(color);
+    this.raw(`BT /${bold ? 'F2' : 'F1'} ${size} Tf ${tx.toFixed(1)} ${y.toFixed(1)} Td (${esc(s)}) Tj ET`);
+    return w;
+  }
+  // word-wrapped paragraph; returns the y after the last line
+  para(x, y, str, { size = 8.5, bold = false, color = C.ink2, width = PAGE_W - 2 * MARGIN, leading = null } = {}) {
+    const lead = leading || size * 1.45;
+    const words = String(str).split(/\s+/);
+    let line = '';
+    for (const word of words) {
+      const probe = line ? line + ' ' + word : word;
+      if (measure(probe, size, bold) > width && line) {
+        this.text(x, y, line, { size, bold, color });
+        y -= lead;
+        line = word;
+      } else line = probe;
+    }
+    if (line) { this.text(x, y, line, { size, bold, color }); y -= lead; }
+    return y;
+  }
+  build() {
+    const objs = [];
+    const add = body => { objs.push(body); return objs.length; };
+    const f1 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+    const f2 = add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+    const contentIds = this.pages.map(p => {
+      const s = p.join('\n');
+      return add(`<< /Length ${s.length} >>\nstream\n${s}\nendstream`);
+    });
+    const pagesId = objs.length + this.pages.length + 1;
+    const pageIds = contentIds.map(cid =>
+      add(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Contents ${cid} 0 R /Resources << /Font << /F1 ${f1} 0 R /F2 ${f2} 0 R >> >> >>`));
+    add(`<< /Type /Pages /Kids [${pageIds.map(i => i + ' 0 R').join(' ')}] /Count ${pageIds.length} >>`);
+    const catalogId = add(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+    let out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n';
+    const offsets = [0];
+    objs.forEach((body, i) => {
+      offsets.push(out.length);
+      out += `${i + 1} 0 obj\n${body}\nendobj\n`;
+    });
+    const xref = out.length;
+    out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+    for (let i = 1; i <= objs.length; i++) out += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
+    out += `trailer\n<< /Size ${objs.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+    return out;
+  }
+}
+
+// ---- formatting ----
+const rFmtF = n => (n < 0 ? '-$' : '$') + Math.round(Math.abs(n)).toLocaleString('en-US');
+function rFmtC(n) {
+  const a = Math.abs(n), sign = n < 0 ? '-' : '';
+  if (a >= 999500) return sign + '$' + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
+  if (a >= 1e3) return sign + '$' + Math.round(a / 1e3) + 'K';
+  return sign + '$' + Math.round(a);
+}
+const rFmtAxis = n => n >= 1e6 ? '$' + +(n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + Math.round(n / 1e3) + 'K' : '$' + n;
+function rNiceStep(rough) {
+  const pow = Math.pow(10, Math.floor(Math.log10(rough || 1)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (rough <= m * pow) return m * pow;
+  return 10 * pow;
+}
+
+// ---- vector chart ----
+// series: [{name, color, dash, pts: [{x, y, projected}]}]  (x = age)
+function drawChart(b, x0, y0, w, h, series, { title = null } = {}) {
+  const plotL = x0 + 40, plotB = y0 + 22, plotW = w - 48, plotH = h - (title ? 62 : 48);
+  let yMax = 0, xMin = Infinity, xMax = -Infinity;
+  for (const s of series) for (const p of s.pts) {
+    yMax = Math.max(yMax, p.y); xMin = Math.min(xMin, p.x); xMax = Math.max(xMax, p.x);
+  }
+  if (!isFinite(xMin) || xMax === xMin) return;
+  const step = rNiceStep(yMax / 4 || 1);
+  const yTop = Math.max(step, Math.ceil(yMax / step) * step);
+  const X = v => plotL + ((v - xMin) / (xMax - xMin)) * plotW;
+  const Y = v => plotB + (v / yTop) * plotH;
+
+  if (title) b.text(x0, y0 + h - 10, title, { size: 10, bold: true, color: C.ink });
+  // legend
+  let lx = x0 + 2;
+  const ly = y0 + h - (title ? 24 : 10);
+  for (const s of series) {
+    b.rect(lx, ly + 1.2, 9, 2.6, s.color);
+    lx += 13;
+    lx += b.text(lx, ly, s.name, { size: 7.5, color: C.ink2 }) + 12;
+  }
+  // grid + y labels
+  for (let v = 0; v <= yTop + 1; v += step) {
+    b.line(plotL, Y(v), plotL + plotW, Y(v), v === 0 ? [0.76, 0.75, 0.70] : C.grid, 0.6);
+    b.text(plotL - 5, Y(v) - 2.5, rFmtAxis(v), { size: 7, color: C.ink3, align: 'right' });
+  }
+  // x ticks
+  const xStep = (xMax - xMin) > 45 ? 10 : 5;
+  for (let a = Math.ceil(xMin / xStep) * xStep; a <= xMax; a += xStep) {
+    b.text(X(a), plotB - 12, String(a), { size: 7, color: C.ink3, align: 'center' });
+  }
+  b.text(plotL + plotW / 2, plotB - 21, 'Age', { size: 7, color: C.ink3, align: 'center' });
+  // series
+  for (const s of series) {
+    const solid = [], dashed = [];
+    let prev = null;
+    for (const p of s.pts) {
+      const pt = [X(p.x), Y(p.y)];
+      if (p.projected) { if (prev && !prev.projected) dashed.push([X(prev.x), Y(prev.y)]); dashed.push(pt); }
+      else solid.push(pt);
+      prev = p;
+    }
+    if (solid.length > 1) b.poly(solid, s.color, 1.5);
+    if (dashed.length > 1) b.poly(dashed, s.color, 1.5, [3, 3]);
+    const last = s.pts[s.pts.length - 1];
+    b.circle(X(last.x), Y(last.y), 2.2, s.color);
+  }
+}
+
+// ---- page chrome ----
+function pageHeader(b, title, sub) {
+  b.rect(0, PAGE_H - 64, PAGE_W, 64, C.navy);
+  b.rect(0, PAGE_H - 66, PAGE_W, 2, C.goldBright);
+  b.text(MARGIN, PAGE_H - 30, 'GIA LEGACY PLANNING', { size: 8, bold: true, color: C.goldBright });
+  b.text(MARGIN, PAGE_H - 48, title, { size: 15, bold: true, color: [0.95, 0.93, 0.89] });
+  if (sub) b.text(PAGE_W - MARGIN, PAGE_H - 48, sub, { size: 9, color: [0.73, 0.74, 0.82], align: 'right' });
+}
+function pageFooter(b, pageNo, client) {
+  b.line(MARGIN, 40, PAGE_W - MARGIN, 40, C.grid, 0.7);
+  b.text(MARGIN, 28, 'Prepared for ' + (client || 'Valued Client') + ' - hypothetical values, not a guarantee. See final page.', { size: 7, color: C.ink3 });
+  b.text(PAGE_W - MARGIN, 28, 'Page ' + pageNo, { size: 7, color: C.ink3, align: 'right' });
+}
+function statBox(b, x, y, w, label, value, sub) {
+  b.rect(x, y, w, 58, C.cream);
+  b.rect(x, y + 56, w, 2, C.goldBright);
+  b.text(x + 10, y + 41, label, { size: 7.5, color: C.ink3, maxW: w - 20 });
+  b.text(x + 10, y + 22, value, { size: 15, bold: true, color: C.ink, maxW: w - 20 });
+  if (sub) b.text(x + 10, y + 9, sub, { size: 6.8, color: C.ink3, maxW: w - 20 });
+}
+
+/* ---- main entry ----
+data = {
+  client, preparedBy, dateStr, carrier, source,
+  policy: { years, firstAge, lastAge, premium, totPrem, cvEnd, dbEnd, breakEven: {year, age} | null },
+  growth: [{age, cv, cumPrem}], dbSeries: [{age, db}],
+  income: { a: {income, incomeStart, deathAge, loanRate, cvGrowth}, totals, lapseAge,
+            chart: [{age, netCV, netDB, loan, projected}] },
+  debt: null | { debts: [{name, balance, rate, payment}], totalDebt, totalPayment,
+                 traditionalAge, policyAge, yearsSaved, detail: [{age, debt, capacity}] },
+  include: { policy, income, debt },
+}                                                                     */
+/* Canvas twin of PdfBuilder — same drawing API, renders report pages to
+   <canvas> elements. Used for the in-page presentation & preview, which no
+   embed can block (unlike PDF plugins, print dialogs, or downloads). */
+class CanvasBuilder {
+  constructor(scale = 2) { this.s = scale; this.pages = []; this.ctx = null; this.newPage(); }
+  newPage() {
+    const c = document.createElement('canvas');
+    c.width = PAGE_W * this.s; c.height = PAGE_H * this.s;
+    this.pages.push(c);
+    this.ctx = c.getContext('2d');
+    this.ctx.fillStyle = '#ffffff';
+    this.ctx.fillRect(0, 0, c.width, c.height);
+    this.ctx.lineCap = 'round'; this.ctx.lineJoin = 'round';
+  }
+  col(c) { return `rgb(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)})`; }
+  Y(y) { return (PAGE_H - y) * this.s; }
+  rect(x, y, w, h, c) { this.ctx.fillStyle = this.col(c); this.ctx.fillRect(x * this.s, this.Y(y + h), w * this.s, h * this.s); }
+  line(x1, y1, x2, y2, c, width = 1, dash = null) {
+    const t = this.ctx;
+    t.strokeStyle = this.col(c); t.lineWidth = width * this.s;
+    t.setLineDash(dash ? dash.map(d => d * this.s) : []);
+    t.beginPath(); t.moveTo(x1 * this.s, this.Y(y1)); t.lineTo(x2 * this.s, this.Y(y2)); t.stroke();
+  }
+  poly(pts, c, width = 1.5, dash = null) {
+    if (pts.length < 2) return;
+    const t = this.ctx;
+    t.strokeStyle = this.col(c); t.lineWidth = width * this.s;
+    t.setLineDash(dash ? dash.map(d => d * this.s) : []);
+    t.beginPath();
+    pts.forEach((p, i) => i ? t.lineTo(p[0] * this.s, this.Y(p[1])) : t.moveTo(p[0] * this.s, this.Y(p[1])));
+    t.stroke();
+  }
+  circle(cx, cy, r, c) {
+    const t = this.ctx;
+    t.fillStyle = this.col(c);
+    t.beginPath(); t.arc(cx * this.s, this.Y(cy), r * this.s, 0, Math.PI * 2); t.fill();
+  }
+  font(size, bold) { return `${bold ? '600' : '400'} ${size * this.s}px system-ui, -apple-system, 'Segoe UI', sans-serif`; }
+  measureText(str, size, bold) { this.ctx.font = this.font(size, bold); return this.ctx.measureText(String(str)).width / this.s; }
+  text(x, y, str, { size = 10, bold = false, color = C.ink, align = 'left', maxW = null } = {}) {
+    let s = String(str);
+    if (maxW) while (s.length > 1 && this.measureText(s, size, bold) > maxW) s = s.slice(0, -1);
+    const w = this.measureText(s, size, bold);
+    let tx = x;
+    if (align === 'right') tx = x - w;
+    else if (align === 'center') tx = x - w / 2;
+    const t = this.ctx;
+    t.font = this.font(size, bold); t.fillStyle = this.col(color); t.textBaseline = 'alphabetic';
+    t.fillText(s, tx * this.s, this.Y(y));
+    return w;
+  }
+  para(x, y, str, { size = 8.5, bold = false, color = C.ink2, width = PAGE_W - 2 * MARGIN, leading = null } = {}) {
+    const lead = leading || size * 1.45;
+    const words = String(str).split(/\s+/);
+    let line = '';
+    for (const word of words) {
+      const probe = line ? line + ' ' + word : word;
+      if (this.measureText(probe, size, bold) > width && line) {
+        this.text(x, y, line, { size, bold, color });
+        y -= lead;
+        line = word;
+      } else line = probe;
+    }
+    if (line) { this.text(x, y, line, { size, bold, color }); y -= lead; }
+    return y;
+  }
+  build() { return this.pages; }
+}
+
+function buildReportPdf(data, b = new PdfBuilder()) {
+  let pageNo = 1;
+  const p = data.policy;
+
+  // ============ cover / overview page ============
+  b.rect(0, PAGE_H - 210, PAGE_W, 210, C.navy);
+  b.rect(0, PAGE_H - 212, PAGE_W, 2, C.goldBright);
+  b.text(MARGIN, PAGE_H - 50, 'GIA LEGACY PLANNING', { size: 9, bold: true, color: C.goldBright });
+  b.text(MARGIN, PAGE_H - 84, 'The Family Banking Strategy', { size: 24, bold: true, color: [0.95, 0.93, 0.89] });
+  b.text(MARGIN, PAGE_H - 104, 'Infinite banking analysis - ' + (data.carrier || 'carrier illustration'), { size: 11, color: [0.73, 0.74, 0.82] });
+  b.rect(MARGIN, PAGE_H - 126, 56, 1.5, C.goldBright);
+  b.text(MARGIN, PAGE_H - 150, 'Prepared for', { size: 8.5, color: C.goldBright });
+  b.text(MARGIN, PAGE_H - 168, data.client || 'Valued Client', { size: 15, bold: true, color: [0.95, 0.93, 0.89] });
+  const rx = PAGE_W - MARGIN;
+  b.text(rx, PAGE_H - 150, data.dateStr, { size: 8.5, color: [0.73, 0.74, 0.82], align: 'right' });
+  if (data.preparedBy) b.text(rx, PAGE_H - 168, 'Presented by ' + data.preparedBy, { size: 9.5, color: [0.85, 0.85, 0.9], align: 'right' });
+
+  let y = PAGE_H - 250;
+  b.text(MARGIN, y, 'Your policy at a glance', { size: 13, bold: true, color: C.ink });
+  y -= 72;
+  const bw = (PAGE_W - 2 * MARGIN - 3 * 10) / 4;
+  statBox(b, MARGIN, y, bw, 'Total premiums illustrated', rFmtC(p.totPrem), p.years + ' policy years');
+  statBox(b, MARGIN + bw + 10, y, bw, 'Cash value at age ' + p.lastAge, rFmtC(p.cvEnd), rFmtF(p.cvEnd - p.totPrem) + ' above premiums');
+  statBox(b, MARGIN + 2 * (bw + 10), y, bw, 'Death benefit at age ' + p.lastAge, rFmtC(p.dbEnd), 'generally income-tax-free');
+  statBox(b, MARGIN + 3 * (bw + 10), y, bw, 'Break-even point',
+    p.breakEven ? 'Year ' + p.breakEven.year : 'Beyond ledger',
+    p.breakEven ? 'age ' + p.breakEven.age + ' - permanently ahead of cost' : '');
+  y -= 24;
+
+  if (data.include.policy) {
+    const chH = 170;
+    y -= chH;
+    drawChart(b, MARGIN, y, PAGE_W - 2 * MARGIN, chH, [
+      { name: 'Cash value', color: C.sGold, pts: data.growth.map(g => ({ x: g.age, y: g.cv })) },
+      { name: 'Total premiums paid', color: C.sTeal, pts: data.growth.map(g => ({ x: g.age, y: g.cumPrem })) },
+    ], { title: 'Cash value vs. premiums paid (illustrated)' });
+    y -= 16;
+    const chH2 = 150;
+    y -= chH2;
+    drawChart(b, MARGIN, y, PAGE_W - 2 * MARGIN, chH2, [
+      { name: 'Death benefit', color: C.sBlue, pts: data.dbSeries.map(g => ({ x: g.age, y: g.db })) },
+    ], { title: 'Death benefit growth (illustrated)' });
+  }
+  pageFooter(b, pageNo++, data.client);
+
+  // ============ income & legacy page ============
+  if (data.include.income) {
+    b.newPage();
+    const a = data.income.a, t = data.income.totals, ill = data.income.ill;
+    const anyIncome = t.income > 0;
+    pageHeader(b, anyIncome ? 'Retirement income & the legacy' : 'Growth & the legacy', data.client || '');
+    let iy = PAGE_H - 100;
+    let scenario;
+    if (ill) {
+      scenario = `Scenario: the carrier illustration itself schedules ${rFmtF(ill.annual)} per year of policy income ` +
+        `beginning at age ${ill.startAge} (already reflected in its values)` +
+        (a.income > 0 ? `, plus a hypothetical ${rFmtF(a.income)} per year of additional loans from age ${a.incomeStart}` : '') +
+        `, shown through age ${a.deathAge}. ` +
+        'Loans are not withdrawals - the full cash value keeps compounding while the loan simply nets against the death benefit.';
+    } else if (a.income > 0) {
+      scenario = `Hypothetical scenario (not projected by the carrier illustration): drawing ${rFmtF(a.income)} per year ` +
+        `in policy loans from age ${a.incomeStart} through age ${a.deathAge}, at a ${a.loanRate}% loan rate, ` +
+        `with cash value beyond the carrier ledger projected at ${a.cvGrowth}%. ` +
+        'Loans are not withdrawals - the full cash value keeps compounding while the loan simply nets against the death benefit.';
+    } else {
+      scenario = `This shows the policy's illustrated growth through age ${a.deathAge} with no income drawn - ` +
+        'the full cash value compounds and the death benefit transfers to your beneficiaries, generally income-tax free. ' +
+        'A hypothetical policy-loan income strategy can be modeled separately.';
+    }
+    iy = b.para(MARGIN, iy, scenario, { size: 9, width: PAGE_W - 2 * MARGIN });
+    iy -= 8;
+    const chH = 190;
+    iy -= chH;
+    const incomeSeries = [
+      { name: anyIncome ? 'Net cash value' : 'Cash value', color: C.sGold, pts: data.income.chart.map(c => ({ x: c.age, y: c.netCV, projected: c.projected })) },
+      { name: anyIncome ? 'Net death benefit' : 'Death benefit', color: C.sBlue, pts: data.income.chart.map(c => ({ x: c.age, y: c.netDB, projected: c.projected })) },
+    ];
+    if (anyIncome) incomeSeries.push({ name: 'Loan balance', color: C.sCoral, pts: data.income.chart.map(c => ({ x: c.age, y: c.loan, projected: c.projected })) });
+    drawChart(b, MARGIN, iy, PAGE_W - 2 * MARGIN, chH, incomeSeries,
+      { title: anyIncome ? 'The income years (dashed = projected beyond the carrier ledger)' : 'Cash value & death benefit (dashed = projected beyond the carrier ledger)' });
+    iy -= 84;
+    const bw2 = (PAGE_W - 2 * MARGIN - 3 * 10) / 4;
+    statBox(b, MARGIN, iy, bw2, 'Income drawn', rFmtC(t.income), anyIncome ? 'tax-advantaged policy loans' : 'none in this scenario');
+    statBox(b, MARGIN + bw2 + 10, iy, bw2, 'Loan balance at ' + a.deathAge, rFmtC(t.loanAtDeath), 'nets against death benefit');
+    statBox(b, MARGIN + 2 * (bw2 + 10), iy, bw2, 'To your heirs', rFmtC(t.netDBAtDeath), 'after the loan is repaid');
+    statBox(b, MARGIN + 3 * (bw2 + 10), iy, bw2, 'Return on premiums',
+      t.premiums > 0 ? (t.legacy / t.premiums).toFixed(1) + 'x' : '-', 'income + legacy vs paid in');
+    iy -= 30;
+    // hero band
+    b.rect(MARGIN, iy - 64, PAGE_W - 2 * MARGIN, 64, C.navy);
+    b.rect(MARGIN, iy - 64, 3, 64, C.goldBright);
+    b.text(MARGIN + 18, iy - 22, 'TOTAL FAMILY VALUE', { size: 8, bold: true, color: C.goldBright });
+    b.text(MARGIN + 18, iy - 48, rFmtC(t.legacy), { size: 22, bold: true, color: [0.95, 0.93, 0.89] });
+    b.text(PAGE_W - MARGIN - 18, iy - 30, anyIncome ? 'income enjoyed + wealth transferred,' : 'wealth transferred to heirs,', { size: 8.5, color: [0.73, 0.74, 0.82], align: 'right' });
+    b.text(PAGE_W - MARGIN - 18, iy - 42, 'from ' + rFmtC(t.premiums) + ' of premiums', { size: 8.5, color: [0.73, 0.74, 0.82], align: 'right' });
+    if (data.income.lapseAge != null) {
+      iy -= 84;
+      b.text(MARGIN, iy, 'CAUTION: at this income the policy lapses at age ' + data.income.lapseAge + ' - reduce the draw or start later.', { size: 9, bold: true, color: C.critical });
+    }
+    pageFooter(b, pageNo++, data.client);
+  }
+
+  // ============ debt freedom page ============
+  if (data.include.debt && data.debt) {
+    const d = data.debt;
+    b.newPage();
+    pageHeader(b, 'Debt freedom - two clocks racing', data.client || '');
+    let dy = PAGE_H - 100;
+    dy = b.para(MARGIN, dy,
+      'Paying the debts below on their current schedules versus wiping them out with a single policy loan the year ' +
+      'your cash value capacity overtakes the remaining balance - then redirecting every payment back to your own policy.',
+      { size: 9, width: PAGE_W - 2 * MARGIN });
+    dy -= 4;
+    // debts table
+    const cols = [MARGIN, MARGIN + 190, MARGIN + 290, MARGIN + 380];
+    b.text(cols[0], dy, 'Debt', { size: 8, bold: true, color: C.ink3 });
+    b.text(cols[1] + 60, dy, 'Balance', { size: 8, bold: true, color: C.ink3, align: 'right' });
+    b.text(cols[2] + 50, dy, 'APR', { size: 8, bold: true, color: C.ink3, align: 'right' });
+    b.text(cols[3] + 80, dy, 'Payment / mo', { size: 8, bold: true, color: C.ink3, align: 'right' });
+    dy -= 5; b.line(MARGIN, dy, PAGE_W - MARGIN, dy, C.grid, 0.7); dy -= 13;
+    for (const debt of d.debts) {
+      if ((debt.balance || 0) <= 0) continue;
+      b.text(cols[0], dy, debt.name || 'Debt', { size: 9, color: C.ink, maxW: 180 });
+      b.text(cols[1] + 60, dy, rFmtF(debt.balance), { size: 9, color: C.ink, align: 'right' });
+      b.text(cols[2] + 50, dy, (debt.rate || 0) + '%', { size: 9, color: C.ink, align: 'right' });
+      b.text(cols[3] + 80, dy, rFmtF(debt.payment), { size: 9, color: C.ink, align: 'right' });
+      dy -= 14;
+    }
+    b.line(MARGIN, dy + 5, PAGE_W - MARGIN, dy + 5, C.grid, 0.7);
+    b.text(cols[0], dy - 8, 'Total', { size: 9, bold: true, color: C.ink });
+    b.text(cols[1] + 60, dy - 8, rFmtF(d.totalDebt), { size: 9, bold: true, color: C.ink, align: 'right' });
+    b.text(cols[3] + 80, dy - 8, rFmtF(d.totalPayment), { size: 9, bold: true, color: C.ink, align: 'right' });
+    dy -= 32;
+    const chH = 180;
+    dy -= chH;
+    drawChart(b, MARGIN, dy, PAGE_W - 2 * MARGIN, chH, [
+      { name: 'Policy loan capacity', color: C.sGold, pts: d.detail.map(r => ({ x: r.age, y: r.capacity })) },
+      { name: 'Debt remaining (traditional)', color: C.sCoral, pts: d.detail.map(r => ({ x: r.age, y: r.debt })) },
+    ], { title: 'The race - debt remaining vs. policy loan capacity' });
+    dy -= 84;
+    const bw3 = (PAGE_W - 2 * MARGIN - 3 * 10) / 4;
+    statBox(b, MARGIN, dy, bw3, 'Total debt today', rFmtC(d.totalDebt), rFmtF(d.totalPayment) + '/mo to lenders');
+    statBox(b, MARGIN + bw3 + 10, dy, bw3, 'Traditional payoff', d.traditionalAge != null ? 'Age ' + d.traditionalAge : '40+ yrs', 'on current payments');
+    statBox(b, MARGIN + 2 * (bw3 + 10), dy, bw3, 'Payoff via policy', d.policyAge != null ? 'Age ' + d.policyAge : 'Beyond ledger', 'one loan clears every debt');
+    statBox(b, MARGIN + 3 * (bw3 + 10), dy, bw3, 'Years reclaimed',
+      (d.traditionalAge != null && d.policyAge != null) ? d.yearsSaved + ' years' : '-', 'then repay your own policy');
+    pageFooter(b, pageNo++, data.client);
+  }
+
+  // ============ disclosures ============
+  b.newPage();
+  pageHeader(b, 'How it works & important disclosures', data.client || '');
+  let fy = PAGE_H - 102;
+  const steps = [
+    ['1. Fund the policy', 'A dividend-paying whole life (or max-funded IUL) policy designed with paid-up additions so early cash value builds fast.'],
+    ['2. Let it compound', 'Cash value grows on a guaranteed schedule plus dividends or index credits - uninterrupted and tax-deferred.'],
+    ['3. Borrow against it', 'Policy loans use your cash value as collateral. Your full balance keeps compounding while you use the carrier\'s money.'],
+    ['4. Repay on your terms', 'No bank schedule. Repay to restore capacity, or let the balance net against the death benefit.'],
+    ['5. Transfer the legacy', 'The death benefit passes to your beneficiaries - generally free of income tax.'],
+  ];
+  for (const [h, body] of steps) {
+    b.text(MARGIN, fy, h, { size: 10.5, bold: true, color: C.gold });
+    fy -= 15;
+    fy = b.para(MARGIN, fy, body, { size: 9, width: PAGE_W - 2 * MARGIN });
+    fy -= 6;
+  }
+  fy -= 10;
+  b.line(MARGIN, fy, PAGE_W - MARGIN, fy, C.grid, 0.8);
+  fy -= 18;
+  b.text(MARGIN, fy, 'Important disclosures', { size: 10.5, bold: true, color: C.ink });
+  fy -= 16;
+  fy = b.para(MARGIN, fy,
+    'This report is a hypothetical planning illustration generated from the carrier document supplied, and is not an offer, ' +
+    'a contract, a complete policy illustration, or tax advice. Values beyond the illustrated period, income scenarios, and loan ' +
+    'projections are estimates at the assumed rates shown and are not guarantees. Policy loans and withdrawals reduce cash value ' +
+    'and death benefit and can cause a policy to lapse; loans from a Modified Endowment Contract may be taxable. Dividends and index ' +
+    'credits are not guaranteed. This presentation is not valid without the complete carrier illustration, which controls in any ' +
+    'conflict. Consult a licensed insurance professional and your tax advisor before acting.',
+    { size: 8, width: PAGE_W - 2 * MARGIN });
+  fy -= 8;
+  b.para(MARGIN, fy, 'Source: ' + (data.source || 'carrier illustration') + '  -  Generated ' + data.dateStr + ' by GIA Legacy Planning.',
+    { size: 8, width: PAGE_W - 2 * MARGIN, color: C.ink3 });
+  pageFooter(b, pageNo, data.client);
+
+  return b.build();
+}
+
+
+/* ================================================================
+   Sample data — Lafayette Life whole life illustration (test file)
+   ================================================================ */
+const SAMPLE_ROWS = [
+  [1,40,10000,16980,605094],[2,41,10000,26498,607949],[3,42,10000,36587,610976],
+  [4,43,10000,47282,614184],[5,44,10000,58618,617585],[6,45,10000,70635,621190],
+  [7,46,10000,83373,625011],[8,47,10000,96875,629062],[9,48,10000,111187,633356],
+  [10,49,10000,126358,637907],[11,50,10000,142439,642731],[12,51,10000,159485,647845],
+  [13,52,10000,177554,653266],[14,53,10000,196707,659012],[15,54,10000,217009,665102],
+  [16,55,10000,238529,671558],[17,56,10000,261340,678402],[18,57,10000,285520,685656],
+  [19,58,10000,311151,693345],[20,59,10000,338320,701496],[21,60,10000,367119,710135],
+  [22,61,10000,397646,719293],[23,62,10000,430004,729001],[24,63,10000,464304,739291],
+  [25,64,10000,500662,750198],[26,65,10000,539201,761760],[27,66,10000,580053,774015],
+  [28,67,10000,623356,787006],[29,68,10000,669257,800777],[30,69,10000,717912,815373],
+].map(([year, age, premium, cv, db]) => ({ year, age, premium, cv, db }));
+
+/* ================================================================
+   Formatting
+   ================================================================ */
+const fmtF = n => (n < 0 ? '−$' : '$') + Math.round(Math.abs(n)).toLocaleString('en-US');
+function fmtC(n) {
+  const a = Math.abs(n), sign = n < 0 ? '−' : '';
+  if (a >= 999500) return sign + '$' + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
+  if (a >= 1e3) return sign + '$' + Math.round(a / 1e3) + 'K';
+  return sign + '$' + Math.round(a);
+}
+const fmtAxis = n => n >= 1e6 ? '$' + +(n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + Math.round(n / 1e3) + 'K' : '$' + n;
+
+function niceStep(rough) {
+  const pow = Math.pow(10, Math.floor(Math.log10(rough)));
+  for (const mult of [1, 2, 2.5, 5, 10]) if (rough <= mult * pow) return mult * pow;
+  return 10 * pow;
+}
+
+/* ================================================================
+   Chart renderer — line chart with crosshair tooltip, table twin
+   ================================================================ */
+const charts = [];
+
+function makeChart(mount, cfg) {
+  // cfg: { title, sub, series:[{key,name,cssVar}], getData()->points [{x,label,projected,values:{}}],
+  //        annotate(svg,scale,pts), extraCols:[{key,name}] }
+  mount.innerHTML = '';
+  const head = document.createElement('div'); head.className = 'chart-head';
+  const tWrap = document.createElement('div');
+  const title = document.createElement('div'); title.className = 'chart-title'; title.textContent = cfg.title;
+  tWrap.appendChild(title);
+  if (cfg.sub) { const sub = document.createElement('div'); sub.className = 'chart-sub'; sub.textContent = cfg.sub; tWrap.appendChild(sub); }
+  head.appendChild(tWrap);
+  const toggle = document.createElement('div'); toggle.className = 'view-toggle'; toggle.setAttribute('role', 'group'); toggle.setAttribute('aria-label', 'Chart or table view');
+  const bChart = document.createElement('button'); bChart.textContent = 'Chart'; bChart.setAttribute('aria-pressed', 'true');
+  const bTable = document.createElement('button'); bTable.textContent = 'Table'; bTable.setAttribute('aria-pressed', 'false');
+  toggle.append(bChart, bTable); head.appendChild(toggle);
+  mount.appendChild(head);
+
+  let legend = null;
+  if (cfg.series.length >= 2) {
+    legend = document.createElement('div'); legend.className = 'legend';
+    for (const s of cfg.series) {
+      const k = document.createElement('span'); k.className = 'key';
+      const sw = document.createElement('span'); sw.className = 'swatch'; sw.style.background = `var(${s.cssVar})`;
+      const nm = document.createElement('span'); nm.textContent = s.name;
+      k.append(sw, nm); legend.appendChild(k);
+    }
+    mount.appendChild(legend);
+  }
+
+  const plotWrap = document.createElement('div'); plotWrap.className = 'plot-wrap';
+  plotWrap.tabIndex = 0;
+  plotWrap.setAttribute('role', 'img');
+  plotWrap.setAttribute('aria-label', cfg.title + '. Use arrow keys to step through values; the table view lists every value.');
+  const tooltip = document.createElement('div'); tooltip.className = 'tooltip';
+  plotWrap.appendChild(tooltip);
+  mount.appendChild(plotWrap);
+
+  const tableView = document.createElement('div'); tableView.className = 'table-view';
+  mount.appendChild(tableView);
+
+  bChart.addEventListener('click', () => { setView(true); });
+  bTable.addEventListener('click', () => { setView(false); });
+  function setView(chartMode) {
+    bChart.setAttribute('aria-pressed', String(chartMode));
+    bTable.setAttribute('aria-pressed', String(!chartMode));
+    plotWrap.style.display = chartMode ? '' : 'none';
+    if (legend) legend.style.display = chartMode ? '' : 'none';
+    tableView.style.display = chartMode ? 'none' : 'block';
+  }
+
+  const chart = { mount, cfg, plotWrap, tooltip, tableView, activeIdx: null, pts: [], scale: null };
+  charts.push(chart);
+
+  plotWrap.addEventListener('pointermove', e => {
+    const r = plotWrap.getBoundingClientRect();
+    hoverAt(chart, e.clientX - r.left, r);
+  });
+  plotWrap.addEventListener('pointerleave', () => { chart.activeIdx = null; drawHover(chart); });
+  plotWrap.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    const n = chart.pts.length;
+    if (!n) return;
+    if (chart.activeIdx === null) chart.activeIdx = e.key === 'ArrowLeft' ? n - 1 : 0;
+    else chart.activeIdx = Math.max(0, Math.min(n - 1, chart.activeIdx + (e.key === 'ArrowRight' ? 1 : -1)));
+    drawHover(chart);
+  });
+  plotWrap.addEventListener('blur', () => { chart.activeIdx = null; drawHover(chart); });
+
+  renderChart(chart);
+  return chart;
+}
+
+function hoverAt(chart, px, rect) {
+  if (!chart.scale || !chart.pts.length) return;
+  const { xOf } = chart.scale;
+  let best = 0, bd = Infinity;
+  chart.pts.forEach((p, i) => { const d = Math.abs(xOf(i) - px); if (d < bd) { bd = d; best = i; } });
+  chart.activeIdx = best;
+  drawHover(chart);
+}
+
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+};
+
+function renderChart(chart) {
+  const { cfg, plotWrap } = chart;
+  const pts = cfg.getData();
+  chart.pts = pts;
+  plotWrap.querySelectorAll('svg').forEach(s => s.remove());
+  if (!pts.length) return;
+
+  const W = Math.max(320, plotWrap.clientWidth || 480);
+  const H = 290;
+  const M = { t: 18, r: 16, b: 34, l: 52 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+
+  let yMax = 0;
+  for (const p of pts) for (const s of cfg.series) yMax = Math.max(yMax, p.values[s.key] || 0);
+  const step = niceStep(yMax / 4 || 1);
+  const yTop = Math.max(step, Math.ceil(yMax / step) * step);
+
+  const xOf = i => M.l + (pts.length === 1 ? iw / 2 : (i / (pts.length - 1)) * iw);
+  const yOf = v => M.t + ih - (v / yTop) * ih;
+  chart.scale = { xOf, yOf, M, W, H, iw, ih };
+
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, 'aria-hidden': 'true' });
+
+  // projected-region band
+  const firstProj = pts.findIndex(p => p.projected);
+  if (firstProj > 0) {
+    svg.appendChild(el('rect', {
+      x: xOf(firstProj - 1), y: M.t, width: xOf(pts.length - 1) - xOf(firstProj - 1), height: ih,
+      fill: 'rgba(240,180,41,0.035)',
+    }));
+    const lbl = el('text', { x: xOf(pts.length - 1) - 4, y: M.t + 12, 'text-anchor': 'end', class: 'proj-label' });
+    lbl.textContent = 'Projected';
+    svg.appendChild(lbl);
+  }
+
+  // gridlines + y ticks
+  for (let v = 0; v <= yTop + 1; v += step) {
+    const yy = yOf(v);
+    svg.appendChild(el('line', { x1: M.l, x2: W - M.r, y1: yy, y2: yy, class: v === 0 ? 'baseline-line' : 'grid-line' }));
+    const t = el('text', { x: M.l - 8, y: yy + 4, 'text-anchor': 'end', class: 'axis-text' });
+    t.textContent = fmtAxis(v);
+    svg.appendChild(t);
+  }
+  // x ticks — ages every ~5
+  const xStep = pts.length > 40 ? 10 : 5;
+  pts.forEach((p, i) => {
+    if (p.x % xStep !== 0 && i !== 0 && i !== pts.length - 1) return;
+    const t = el('text', { x: xOf(i), y: H - 12, 'text-anchor': 'middle', class: 'axis-text' });
+    t.textContent = p.x;
+    svg.appendChild(t);
+  });
+  const xcap = el('text', { x: M.l + iw / 2, y: H - 0.5, 'text-anchor': 'middle', class: 'axis-text', 'font-size': '10.5' });
+  xcap.textContent = 'Age';
+  svg.appendChild(xcap);
+
+  // series: area wash for the first series, 2px lines, dashed when projected
+  cfg.series.forEach((s, si) => {
+    const segs = []; // [{d, dashed}]
+    let d = '', dashed = null;
+    pts.forEach((p, i) => {
+      const isProj = !!p.projected;
+      if (dashed === null) dashed = isProj;
+      if (isProj !== dashed) { segs.push({ d, dashed }); d = `M${xOf(i - 1).toFixed(1)} ${yOf(pts[i - 1].values[s.key] || 0).toFixed(1)}`; dashed = isProj; }
+      d += (d ? 'L' : 'M') + xOf(i).toFixed(1) + ' ' + yOf(p.values[s.key] || 0).toFixed(1);
+    });
+    segs.push({ d, dashed });
+    if (si === 0) {
+      let area = '';
+      pts.forEach((p, i) => { area += (area ? 'L' : 'M') + xOf(i).toFixed(1) + ' ' + yOf(p.values[s.key] || 0).toFixed(1); });
+      area += `L${xOf(pts.length - 1).toFixed(1)} ${yOf(0)}L${xOf(0).toFixed(1)} ${yOf(0)}Z`;
+      svg.appendChild(el('path', { d: area, fill: `var(${s.cssVar})`, 'fill-opacity': '0.1', stroke: 'none' }));
+    }
+    for (const seg of segs) {
+      svg.appendChild(el('path', {
+        d: seg.d, fill: 'none', stroke: `var(${s.cssVar})`, 'stroke-width': '2',
+        'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+        ...(seg.dashed ? { 'stroke-dasharray': '5 5' } : {}),
+      }));
+    }
+    // end marker with surface ring
+    const li = pts.length - 1;
+    svg.appendChild(el('circle', { cx: xOf(li), cy: yOf(pts[li].values[s.key] || 0), r: 5.5, fill: 'var(--surface)' }));
+    svg.appendChild(el('circle', { cx: xOf(li), cy: yOf(pts[li].values[s.key] || 0), r: 4, fill: `var(${s.cssVar})` }));
+  });
+
+  // hover layer group
+  const hoverG = el('g', { class: 'hover-layer' });
+  svg.appendChild(hoverG);
+  chart.hoverG = hoverG;
+
+  if (cfg.annotate) cfg.annotate(svg, chart.scale, pts, el);
+
+  plotWrap.appendChild(svg);
+  renderTable(chart);
+  drawHover(chart);
+}
+
+function drawHover(chart) {
+  const { hoverG, tooltip, cfg, pts, scale } = chart;
+  if (!hoverG) return;
+  while (hoverG.firstChild) hoverG.removeChild(hoverG.firstChild);
+  if (chart.activeIdx === null || !pts.length) { tooltip.style.display = 'none'; return; }
+  const i = chart.activeIdx, p = pts[i];
+  const { xOf, yOf, M, ih, W } = scale;
+  const xx = xOf(i);
+  hoverG.appendChild(el('line', { x1: xx, x2: xx, y1: M.t, y2: M.t + ih, stroke: 'var(--ink-3)', 'stroke-width': '1', 'stroke-opacity': '0.55' }));
+  for (const s of cfg.series) {
+    const yy = yOf(p.values[s.key] || 0);
+    hoverG.appendChild(el('circle', { cx: xx, cy: yy, r: 6, fill: 'var(--surface)' }));
+    hoverG.appendChild(el('circle', { cx: xx, cy: yy, r: 4.5, fill: `var(${s.cssVar})` }));
+  }
+  // tooltip content — textContent only
+  tooltip.textContent = '';
+  const tt = document.createElement('div'); tt.className = 'tt-title';
+  tt.textContent = p.label + (p.projected ? ' · projected' : '');
+  tooltip.appendChild(tt);
+  for (const s of cfg.series) {
+    const row = document.createElement('div'); row.className = 'tt-row';
+    const key = document.createElement('span'); key.className = 'tt-key'; key.style.background = `var(${s.cssVar})`;
+    const val = document.createElement('span'); val.className = 'tt-val'; val.textContent = fmtF(p.values[s.key] || 0);
+    const name = document.createElement('span'); name.className = 'tt-name'; name.textContent = s.name;
+    row.append(key, val, name); tooltip.appendChild(row);
+  }
+  if (cfg.ttExtra) {
+    for (const [label, value] of cfg.ttExtra(p)) {
+      const row = document.createElement('div'); row.className = 'tt-row';
+      const key = document.createElement('span'); key.className = 'tt-key'; key.style.background = 'transparent';
+      const val = document.createElement('span'); val.className = 'tt-val'; val.textContent = value;
+      const name = document.createElement('span'); name.className = 'tt-name'; name.textContent = label;
+      row.append(key, val, name); tooltip.appendChild(row);
+    }
+  }
+  tooltip.style.display = 'block';
+  const wrapW = chart.plotWrap.clientWidth;
+  const ttW = tooltip.offsetWidth || 200;
+  const px = (xx / W) * wrapW;
+  let left = px + 14;
+  if (left + ttW > wrapW - 4) left = px - ttW - 14;
+  tooltip.style.left = Math.max(4, left) + 'px';
+  tooltip.style.top = '18px';
+}
+
+function renderTable(chart) {
+  const { cfg, tableView, pts } = chart;
+  tableView.textContent = '';
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const hr = document.createElement('tr');
+  const cols = [{ key: '_x', name: 'Age' }, { key: '_yr', name: 'Year' },
+    ...cfg.series.map(s => ({ key: s.key, name: s.name })), ...(cfg.extraCols || [])];
+  for (const c of cols) { const th = document.createElement('th'); th.textContent = c.name; hr.appendChild(th); }
+  thead.appendChild(hr); table.appendChild(thead);
+  const tbody = document.createElement('tbody');
+  for (const p of pts) {
+    const tr = document.createElement('tr');
+    if (p.projected) tr.className = 'proj';
+    for (const c of cols) {
+      const td = document.createElement('td');
+      if (c.key === '_x') td.textContent = p.x + (p.projected ? ' ·' : '');
+      else if (c.key === '_yr') td.textContent = p.year;
+      else td.textContent = fmtF(p.values[c.key] !== undefined ? p.values[c.key] : (p.extra ? p.extra[c.key] : 0) || 0);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  tableView.appendChild(table);
+}
+
+/* ================================================================
+   App state & wiring
+   ================================================================ */
+const $ = id => document.getElementById(id);
+
+const DEFAULT_DEBTS = [
+  { name: 'Credit cards', balance: 18000, rate: 21.9, payment: 450 },
+  { name: 'Auto loan', balance: 28000, rate: 6.9, payment: 520 },
+  { name: 'Student loans', balance: 35000, rate: 5.8, payment: 380 },
+];
+
+const state = {
+  rows: SAMPLE_ROWS,
+  source: 'Sample · Lafayette Life whole life illustration',
+  carrier: 'Lafayette Life',
+  a: { income: 40000, incomeStart: 65, deathAge: 85, loanRate: 5, cvGrowth: 5.7, dbGrowth: 1.7 },
+  debts: DEFAULT_DEBTS.map(d => ({ ...d })),
+  p: { client: '', advisor: '', agency: '', include: { policy: true, income: true, debt: true, learn: true } },
+};
+let model = null;
+let debtModel = null;
+
+function setStatus(text, ok) {
+  const line = $('statusLine');
+  line.textContent = '';
+  const pill = document.createElement('span');
+  pill.className = 'pill' + (ok ? '' : ' err');
+  const dot = document.createElement('span'); dot.className = 'dot';
+  const label = document.createElement('span'); label.textContent = text;
+  pill.append(dot, label);
+  line.appendChild(pill);
+}
+
+function loadRows(rows, source, carrier) {
+  activePlanId = null; // a fresh illustration starts a fresh plan (applyPlan re-links after)
+  state.rows = rows;
+  state.source = source;
+  state.carrier = carrier;
+  const rates = deriveRates(rows);
+  state.a.cvGrowth = +(rates.cvGrowth * 100).toFixed(1);
+  state.a.dbGrowth = +(rates.dbGrowth * 100).toFixed(1);
+  // re-range the age controls around this policy
+  const firstAge = rows[0].age, lastAge = rows[rows.length - 1].age;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const cStart = $('cStart'), cDeath = $('cDeath'), cGrowth = $('cGrowth');
+  cStart.min = firstAge + 1; cStart.max = Math.min(95, firstAge + 60);
+  state.a.incomeStart = clamp(Math.max(65, firstAge + 10), +cStart.min, +cStart.max);
+  cStart.value = state.a.incomeStart;
+  // ledgers may already run to age 120+ — death age can sit anywhere inside them
+  cDeath.min = Math.min(lastAge, state.a.incomeStart + 5);
+  cDeath.max = Math.max(100, Math.min(121, lastAge));
+  state.a.deathAge = clamp(Math.max(85, state.a.incomeStart + 20), +cDeath.min, +cDeath.max);
+  cDeath.value = state.a.deathAge;
+  cGrowth.value = state.a.cvGrowth;
+  const premium = rows[0].premium;
+  const cIncome = $('cIncome');
+  cIncome.max = Math.max(50000, Math.round(premium * 12 / 2500) * 2500);
+  // Default to NO advisor-modeled draw. We only ever show what the illustration
+  // itself projects; any loan income is a hypothetical the advisor opts into by
+  // moving the slider — never invented on the client's behalf.
+  state.a.income = 0;
+  state.a.income = Math.min(state.a.income, +cIncome.max);
+  cIncome.value = state.a.income;
+  $('oIncome').textContent = fmtF(state.a.income);
+  const n = rows.length;
+  setStatus(`Loaded · ${carrier || 'illustration'} · ${n} policy years · ages ${firstAge}–${lastAge} · ${fmtC(premium)}/yr premium`, true);
+  recompute();
+}
+
+function tile(label, value, sub, subUp) {
+  const d = document.createElement('div'); d.className = 'tile';
+  const l = document.createElement('div'); l.className = 't-label'; l.textContent = label;
+  const v = document.createElement('div'); v.className = 't-value'; v.textContent = value;
+  d.append(l, v);
+  if (sub) { const s = document.createElement('div'); s.className = 't-sub' + (subUp ? ' up' : ''); s.textContent = sub; d.appendChild(s); }
+  return d;
+}
+
+function recompute() {
+  const a = state.a;
+  a.incomeStart = Math.min(a.incomeStart, a.deathAge);
+  model = buildModel(state.rows, a);
+  const rows = state.rows;
+  // focus every stat on the plan horizon ("Plan runs to age"), not the
+  // ledger's age-120 tail — the timeline is already truncated to deathAge
+  const horizon = model.timeline.filter(p => !p.projected);
+  const last = horizon[horizon.length - 1];
+  const totPremIll = last.cumPrem;
+  const premYears = horizon.filter(p => p.premium > 0).length;
+
+  // glance tiles (illustrated values through the plan horizon)
+  const gt = $('glanceTiles'); gt.textContent = '';
+  gt.append(
+    tile('Premiums paid by ' + last.age, fmtC(totPremIll), `${premYears} years × ${fmtC(rows[0].premium)}`),
+    tile('Cash value at age ' + last.age, fmtC(last.cv), fmtF(last.cv - totPremIll) + ' above premiums paid', last.cv > totPremIll),
+    tile('Death benefit at age ' + last.age, fmtC(last.db), 'generally income-tax-free to heirs'),
+    tile('Break-even point', model.breakEven ? 'Year ' + model.breakEven.year : 'Beyond illustration',
+      model.breakEven ? `age ${model.breakEven.age} — cash value exceeds all premiums paid` : ''),
+  );
+
+  // modeler tiles
+  const t = model.totals;
+  const ill = model.illustratedIncome;
+  // note + slider label reflect where the income comes from
+  const note = $('illIncomeNote');
+  const msg = $('illIncomeMsg'); msg.textContent = '';
+  if (ill) {
+    // carrier illustration projects its own income (e.g. an income rider)
+    note.hidden = false; note.classList.remove('hypo');
+    const s1 = document.createElement('strong');
+    s1.textContent = fmtF(ill.annual) + '/yr from age ' + ill.startAge;
+    msg.append('This illustration projects ', s1,
+      ` of income (through age ${ill.endAge}) — the carrier's values are net of it, and it's counted below. The slider models any additional draws on top.`);
+    $('lIncome').textContent = 'Additional income drawn';
+  } else if (a.income > 0) {
+    // no illustrated income; advisor is modeling a hypothetical draw
+    note.hidden = false; note.classList.add('hypo');
+    const s1 = document.createElement('strong'); s1.textContent = 'not in the carrier illustration';
+    msg.append('Heads up: this illustration does not project retirement income. The ',
+      fmtF(a.income) + '/yr below is a ', s1, ' — a hypothetical policy-loan strategy you are modeling for the client.');
+    $('lIncome').textContent = 'Hypothetical income drawn';
+  } else {
+    // nothing drawn — show only what the illustration shows
+    note.hidden = false; note.classList.add('hypo');
+    msg.append('This illustration shows accumulation only — no retirement income is projected. ' +
+      'Drag "Income drawn" above zero to model a hypothetical policy-loan income strategy on top of it.');
+    $('lIncome').textContent = 'Income drawn (optional)';
+  }
+  const mt = $('modelTiles'); mt.textContent = '';
+  const yrsIncome = model.timeline.filter(p => p.draw > 0).length;
+  const incomeSub = ill
+    ? `illustrated ${fmtC(ill.annual)}/yr from age ${ill.startAge}` + (t.extraIncome > 0 ? ` + ${fmtC(t.extraIncome)} extra draws` : '')
+    : (yrsIncome ? `${yrsIncome} years × ${fmtC(a.income)} via policy loans` : 'no income drawn');
+  mt.append(
+    tile('Income drawn', fmtC(t.income), incomeSub),
+    tile('Loan balance at age ' + a.deathAge, fmtC(t.loanAtDeath), 'nets against the death benefit'),
+    tile('To your heirs', fmtC(t.netDBAtDeath), `death benefit after loan, at age ${a.deathAge}`, t.netDBAtDeath > 0),
+    tile('Return on premiums', t.premiums > 0 ? (t.legacy / t.premiums).toFixed(1) + '×' : '—',
+      `income + legacy vs ${fmtC(t.premiums)} paid in`, t.legacy > t.premiums),
+  );
+
+  // hero
+  $('heroLegacy').textContent = fmtC(t.legacy);
+  const hd = $('heroDelta'); hd.textContent = '';
+  if (t.premiums > 0) {
+    const strong = document.createElement('strong');
+    strong.textContent = (t.legacy / t.premiums).toFixed(1) + '×';
+    const lead = t.income > 0 ? 'Income enjoyed plus wealth transferred — ' : 'Wealth transferred to heirs — ';
+    hd.append(lead, strong, ` the ${fmtC(t.premiums)} paid in premiums.`);
+  }
+  const bd = $('legacyBreakdown'); bd.textContent = '';
+  const bRow = (name, val, keyColor, total) => {
+    const r = document.createElement('div'); r.className = 'lb-row' + (total ? ' total' : '');
+    const n = document.createElement('span'); n.className = 'lb-name';
+    if (keyColor) { const k = document.createElement('span'); k.className = 'lb-key'; k.style.background = keyColor; n.appendChild(k); }
+    n.append(name);
+    const v = document.createElement('span'); v.className = 'lb-val'; v.textContent = fmtF(val);
+    r.append(n, v);
+    return r;
+  };
+  bd.append(
+    bRow('Retirement income drawn', t.income, 'var(--s-teal)'),
+    bRow('Death benefit to heirs', t.netDBAtDeath, 'var(--s-blue)'),
+    bRow('Total family value', t.legacy, null, true),
+    bRow('Premiums paid in', -t.premiums, null),
+  );
+
+  // lapse banner
+  const lb = $('lapseBanner');
+  if (model.lapseAge !== null) {
+    lb.style.display = 'flex';
+    const msg = $('lapseMsg'); msg.textContent = '';
+    const s1 = document.createElement('strong'); s1.textContent = `the policy collapses at age ${model.lapseAge}`;
+    msg.append(`At ${fmtC(a.income)}/yr this draw outruns the cash value — `, s1, '. Lower the income, start later, or assume a lower loan rate.');
+  } else {
+    lb.style.display = 'none';
+  }
+
+  // debt freedom race
+  debtModel = computeDebtFreedom(
+    state.rows.map(r => ({ ...r, loanCapacity: r.cv * LOAN_CAPACITY_FACTOR })),
+    state.debts,
+  );
+  renderDebtSummary();
+
+  for (const c of charts) renderChart(c);
+  saveLastCase(); // the page always reopens exactly as you left it
+}
+
+/* -------- working-case persistence: reload-proof -------- */
+const LAST_CASE_KEY = 'gia_last_case';
+function saveLastCase() {
+  try {
+    localStorage.setItem(LAST_CASE_KEY, JSON.stringify({
+      rows: state.rows, source: state.source, carrier: state.carrier,
+      a: state.a, debts: state.debts, include: state.p.include, client: state.p.client,
+    }));
+  } catch (e) { /* storage unavailable — page still works, just won't persist */ }
+}
+function restoreLastCase() {
+  let lc = null;
+  try { lc = JSON.parse(localStorage.getItem(LAST_CASE_KEY)); } catch (e) {}
+  if (!lc || !Array.isArray(lc.rows) || lc.rows.length < 3) return false;
+  try {
+    if (lc.client) {
+      $('pClient').value = lc.client;
+      state.p.client = lc.client;
+      const line = $('preparedLine');
+      line.hidden = false;
+      line.textContent = 'Prepared for ' + lc.client;
+    }
+    loadRows(lc.rows, lc.source || 'Restored case', lc.carrier || null);
+    Object.assign(state.a, lc.a || {});
+    syncControls();
+    state.debts = (lc.debts || []).map(d => ({ ...d }));
+    renderDebtEditor();
+    state.p.include = { policy: true, income: true, debt: true, learn: true, ...(lc.include || {}) };
+    for (const [key, secId] of Object.entries(SECTION_FOR)) {
+      const box = $('inc' + key[0].toUpperCase() + key.slice(1));
+      box.checked = !!state.p.include[key];
+      document.getElementById(secId).style.display = box.checked ? '' : 'none';
+    }
+    recompute();
+    setStatus('Restored your last case — ' + [lc.client, lc.carrier].filter(Boolean).join(' · '), true);
+    return true;
+  } catch (e) { return false; }
+}
+
+function renderDebtSummary() {
+  const dt = $('debtTiles'); dt.textContent = '';
+  const totalLine = $('debtTotal');
+  if (!debtModel) {
+    totalLine.textContent = 'No debts listed — add one to compare timelines.';
+    return;
+  }
+  const m = debtModel;
+  const nDebts = state.debts.filter(d => (d.balance || 0) > 0).length;
+  totalLine.textContent = `${nDebts} debt${nDebts === 1 ? '' : 's'} · ${fmtF(m.totalDebt)} total · ${fmtF(m.totalPayment)}/mo in payments`;
+  dt.append(
+    tile('Total debt today', fmtC(m.totalDebt), fmtF(m.totalPayment) + '/mo going to lenders'),
+    tile('Traditional payoff',
+      m.traditionalYear != null ? 'Age ' + m.traditionalAge : '40+ years',
+      m.traditionalYear != null ? `${m.traditionalYear} more years of payments` : 'payments barely cover the interest'),
+    tile('Payoff via policy capacity',
+      m.policyYear != null ? 'Age ' + m.policyAge : 'Beyond illustration',
+      m.policyYear != null
+        ? (m.policyYear === 0 ? 'your capacity covers it today' : `policy year ${m.policyRow.year} — one loan clears every debt`)
+        : 'capacity never covers the balance in the illustrated years', m.policyYear != null),
+    tile('Years reclaimed',
+      m.traditionalYear != null && m.policyYear != null ? m.yearsSaved + ' years' : '—',
+      m.policyYear != null ? `then ${fmtF(m.totalPayment)}/mo repays your policy, not the bank` : '', m.yearsSaved > 0),
+  );
+}
+
+/* -------- chart definitions -------- */
+function illustratedPoints() {
+  return state.rows.map(r => {
+    let cum = 0;
+    return r; // placeholder — replaced below
+  });
+}
+
+makeChart($('chartGrowth'), {
+  title: 'Cash value vs. premiums paid',
+  sub: 'Illustrated values — break-even is where gold crosses above teal',
+  series: [
+    { key: 'cv', name: 'Cash value', cssVar: '--s-gold' },
+    { key: 'cumPrem', name: 'Total premiums paid', cssVar: '--s-teal' },
+  ],
+  getData() {
+    if (!model) return [];
+    return model.timeline.filter(p => !p.projected).map(p => ({
+      x: p.age, year: p.year, projected: false,
+      label: `Age ${p.age} · policy year ${p.year}`,
+      values: { cv: p.cv, cumPrem: p.cumPrem },
+    }));
+  },
+  annotate(svg, scale, pts, el) {
+    if (!model || !model.breakEven) return;
+    const be = model.breakEven;
+    const i = pts.findIndex(p => p.x === be.age);
+    if (i < 0) return;
+    const cx = scale.xOf(i), cy = scale.yOf(pts[i].values.cv);
+    svg.appendChild(el('circle', { cx, cy, r: 7, fill: 'var(--surface)' }));
+    svg.appendChild(el('circle', { cx, cy, r: 5, fill: 'var(--accent)' }));
+    const anchor = i < pts.length * 0.6 ? 'start' : 'end';
+    const tx = anchor === 'start' ? cx + 10 : cx - 10;
+    const t1 = el('text', { x: tx, y: Math.max(scale.M.t + 12, cy - 16), 'text-anchor': anchor, class: 'anno-text gold' });
+    t1.textContent = `Break-even · year ${be.year}`;
+    svg.appendChild(t1);
+  },
+});
+
+makeChart($('chartDB'), {
+  title: 'Death benefit growth',
+  sub: 'Illustrated values — the legacy floor rises every year',
+  series: [{ key: 'db', name: 'Death benefit', cssVar: '--s-blue' }],
+  getData() {
+    if (!model) return [];
+    return model.timeline.filter(p => !p.projected).map(p => ({
+      x: p.age, year: p.year, projected: false,
+      label: `Age ${p.age} · policy year ${p.year}`,
+      values: { db: p.db },
+    }));
+  },
+});
+
+makeChart($('chartLegacy'), {
+  title: 'The income years — net cash value, loan balance, and what passes on',
+  sub: 'Dashed segments are projected beyond the carrier illustration at your assumed rate',
+  series: [
+    { key: 'netCV', name: 'Net cash value', cssVar: '--s-gold' },
+    { key: 'netDB', name: 'Net death benefit', cssVar: '--s-blue' },
+    { key: 'loan', name: 'Loan balance', cssVar: '--s-coral' },
+  ],
+  extraCols: [{ key: 'cumIncome', name: 'Income drawn (cum.)' }],
+  ttExtra: p => p.extra && p.extra.cumIncome > 0 ? [['Income drawn to date', fmtF(p.extra.cumIncome)]] : [],
+  getData() {
+    if (!model) return [];
+    return model.timeline.map(p => ({
+      x: p.age, year: p.year, projected: p.projected,
+      label: `Age ${p.age} · policy year ${p.year}`,
+      values: { netCV: p.netCV, netDB: p.netDB, loan: p.loan },
+      extra: { cumIncome: p.cumIncome },
+    }));
+  },
+  annotate(svg, scale, pts, el) {
+    if (!model) return;
+    const a = state.a;
+    const ill = model.illustratedIncome;
+    let startAge = a.income > 0 ? a.incomeStart : null;
+    if (ill && (startAge === null || ill.startAge < startAge)) startAge = ill.startAge;
+    const si = startAge !== null ? pts.findIndex(p => p.x === startAge) : -1;
+    if (si >= 0) {
+      const xx = scale.xOf(si);
+      svg.appendChild(el('line', { x1: xx, x2: xx, y1: scale.M.t, y2: scale.M.t + scale.ih, stroke: 'var(--accent)', 'stroke-width': '1', 'stroke-opacity': '0.5' }));
+      const anchor = si < pts.length * 0.7 ? 'start' : 'end';
+      const t = el('text', { x: anchor === 'start' ? xx + 6 : xx - 6, y: scale.M.t + 26, 'text-anchor': anchor, class: 'anno-text gold' });
+      t.textContent = 'Income begins';
+      svg.appendChild(t);
+    }
+    if (model.lapseAge !== null) {
+      const li = pts.findIndex(p => p.x === model.lapseAge);
+      if (li >= 0) {
+        const xx = scale.xOf(li);
+        svg.appendChild(el('line', { x1: xx, x2: xx, y1: scale.M.t, y2: scale.M.t + scale.ih, stroke: 'var(--critical)', 'stroke-width': '1', 'stroke-opacity': '0.7' }));
+        const anchor = li < pts.length * 0.7 ? 'start' : 'end';
+        const t = el('text', { x: anchor === 'start' ? xx + 6 : xx - 6, y: scale.M.t + 44, 'text-anchor': anchor, class: 'anno-text', fill: 'var(--critical)', style: 'fill: var(--critical)' });
+        t.textContent = `Lapses · age ${model.lapseAge}`;
+        svg.appendChild(t);
+      }
+    }
+  },
+});
+
+makeChart($('chartDebt'), {
+  title: 'The race — debt remaining vs. policy loan capacity',
+  sub: `Capacity assumes ${Math.round(LOAN_CAPACITY_FACTOR * 100)}% of illustrated cash value is borrowable`,
+  series: [
+    { key: 'capacity', name: 'Policy loan capacity', cssVar: '--s-gold' },
+    { key: 'debt', name: 'Debt remaining (traditional payments)', cssVar: '--s-coral' },
+  ],
+  getData() {
+    if (!debtModel) return [];
+    return debtModel.detail.map(p => ({
+      x: p.age, year: p.year, projected: false,
+      label: `Age ${p.age} · policy year ${p.year}`,
+      values: { capacity: p.capacity, debt: p.debt },
+    }));
+  },
+  annotate(svg, scale, pts, el) {
+    if (!debtModel) return;
+    const m = debtModel;
+    if (m.policyAge != null) {
+      const i = pts.findIndex(p => p.x === m.policyAge);
+      if (i >= 0) {
+        const cx = scale.xOf(i), cy = scale.yOf(pts[i].values.capacity);
+        svg.appendChild(el('line', { x1: cx, x2: cx, y1: scale.M.t, y2: scale.M.t + scale.ih, stroke: 'var(--accent)', 'stroke-width': '1', 'stroke-opacity': '0.5' }));
+        svg.appendChild(el('circle', { cx, cy, r: 7, fill: 'var(--surface)' }));
+        svg.appendChild(el('circle', { cx, cy, r: 5, fill: 'var(--accent)' }));
+        const anchor = i < pts.length * 0.6 ? 'start' : 'end';
+        const t = el('text', { x: anchor === 'start' ? cx + 9 : cx - 9, y: Math.max(scale.M.t + 12, cy - 14), 'text-anchor': anchor, class: 'anno-text gold' });
+        t.textContent = `Debt-free via policy · age ${m.policyAge}`;
+        svg.appendChild(t);
+      }
+    }
+    if (m.traditionalAge != null) {
+      const i = pts.findIndex(p => p.x === m.traditionalAge);
+      if (i >= 0) {
+        const cx = scale.xOf(i), cy = scale.yOf(0);
+        svg.appendChild(el('circle', { cx, cy, r: 6.5, fill: 'var(--surface)' }));
+        svg.appendChild(el('circle', { cx, cy, r: 4.5, fill: 'var(--s-coral)' }));
+        const anchor = i < pts.length * 0.6 ? 'start' : 'end';
+        const t = el('text', { x: anchor === 'start' ? cx + 9 : cx - 9, y: cy - 10, 'text-anchor': anchor, class: 'anno-text' });
+        t.textContent = `Traditional payoff · age ${m.traditionalAge}`;
+        svg.appendChild(t);
+      }
+    }
+  },
+});
+
+/* -------- debt editor -------- */
+function renderDebtEditor() {
+  const grid = $('debtGrid');
+  grid.querySelectorAll('.debt-row-cell').forEach(e => e.remove());
+  state.debts.forEach((d, idx) => {
+    const mk = (type, value, key, label, attrs = {}) => {
+      const input = document.createElement('input');
+      input.type = type; input.value = value;
+      input.setAttribute('aria-label', label + ' — ' + (d.name || 'debt ' + (idx + 1)));
+      for (const k in attrs) input.setAttribute(k, attrs[k]);
+      input.className = 'debt-row-cell';
+      input.addEventListener('input', () => {
+        d[key] = type === 'number' ? (parseFloat(input.value) || 0) : input.value;
+        recompute();
+      });
+      return input;
+    };
+    grid.append(
+      mk('text', d.name, 'name', 'Name'),
+      mk('number', d.balance, 'balance', 'Balance', { min: 0, step: 500, inputmode: 'decimal' }),
+      mk('number', d.rate, 'rate', 'Annual rate percent', { min: 0, max: 40, step: 0.1, inputmode: 'decimal' }),
+      mk('number', d.payment, 'payment', 'Monthly payment', { min: 0, step: 10, inputmode: 'decimal' }),
+    );
+    const x = document.createElement('button');
+    x.type = 'button'; x.className = 'dg-x debt-row-cell'; x.textContent = '✕';
+    x.setAttribute('aria-label', 'Remove ' + (d.name || 'debt ' + (idx + 1)));
+    x.addEventListener('click', () => {
+      state.debts.splice(idx, 1);
+      renderDebtEditor();
+      recompute();
+    });
+    grid.appendChild(x);
+  });
+}
+$('addDebt').addEventListener('click', () => {
+  state.debts.push({ name: 'New debt', balance: 10000, rate: 8, payment: 200 });
+  renderDebtEditor();
+  recompute();
+});
+renderDebtEditor();
+
+/* -------- controls -------- */
+const controlRegistry = [];
+function syncControls() {
+  for (const { input, out, key, fmt } of controlRegistry) {
+    const v = Math.max(+input.min || 0, Math.min(+input.max || Infinity, state.a[key]));
+    state.a[key] = v;
+    input.value = v;
+    out.textContent = fmt(v);
+  }
+}
+function bindControl(id, outId, key, fmt) {
+  const input = $(id), out = $(outId);
+  controlRegistry.push({ input, out, key, fmt });
+  input.addEventListener('input', () => {
+    state.a[key] = +input.value;
+    if (key === 'incomeStart' && state.a.deathAge < state.a.incomeStart) {
+      state.a.deathAge = state.a.incomeStart;
+      $('cDeath').value = state.a.incomeStart;
+      $('oDeath').textContent = state.a.incomeStart;
+    }
+    out.textContent = fmt(+input.value);
+    recompute();
+  });
+  out.textContent = fmt(+input.value);
+}
+bindControl('cIncome', 'oIncome', 'income', v => fmtF(v));
+bindControl('cStart', 'oStart', 'incomeStart', v => String(v));
+bindControl('cDeath', 'oDeath', 'deathAge', v => String(v));
+bindControl('cLoan', 'oLoan', 'loanRate', v => v.toFixed(2).replace(/\.?0+$/, '') + (Number.isInteger(v) ? '.0' : '') + '%');
+bindControl('cGrowth', 'oGrowth', 'cvGrowth', v => v.toFixed(1) + '%');
+
+/* -------- intake wiring -------- */
+const dz = $('dropzone'), fi = $('fileInput');
+// The dropzone is a <label for="fileInput"> — clicks open the picker natively,
+// with no scripted input.click() that sandboxed embeds may swallow.
+dz.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); } });
+// Don't let a stray drop anywhere on the page navigate away from the tool.
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => e.preventDefault());
+['dragover', 'dragenter'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
+dz.addEventListener('drop', e => {
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+fi.addEventListener('change', () => { if (fi.files[0]) handleFile(fi.files[0]); fi.value = ''; });
+
+async function handleFile(file) {
+  setStatus(`Reading ${file.name}…`, true);
+  try {
+    const buf = await file.arrayBuffer();
+    const text = await extractPdfText(buf);
+    const rows = parseIllustrationText(text);
+    loadRows(rows, file.name, detectCarrier(text) || 'Uploaded illustration');
+  } catch (err) {
+    setStatus(err.message || 'Could not read that PDF — try pasting the table text instead.', false);
+    document.querySelector('details.paste').open = true;
+  }
+}
+
+$('parsePaste').addEventListener('click', () => {
+  try {
+    const text = $('pasteBox').value;
+    const rows = parseIllustrationText(text);
+    loadRows(rows, 'Pasted illustration', detectCarrier(text) || 'Pasted illustration');
+  } catch (err) {
+    setStatus(err.message, false);
+  }
+});
+
+$('loadSample').addEventListener('click', () => {
+  loadRows(SAMPLE_ROWS, 'Sample', 'Lafayette Life');
+});
+
+/* -------- presentation dashboard -------- */
+const SECTION_FOR = { policy: 'glance', income: 'modeler', debt: 'debt', learn: 'learn' };
+
+$('pClient').addEventListener('input', () => {
+  state.p.client = $('pClient').value.trim();
+  activePlanId = null; // a different name is a different plan; same name re-links on save
+  const line = $('preparedLine');
+  line.hidden = !state.p.client;
+  line.textContent = state.p.client ? 'Prepared for ' + state.p.client : '';
+  saveLastCase();
+});
+$('pAdvisor').addEventListener('input', () => { state.p.advisor = $('pAdvisor').value.trim(); saveSettings(); });
+$('pAgency').addEventListener('input', () => { state.p.agency = $('pAgency').value.trim(); saveSettings(); });
+
+/* -------- agent settings & saved client plans (persisted in this browser) -------- */
+const PLANS_KEY = 'gia_ibc_plans';
+const SETTINGS_KEY = 'gia_agent_settings';
+
+function saveSettings() {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ advisor: state.p.advisor, agency: state.p.agency || '' })); } catch (e) {}
+}
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+    if (s.advisor) { state.p.advisor = s.advisor; $('pAdvisor').value = s.advisor; }
+    if (s.agency) { state.p.agency = s.agency; $('pAgency').value = s.agency; }
+  } catch (e) {}
+}
+function getPlans() {
+  try { return JSON.parse(localStorage.getItem(PLANS_KEY)) || []; } catch (e) { return []; }
+}
+function putPlans(plans) {
+  try { localStorage.setItem(PLANS_KEY, JSON.stringify(plans)); return true; }
+  catch (e) { setStatus('Could not save — this browser is blocking storage.', false); return false; }
+}
+let activePlanId = null;
+
+$('savePlan').addEventListener('click', () => {
+  const client = state.p.client;
+  if (!client) {
+    setStatus('Give the plan a client name first — type it in "Prepared for".', false);
+    $('pClient').focus();
+    return;
+  }
+  const plans = getPlans();
+  const existing = plans.find(p => p.id === activePlanId) || plans.find(p => p.client.toLowerCase() === client.toLowerCase());
+  const plan = {
+    id: existing ? existing.id : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+    client,
+    carrier: state.carrier, source: state.source,
+    rows: state.rows, a: { ...state.a },
+    debts: state.debts.map(d => ({ ...d })),
+    include: { ...state.p.include },
+    createdAt: existing ? existing.createdAt : new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  if (existing) plans[plans.indexOf(existing)] = plan;
+  else plans.push(plan);
+  if (putPlans(plans)) {
+    activePlanId = plan.id;
+    renderPlans();
+    setStatus((existing ? 'Updated' : 'Saved') + ' plan for ' + client + ' — stored in this browser.', true);
+  }
+});
+
+function applyPlan(plan) {
+  $('pClient').value = plan.client;
+  state.p.client = plan.client;
+  const line = $('preparedLine');
+  line.hidden = false;
+  line.textContent = 'Prepared for ' + plan.client;
+  loadRows(plan.rows, plan.source, plan.carrier); // sets ranges + defaults, clears active id
+  activePlanId = plan.id;
+  Object.assign(state.a, plan.a);
+  syncControls();
+  state.debts = (plan.debts || []).map(d => ({ ...d }));
+  renderDebtEditor();
+  state.p.include = { policy: true, income: true, debt: true, learn: true, ...plan.include };
+  for (const [key, secId] of Object.entries(SECTION_FOR)) {
+    const box = $('inc' + key[0].toUpperCase() + key.slice(1));
+    box.checked = !!state.p.include[key];
+    document.getElementById(secId).style.display = box.checked ? '' : 'none';
+  }
+  recompute();
+  renderPlans();
+  setStatus('Loaded plan — ' + plan.client + ' · ' + (plan.carrier || 'illustration'), true);
+}
+
+function renderPlans() {
+  const grid = $('plansGrid');
+  grid.textContent = '';
+  const plans = getPlans().sort((x, y) => (y.updatedAt || '').localeCompare(x.updatedAt || ''));
+  if (!plans.length) {
+    const empty = document.createElement('div');
+    empty.className = 'plans-empty';
+    const s = document.createElement('strong');
+    s.textContent = 'Create your first client plan';
+    empty.appendChild(s);
+    empty.append('Load an illustration, type the client’s name above, set the scenario, then hit Save plan. Plans stay in this browser.');
+    grid.appendChild(empty);
+    return;
+  }
+  for (const plan of plans) {
+    const card = document.createElement('div');
+    card.className = 'plan-card' + (plan.id === activePlanId ? ' active' : '');
+    const name = document.createElement('div'); name.className = 'pc-name'; name.textContent = plan.client;
+    const meta = document.createElement('div'); meta.className = 'pc-meta';
+    const prem = plan.rows && plan.rows.length ? fmtC(plan.rows[0].premium) + '/yr · ' + plan.rows.length + ' yrs' : '';
+    meta.textContent = [plan.carrier, prem].filter(Boolean).join(' · ');
+    const upd = document.createElement('div'); upd.className = 'pc-updated';
+    upd.textContent = 'Updated ' + new Date(plan.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const actions = document.createElement('div'); actions.className = 'pc-actions';
+    const view = document.createElement('button'); view.type = 'button'; view.className = 'btn-ghost'; view.textContent = 'View plan';
+    view.addEventListener('click', () => applyPlan(plan));
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'pc-del'; del.textContent = '✕';
+    del.setAttribute('aria-label', 'Delete plan for ' + plan.client);
+    // two-click inline confirm — embedded views block confirm() dialogs entirely
+    let disarmT = null;
+    del.addEventListener('click', () => {
+      if (!del.classList.contains('armed')) {
+        del.classList.add('armed');
+        del.textContent = 'Delete?';
+        del.setAttribute('aria-label', 'Confirm: delete plan for ' + plan.client);
+        disarmT = setTimeout(() => {
+          del.classList.remove('armed');
+          del.textContent = '✕';
+          del.setAttribute('aria-label', 'Delete plan for ' + plan.client);
+        }, 3500);
+        return;
+      }
+      clearTimeout(disarmT);
+      putPlans(getPlans().filter(p => p.id !== plan.id));
+      if (activePlanId === plan.id) activePlanId = null;
+      renderPlans();
+      setStatus('Deleted the plan for ' + plan.client + '.', true);
+    });
+    actions.append(view, del);
+    card.append(name, meta, upd, actions);
+    grid.appendChild(card);
+  }
+}
+
+for (const [key, secId] of Object.entries(SECTION_FOR)) {
+  const box = $('inc' + key[0].toUpperCase() + key.slice(1));
+  box.addEventListener('change', () => {
+    state.p.include[key] = box.checked;
+    document.getElementById(secId).style.display = box.checked ? '' : 'none';
+    if (box.checked) for (const c of charts) renderChart(c); // re-measure after unhide
+    saveLastCase();
+  });
+}
+
+function collectReportData() {
+  const rows = state.rows;
+  const ill = model.timeline.filter(p => !p.projected); // truncated to the plan horizon
+  const last = ill[ill.length - 1];
+  return {
+    client: state.p.client,
+    preparedBy: [state.p.advisor, state.p.agency].filter(Boolean).join(' · '),
+    dateStr: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    carrier: state.carrier, source: state.source,
+    policy: {
+      years: ill.length, firstAge: rows[0].age, lastAge: last.age, premium: rows[0].premium,
+      totPrem: last.cumPrem, cvEnd: last.cv, dbEnd: last.db,
+      breakEven: model.breakEven ? { year: model.breakEven.year, age: model.breakEven.age } : null,
+    },
+    growth: ill.map(p => ({ age: p.age, cv: p.cv, cumPrem: p.cumPrem })),
+    dbSeries: ill.map(p => ({ age: p.age, db: p.db })),
+    income: {
+      a: state.a, totals: model.totals, lapseAge: model.lapseAge, ill: model.illustratedIncome,
+      chart: model.timeline.map(p => ({ age: p.age, netCV: p.netCV, netDB: p.netDB, loan: p.loan, projected: p.projected })),
+    },
+    debt: debtModel ? {
+      debts: state.debts, totalDebt: debtModel.totalDebt, totalPayment: debtModel.totalPayment,
+      traditionalAge: debtModel.traditionalAge, policyAge: debtModel.policyAge,
+      yearsSaved: debtModel.yearsSaved, detail: debtModel.detail,
+    } : null,
+    include: { policy: state.p.include.policy, income: state.p.include.income, debt: state.p.include.debt && !!debtModel },
+  };
+}
+
+let reportUrl = null;
+$('downloadPdf').addEventListener('click', () => {
+  try {
+    const pdfStr = buildReportPdf(collectReportData());
+    const bytes = new Uint8Array(pdfStr.length);
+    for (let i = 0; i < pdfStr.length; i++) bytes[i] = pdfStr.charCodeAt(i) & 0xff;
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    if (reportUrl) URL.revokeObjectURL(reportUrl);
+    reportUrl = URL.createObjectURL(blob);
+    const name = ((state.p.client || 'client').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'client')
+      + '-family-banking-report.pdf';
+    // attempt a direct download (works in a normal tab; sandboxed embeds may block it)
+    const a = document.createElement('a');
+    a.href = reportUrl; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    // always surface the fallback bar — one of these paths works everywhere
+    const fb = $('pdfFallback');
+    fb.hidden = false;
+    const save = $('pdfSaveLink');
+    save.href = reportUrl; save.download = name;
+    $('pdfOpenTab').href = reportUrl; // plain link — pop-up blockers don't touch it
+    $('pdfName').textContent = name;
+    // embedded views (like the artifact panel) silently block downloads —
+    // render the preview immediately there so the report is visibly ready
+    const embedded = window.self !== window.top;
+    if (embedded) renderReportPreview();
+    else { $('pdfPreviewWrap').hidden = true; $('pdfPreviewBtn').textContent = 'Preview here'; }
+    if (embedded) $('pdfFallback').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setStatus('Report generated — ' + name, true);
+  } catch (err) {
+    setStatus('Could not build the PDF: ' + (err.message || err), false);
+  }
+});
+$('pdfOpenTab').addEventListener('click', e => {
+  if (!reportUrl) e.preventDefault(); // link is live only after a report is generated
+});
+function renderReportPreview() {
+  const pages = buildReportPdf(collectReportData(), new CanvasBuilder(2));
+  const cont = $('pdfPreviewPages');
+  cont.textContent = '';
+  for (const c of pages) {
+    // real <img> pages: right-click / long-press "Save image" works in any embed
+    const img = document.createElement('img');
+    img.src = c.toDataURL('image/png');
+    img.alt = 'Report page';
+    img.title = 'Right-click (or long-press) to save this page as an image';
+    cont.appendChild(img);
+  }
+  $('pdfPreviewWrap').hidden = false;
+  $('pdfPreviewBtn').textContent = 'Hide preview';
+}
+$('pdfPreviewBtn').addEventListener('click', () => {
+  const wrap = $('pdfPreviewWrap');
+  if (wrap.hidden) renderReportPreview();
+  else { wrap.hidden = true; $('pdfPreviewBtn').textContent = 'Preview here'; }
+});
+
+/* -------- fullscreen presentation mode (slide deck) -------- */
+let slideIdx = 0, slideCount = 0;
+
+function showSlide(i) {
+  slideCount = $('presentPages').children.length;
+  slideIdx = Math.max(0, Math.min(slideCount - 1, i));
+  [...$('presentPages').children].forEach((s, k) => {
+    s.classList.toggle('active', k === slideIdx);
+    s.classList.toggle('before', k < slideIdx);
+  });
+  [...$('presentDots').children].forEach((d, k) => d.classList.toggle('active', k === slideIdx));
+  $('presentCounter').textContent = (slideIdx + 1) + ' / ' + slideCount;
+  $('presentPrev').disabled = slideIdx === 0;
+  $('presentNext').disabled = slideIdx === slideCount - 1;
+}
+
+function openPresentation() {
+  try {
+    const pages = buildReportPdf(collectReportData(), new CanvasBuilder(2));
+    const cont = $('presentPages');
+    const dots = $('presentDots');
+    cont.textContent = ''; dots.textContent = '';
+    pages.forEach((c, k) => {
+      const slide = document.createElement('div');
+      slide.className = 'slide';
+      slide.appendChild(c);
+      c.addEventListener('click', () => { if (!suppressClick) showSlide(slideIdx + 1); }); // tap/click advances
+      cont.appendChild(slide);
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.setAttribute('aria-label', 'Go to page ' + (k + 1));
+      dot.addEventListener('click', () => showSlide(k));
+      dots.appendChild(dot);
+    });
+    $('presentTitle').textContent = (state.p.client ? state.p.client + ' — ' : '') + 'The Family Banking Strategy';
+    $('presentOverlay').hidden = false;
+    document.body.style.overflow = 'hidden';
+    showSlide(0);
+    // true fullscreen where the environment allows it; harmless where it doesn't
+    if ($('presentOverlay').requestFullscreen) $('presentOverlay').requestFullscreen().catch(() => {});
+    $('presentNext').focus();
+  } catch (err) {
+    setStatus('Could not open the presentation: ' + (err.message || err), false);
+  }
+}
+function closePresentation() {
+  $('presentOverlay').hidden = true;
+  document.body.style.overflow = '';
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  $('presentBtn').focus();
+}
+$('presentBtn').addEventListener('click', openPresentation);
+$('presentClose').addEventListener('click', closePresentation);
+$('presentPrev').addEventListener('click', () => showSlide(slideIdx - 1));
+$('presentNext').addEventListener('click', () => showSlide(slideIdx + 1));
+document.addEventListener('keydown', e => {
+  if ($('presentOverlay').hidden) return;
+  if (e.key === 'Escape') { closePresentation(); return; }
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown' || e.key === 'Enter') { e.preventDefault(); showSlide(slideIdx + 1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); showSlide(slideIdx - 1); }
+  else if (e.key === 'Home') { e.preventDefault(); showSlide(0); }
+  else if (e.key === 'End') { e.preventDefault(); showSlide(slideCount - 1); }
+});
+// touch swipe between slides
+let swipeX = null, suppressClick = false;
+$('presentPages').addEventListener('pointerdown', e => { swipeX = e.clientX; });
+$('presentPages').addEventListener('pointerup', e => {
+  if (swipeX === null) return;
+  const dx = e.clientX - swipeX;
+  swipeX = null;
+  if (Math.abs(dx) > 48) {
+    suppressClick = true;
+    setTimeout(() => { suppressClick = false; }, 350);
+    showSlide(slideIdx + (dx < 0 ? 1 : -1));
+  }
+});
+
+$('printPage').addEventListener('click', () => {
+  try {
+    // print the branded report, not the dark page
+    const pages = buildReportPdf(collectReportData(), new CanvasBuilder(2));
+    const holder = $('printReport');
+    holder.textContent = '';
+    for (const c of pages) {
+      const img = document.createElement('img');
+      img.src = c.toDataURL('image/png');
+      holder.appendChild(img);
+    }
+    document.body.classList.add('print-report-mode');
+    const cleanup = () => { document.body.classList.remove('print-report-mode'); };
+    window.addEventListener('afterprint', cleanup, { once: true });
+    setTimeout(cleanup, 60000);
+    window.print();
+    if (window.self !== window.top) {
+      setStatus('If no print dialog appeared, this panel blocks printing — open the artifact in its own browser tab (or print the downloaded PDF).', true);
+    }
+  } catch (e) {
+    setStatus('Printing is blocked in this view — open the page in a browser tab and print there.', false);
+  }
+});
+
+/* -------- responsive re-render -------- */
+let rT = null;
+window.addEventListener('resize', () => {
+  clearTimeout(rT);
+  rT = setTimeout(() => { for (const c of charts) renderChart(c); }, 120);
+});
+
+/* boot */
+loadSettings();
+if (!restoreLastCase()) loadRows(SAMPLE_ROWS, 'Sample', 'Lafayette Life');
+renderPlans();
+</script>
