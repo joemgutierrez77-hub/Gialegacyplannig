@@ -164,7 +164,78 @@ data/
   api_usage.jsonl          ← Every API call logged (tokens + estimated cost)
 
 main.py                    ← CLI entry point
+api.py                     ← Mobile API layer (FastAPI) over the same modules
 ```
+
+---
+
+## Mobile API (phone app back-end)
+
+`api.py` exposes the recruiting / production / profitability modules as a
+REST API so a phone app — native, or a no-code builder like **Glide** or
+**Softr** — can run the agency from the field.
+
+### Get a permanent link (no terminal) — deploy to Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/joemgutierrez77-hub/Gialegacyplannig)
+
+1. Click the button (or go to **dashboard.render.com → New → Blueprint** and
+   pick this repo). Render reads `render.yaml` and builds everything.
+2. In ~2 minutes you get a permanent URL like
+   `https://gia-legacy-planning.onrender.com` — open it on your phone and
+   bookmark it / add to your home screen. That's your app.
+3. (Optional) In the Render dashboard add `ANTHROPIC_API_KEY` to turn on the AI
+   reports, and `AIRTABLE_API_KEY` + `AIRTABLE_BASE_ID` for persistent storage.
+
+> **Note on data:** Render's free tier has an ephemeral disk — local JSON data
+> resets when the service restarts. For a permanent record, set the Airtable
+> keys (the system already reads/writes Airtable when they're present).
+
+### Run it locally instead
+
+```bash
+pip install -r requirements.txt
+export ANTHROPIC_API_KEY=sk-ant-...   # optional — only the AI endpoints need it
+uvicorn api:app --reload
+```
+
+Then open one of these in any browser (including your phone's):
+
+- **http://localhost:8000/** — the mobile **home screen**: live pipeline, this
+  month's production vs. targets, override income, and a quick "add recruit" form.
+- **http://localhost:8000/docs** — interactive API docs for every endpoint.
+
+To open it from your phone, run the server on a computer and visit
+`http://<that-computer's-LAN-IP>:8000/` on the same Wi-Fi (start it with
+`uvicorn api:app --host 0.0.0.0` so the phone can reach it).
+
+AI endpoints return a clean `503` (not a crash) if `ANTHROPIC_API_KEY` is unset,
+so the home screen and all data endpoints work with no key at all.
+
+| Endpoint | Method | What it does | Claude? |
+|---|---|---|---|
+| `/dashboard` | GET | Home-screen snapshot: pipeline, team production vs. targets, override income | No (instant/free) |
+| `/recruiting/pipeline` | GET | Stage counts | No |
+| `/recruiting/recruits` | GET / POST | List / add a recruit | No |
+| `/recruiting/recruits/{id}/advance` | POST | Advance a stage (fires the onboarding email) | No |
+| `/recruiting/report` | GET | AI pipeline health report | Yes |
+| `/recruiting/score` | POST | AI candidate scoring | Yes |
+| `/recruiting/outreach` | POST | AI-drafted first-contact message | Yes |
+| `/production/agents` | GET / POST | List / add an agent | No |
+| `/production/agents/{id}/stats` | POST | Log a month of production | No |
+| `/production/leaderboard` | GET | AI team leaderboard | Yes |
+| `/production/agents/{id}/scorecard` | GET | AI coaching scorecard | Yes |
+| `/production/agents/{id}/gaps` | GET | AI funnel gap analysis | Yes |
+| `/profitability/policies` | GET / POST | List / record a policy | No |
+| `/profitability/policies/{num}/lapse` | POST | Record a lapse + chargeback | No |
+| `/profitability/pnl?month=YYYY-MM` | GET | AI monthly P&L | Yes |
+| `/profitability/chargebacks` | GET | AI chargeback exposure | Yes |
+| `/profitability/projection?months=6` | GET | AI override income projection | Yes |
+| `/usage?since=YYYY-MM-DD` | GET | API spend by module | No |
+
+Read/list endpoints never call Claude, so they're instant and cost nothing —
+ideal for a mobile home screen. AI endpoints route through the same
+cost-controlled `call_claude` path as the CLI.
 
 ---
 
