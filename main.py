@@ -26,6 +26,7 @@ from src.modules.production    import (add_agent, agent_scorecard, team_leaderbo
 from src.modules.profitability import (monthly_pnl_report,
                                         chargeback_exposure_report,
                                         override_income_projection)
+from src.modules.leads import mortgage_protection_lead_hub
 
 
 def cmd_recruiting(args):
@@ -309,6 +310,15 @@ def cmd_airtable(args):
         print(f"Unknown airtable subcommand: {sub}")
 
 
+
+def cmd_leads(args):
+    sub = args.subcommand
+    if sub == "hub":
+        target = args.target or 30
+        print(mortgage_protection_lead_hub(target))
+    else:
+        print(f"Unknown leads subcommand: {sub}")
+
 def main():
     parser = argparse.ArgumentParser(
         description="GIA Legacy Planning — Agency Management CLI"
@@ -342,6 +352,11 @@ def main():
     prof.add_argument("--month",  "-m")
     prof.add_argument("--months", type=int)
 
+    # ---- leads ----
+    leads = sub.add_parser("leads")
+    leads.add_argument("subcommand", choices=["hub"])
+    leads.add_argument("--target", "-t", type=int, help="Monthly qualified lead target")
+
     # ---- usage ----
     usg = sub.add_parser("usage")
     usg.add_argument("--since", help="YYYY-MM-DD")
@@ -368,6 +383,8 @@ def main():
         cmd_profitability(args)
     elif args.command == "usage":
         cmd_usage(args)
+    elif args.command == "leads":
+        cmd_leads(args)
     elif args.command == "airtable":
         cmd_airtable(args)
     elif args.command == "flowhub":
