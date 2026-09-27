@@ -33,11 +33,18 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Stage site files only
+        # Publish only the pages the site needs — never the whole repository,
+        # so an accidentally committed data or credential file can't end up
+        # on the public site.
+        run: |
+          mkdir -p _site/productivity
+          cp index.html dashboard.html _site/
+          cp productivity/index.html _site/productivity/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
-          path: '.'
+          path: '_site'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5

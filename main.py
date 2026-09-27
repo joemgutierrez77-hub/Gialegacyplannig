@@ -123,7 +123,8 @@ def _connect_email():
         print("Nothing saved — an IMAP server is required.")
         return
     provider = "gmail" if "gmail" in host else "outlook" if "office365" in host else "custom"
-    password = input("App password (stored only on this Mac): ").strip()
+    from getpass import getpass
+    password = getpass("App password (hidden while you type; stored only on this Mac): ").strip()
     if not password:
         print("Nothing saved — the app password is required.")
         return

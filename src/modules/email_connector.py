@@ -117,6 +117,7 @@ def save_email_account(provider: str, address: str, password: str, host: str = "
     lines.append(f"EMAIL_ACCOUNT_{idx}={provider.lower()}|{address}|{host}|{password}")
     with open(path, "w") as f:
         f.write("\n".join(lines) + "\n")
+    os.chmod(path, 0o600)  # credentials: owner read/write only
     return idx
 
 
