@@ -55,6 +55,22 @@ macOS remembers and never asks again.
 
 ---
 
+## 📱 GIA Text — text a list of recruits from your Mac
+
+Double-click **`GIAText.command`**:
+
+1. A list opens in TextEdit — paste `Name|+15551234567` lines, **Cmd+S**, close it.
+2. Back in the window, press **Return**, check the preview, type **y**.
+3. Each person gets their own text (first name filled in) from your iPhone number.
+
+Edit the wording any time in `data/gia-text-message.txt`. People already texted are
+skipped automatically, so running it twice never double-texts anyone.
+
+**One-time setup:** iPhone → Settings → Messages → **Text Message Forwarding** → turn on
+your Mac. The first run asks to let Terminal control Messages — click **OK**.
+
+---
+
 ## 🆘 Quick help
 
 - **Lost your data?** It's tied to the browser you opened it in. Use the same
