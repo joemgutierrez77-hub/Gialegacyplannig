@@ -50,7 +50,7 @@ while IFS='|' read -r name phone || [ -n "$name" ]; do
 done < "$LIST"
 
 if [ ${#names[@]} -eq 0 ]; then
-  echo "No one on the list. Add lines like  Reymundo|+17864438678  and run again."
+  echo "No one on the list. Add lines like  Alex|+15551234567  and run again."
   read -rp "Press Return to close."; exit 0
 fi
 
